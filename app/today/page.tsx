@@ -147,18 +147,50 @@ export default async function TodayPage() {
 
     const focus = await prisma.dailyFocus.findFirst({
       where: { id: focusId, userId: currentSession.user.id },
-      select: { id: true },
+      select: {
+        id: true,
+        taskInstanceId: true,
+        taskInstance: { select: { status: true } },
+      },
     });
 
     if (!focus) return;
 
+    const nowDate = new Date();
+    const markingComplete = !completed;
+
+    // Update the DailyFocus record
     await prisma.dailyFocus.update({
       where: { id: focus.id },
       data: {
-        completed: !completed,
-        completedAt: !completed ? new Date() : null,
+        completed: markingComplete,
+        completedAt: markingComplete ? nowDate : null,
       },
     });
+
+    // Also update the original TaskInstance status
+    if (markingComplete && focus.taskInstance.status !== "COMPLETED") {
+      await prisma.taskInstance.update({
+        where: { id: focus.taskInstanceId },
+        data: {
+          status: "COMPLETED",
+          completedAt: nowDate,
+          completedByUserId: currentSession.user.id,
+          failedAt: null,
+          failedByUserId: null,
+        },
+      });
+    } else if (!markingComplete && focus.taskInstance.status === "COMPLETED") {
+      // Unchecking — revert task back to TODO
+      await prisma.taskInstance.update({
+        where: { id: focus.taskInstanceId },
+        data: {
+          status: "TODO",
+          completedAt: null,
+          completedByUserId: null,
+        },
+      });
+    }
 
     revalidatePath("/today");
   }
