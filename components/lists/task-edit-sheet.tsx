@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Trash2 } from "lucide-react";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +50,7 @@ type SerializedTask = {
   occurrenceDate: string;
 };
 
-interface TaskEditSheetProps {
+interface TaskEditDialogProps {
   task: SerializedTask | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -65,7 +65,6 @@ const importanceOptions: Importance[] = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 function formatDateForInput(isoString: string | null): string {
   if (!isoString) return "";
   const d = new Date(isoString);
-  // Format as YYYY-MM-DDTHH:MM for datetime-local
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
@@ -74,7 +73,7 @@ function formatDateForInput(isoString: string | null): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-export function TaskEditSheet({
+export function TaskEditDialog({
   task,
   open,
   onOpenChange,
@@ -82,7 +81,7 @@ export function TaskEditSheet({
   canWrite,
   editTaskAction,
   deleteTaskAction,
-}: TaskEditSheetProps) {
+}: TaskEditDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!task) return null;
@@ -108,100 +107,98 @@ export function TaskEditSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Task Details</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Task Details</DialogTitle>
+          <DialogDescription>
             {canWrite ? "Edit task fields and save changes." : "View task details."}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         {/* Current status + importance display */}
-        <div className="flex items-center gap-2 px-4">
+        <div className="flex items-center gap-2">
           <StatusBadge status={task.status} />
           <ImportanceBadge importance={task.importanceSnapshot} />
         </div>
 
         {canWrite ? (
-          <form key={task.id} action={handleEdit} className="flex-1 flex flex-col">
-            <div className="flex-1 space-y-4 px-4 py-2">
-              <input type="hidden" name="taskId" value={task.id} />
+          <form key={task.id} action={handleEdit} className="space-y-4">
+            <input type="hidden" name="taskId" value={task.id} />
 
-              {/* Description */}
+            {/* Description */}
+            <Field>
+              <FieldLabel htmlFor="edit-description">Description</FieldLabel>
+              <Textarea
+                id="edit-description"
+                name="description"
+                defaultValue={task.descriptionSnapshot}
+                rows={3}
+                required
+                className="resize-none"
+              />
+            </Field>
+
+            {/* Deadline */}
+            <Field>
+              <FieldLabel htmlFor="edit-deadline">Deadline</FieldLabel>
+              <Input
+                id="edit-deadline"
+                name="deadlineAt"
+                type="datetime-local"
+                defaultValue={formatDateForInput(task.deadlineAt)}
+                className="h-10"
+              />
+            </Field>
+
+            {/* Importance + Status row */}
+            <div className="grid grid-cols-2 gap-3">
               <Field>
-                <FieldLabel htmlFor="edit-description">Description</FieldLabel>
-                <Textarea
-                  id="edit-description"
-                  name="description"
-                  defaultValue={task.descriptionSnapshot}
-                  rows={3}
-                  required
-                  className="resize-none"
-                />
+                <FieldLabel>Importance</FieldLabel>
+                <Select name="importance" defaultValue={task.importanceSnapshot}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {importanceOptions.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
 
-              {/* Deadline */}
               <Field>
-                <FieldLabel htmlFor="edit-deadline">Deadline</FieldLabel>
-                <Input
-                  id="edit-deadline"
-                  name="deadlineAt"
-                  type="datetime-local"
-                  defaultValue={formatDateForInput(task.deadlineAt)}
-                  className="h-10"
-                />
-              </Field>
-
-              {/* Importance + Status row */}
-              <div className="grid grid-cols-2 gap-3">
-                <Field>
-                  <FieldLabel>Importance</FieldLabel>
-                  <Select name="importance" defaultValue={task.importanceSnapshot}>
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {importanceOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                <Field>
-                  <FieldLabel>Status</FieldLabel>
-                  <Select name="status" defaultValue={task.status}>
-                    <SelectTrigger className="h-10 w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allowedStatuses.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt.replace("_", " ")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-              </div>
-
-              {/* Tags */}
-              <Field>
-                <FieldLabel htmlFor="edit-tags">Tags (comma separated)</FieldLabel>
-                <Input
-                  id="edit-tags"
-                  name="tags"
-                  defaultValue={task.tagsSnapshot.join(", ")}
-                  placeholder="work, urgent, code"
-                  className="h-10"
-                />
+                <FieldLabel>Status</FieldLabel>
+                <Select name="status" defaultValue={task.status}>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedStatuses.map((opt) => (
+                      <SelectItem key={opt} value={opt}>
+                        {opt.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
             </div>
 
-            <SheetFooter className="border-t border-border">
+            {/* Tags */}
+            <Field>
+              <FieldLabel htmlFor="edit-tags">Tags (comma separated)</FieldLabel>
+              <Input
+                id="edit-tags"
+                name="tags"
+                defaultValue={task.tagsSnapshot.join(", ")}
+                placeholder="work, urgent, code"
+                className="h-10"
+              />
+            </Field>
+
+            <DialogFooter className="border-t border-border pt-4">
               <div className="flex items-center justify-between w-full">
                 {/* Delete button */}
                 <AlertDialog>
@@ -259,11 +256,11 @@ export function TaskEditSheet({
                   </PillButton>
                 </div>
               </div>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         ) : (
           /* Read-only view */
-          <div className="flex-1 space-y-4 px-4 py-2">
+          <div className="space-y-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1">
                 Description
@@ -292,7 +289,7 @@ export function TaskEditSheet({
             )}
           </div>
         )}
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

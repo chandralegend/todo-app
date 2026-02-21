@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Menu, LayoutDashboard, Activity } from "lucide-react";
+import { Search, Menu, LayoutDashboard, Activity, ListTodo } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -41,6 +41,7 @@ function IconBtn({
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/lists", label: "Lists", icon: ListTodo },
   { href: "/admin/recurrence", label: "Admin", icon: Activity },
 ];
 

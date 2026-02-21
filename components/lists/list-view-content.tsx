@@ -19,6 +19,7 @@ import { PillButton } from "@/components/ui/pill-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ImportanceBadge } from "@/components/ui/importance-badge";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { CircularDate } from "@/components/ui/circular-date";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
@@ -31,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TaskEditSheet } from "@/components/lists/task-edit-sheet";
+import { TaskEditDialog } from "@/components/lists/task-edit-sheet";
 import { KanbanBoard } from "@/components/lists/kanban-board";
 import { QuickAddDialog } from "@/components/lists/quick-add-dialog";
 
@@ -56,6 +57,7 @@ type ListInfo = {
   overdueCount: number;
   completedCount: number;
   progress: number;
+  tags: string[];
 };
 
 interface ListViewContentProps {
@@ -118,7 +120,7 @@ export function ListViewContent({
   const router = useRouter();
   const pathname = usePathname();
   const [editingTask, setEditingTask] = useState<SerializedTask | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
 
   function buildFilterUrl(overrides: Partial<typeof currentFilters>) {
@@ -140,50 +142,75 @@ export function ListViewContent({
     currentFilters.tag !== "";
 
   return (
-    <AppShell breadcrumbOverrides={{ [list.id]: list.name }}>
+    <AppShell
+      breadcrumbOverrides={{ [list.id]: list.name }}
+      action={
+        canWrite ? (
+          <PillButton size="sm" onClick={() => setAddOpen(true)}>
+            <Plus className="size-3.5" /> Add Task
+          </PillButton>
+        ) : undefined
+      }
+    >
       <div className="space-y-5">
         {/* ── Header card ── */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          {/* Title + add button */}
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">{list.name}</h1>
-              {list.description && (
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  {list.description}
-                </p>
-              )}
-            </div>
-            {canWrite && (
-              <PillButton size="sm" onClick={() => setAddOpen(true)}>
-                <Plus className="size-3.5" /> Add Task
-              </PillButton>
-            )}
-          </div>
+          <div className="flex items-start justify-between gap-6">
+            {/* Left: title, description, stats, tags */}
+            <div className="flex-1 min-w-0 space-y-3">
+              <div>
+                <h1 className="text-xl font-bold tracking-tight">{list.name}</h1>
+                {list.description && (
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {list.description}
+                  </p>
+                )}
+              </div>
 
-          {/* Stats + progress */}
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                <ClipboardList className="size-3.5" />
-                {list.totalTasks} {list.totalTasks === 1 ? "task" : "tasks"}
-              </span>
-              {list.overdueCount > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-sm text-destructive font-medium">
-                  <AlertTriangle className="size-3.5" />
-                  {list.overdueCount} overdue
+              {/* Stats */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <ClipboardList className="size-3.5" />
+                  {list.totalTasks} {list.totalTasks === 1 ? "task" : "tasks"}
                 </span>
+                {list.overdueCount > 0 && (
+                  <span className="inline-flex items-center gap-1.5 text-sm text-destructive font-medium">
+                    <AlertTriangle className="size-3.5" />
+                    {list.overdueCount} overdue
+                  </span>
+                )}
+                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <CheckCircle2 className="size-3.5" />
+                  {list.completedCount} done
+                </span>
+              </div>
+
+              {/* Tags */}
+              {list.tags.length > 0 && (
+                <div className="flex gap-1.5 flex-wrap">
+                  {list.tags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => router.push(buildFilterUrl({ tag }))}
+                      className="cursor-pointer"
+                    >
+                      <Badge variant="secondary" className="text-[0.65rem]">
+                        #{tag}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
               )}
-              <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                <CheckCircle2 className="size-3.5" />
-                {list.completedCount} done
-              </span>
             </div>
-            <ProgressRing value={list.progress} size="sm" />
+
+            {/* Right: large progress ring */}
+            <div className="shrink-0">
+              <ProgressRing value={list.progress} size="lg" />
+            </div>
           </div>
         </div>
 
-        {/* ── Toolbar ── */}
+        {/* ── Toolbar: due pills + add filter + sort ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <FilterChipGroup>
             {duePills.map((pill) => (
@@ -198,6 +225,11 @@ export function ListViewContent({
                 />
               </button>
             ))}
+            {/* +Add Filter inline with pills */}
+            <FilterDropdown
+              currentFilters={currentFilters}
+              onApply={(overrides) => router.push(buildFilterUrl(overrides))}
+            />
           </FilterChipGroup>
 
           <div className="flex items-center gap-2">
@@ -221,32 +253,32 @@ export function ListViewContent({
         </div>
 
         {/* Active filters */}
-        <FilterChipGroup>
-          {currentFilters.status !== "ALL" && (
-            <FilterChip
-              label="Status:"
-              value={currentFilters.status.replace("_", " ")}
-              active
-              onRemove={() => router.push(buildFilterUrl({ status: "ALL" }))}
-            />
-          )}
-          {currentFilters.importance !== "ALL" && (
-            <FilterChip
-              label="Importance:"
-              value={currentFilters.importance}
-              active
-              onRemove={() => router.push(buildFilterUrl({ importance: "ALL" }))}
-            />
-          )}
-          {currentFilters.tag && (
-            <FilterChip
-              label="Tag:"
-              value={`#${currentFilters.tag}`}
-              active
-              onRemove={() => router.push(buildFilterUrl({ tag: "" }))}
-            />
-          )}
-          {hasActiveFilters && (
+        {hasActiveFilters && (
+          <FilterChipGroup>
+            {currentFilters.status !== "ALL" && (
+              <FilterChip
+                label="Status:"
+                value={currentFilters.status.replace("_", " ")}
+                active
+                onRemove={() => router.push(buildFilterUrl({ status: "ALL" }))}
+              />
+            )}
+            {currentFilters.importance !== "ALL" && (
+              <FilterChip
+                label="Importance:"
+                value={currentFilters.importance}
+                active
+                onRemove={() => router.push(buildFilterUrl({ importance: "ALL" }))}
+              />
+            )}
+            {currentFilters.tag && (
+              <FilterChip
+                label="Tag:"
+                value={`#${currentFilters.tag}`}
+                active
+                onRemove={() => router.push(buildFilterUrl({ tag: "" }))}
+              />
+            )}
             <button
               onClick={() =>
                 router.push(
@@ -261,12 +293,8 @@ export function ListViewContent({
             >
               Clear all
             </button>
-          )}
-          <FilterDropdown
-            currentFilters={currentFilters}
-            onApply={(overrides) => router.push(buildFilterUrl(overrides))}
-          />
-        </FilterChipGroup>
+          </FilterChipGroup>
+        )}
 
         {/* ── Content tabs ── */}
         <Tabs defaultValue="table">
@@ -322,6 +350,9 @@ export function ListViewContent({
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border bg-muted/30">
+                        <th className="text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground w-10 hidden sm:table-cell">
+                          {/* Date column */}
+                        </th>
                         <th className="text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                           Task
                         </th>
@@ -342,19 +373,30 @@ export function ListViewContent({
                     <tbody>
                       {tasks.map((task) => {
                         const overdue = isOverdue(task.deadlineAt, task.status);
+                        const dateForCircle = task.deadlineAt
+                          ? new Date(task.deadlineAt)
+                          : new Date(task.occurrenceDate);
                         return (
                           <tr
                             key={task.id}
                             onClick={() => {
                               setEditingTask(task);
-                              setSheetOpen(true);
+                              setDialogOpen(true);
                             }}
                             className={`border-b border-border last:border-0 cursor-pointer transition-colors hover:bg-muted/40 ${
                               task.status === "COMPLETED" ? "opacity-60" : ""
                             } ${overdue ? "bg-destructive/[0.03]" : ""}`}
                           >
+                            {/* Circular date */}
+                            <td className="pl-4 pr-1 py-3 hidden sm:table-cell">
+                              <CircularDate
+                                date={dateForCircle}
+                                overdue={overdue}
+                                size="xs"
+                              />
+                            </td>
                             {/* Task name */}
-                            <td className="px-4 py-3 max-w-[300px]">
+                            <td className="px-4 sm:pl-2 py-3 max-w-[300px]">
                               <p
                                 className={`font-medium text-sm leading-snug truncate ${
                                   task.status === "COMPLETED"
@@ -456,7 +498,7 @@ export function ListViewContent({
                 updateTaskStatusAction={updateTaskStatusAction}
                 onTaskClick={(task) => {
                   setEditingTask(task);
-                  setSheetOpen(true);
+                  setDialogOpen(true);
                 }}
               />
             )}
@@ -472,12 +514,12 @@ export function ListViewContent({
         createTaskAction={quickCreateTaskAction}
       />
 
-      {/* Task Edit Sheet */}
-      <TaskEditSheet
+      {/* Task Edit Dialog */}
+      <TaskEditDialog
         task={editingTask}
-        open={sheetOpen}
+        open={dialogOpen}
         onOpenChange={(open) => {
-          setSheetOpen(open);
+          setDialogOpen(open);
           if (!open) setEditingTask(null);
         }}
         allowedStatuses={editingTask ? (allowedStatuses[editingTask.id] ?? []) : []}

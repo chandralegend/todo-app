@@ -55,6 +55,15 @@ const ALLOWED_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
   FAILED: ["FAILED", "TODO"],
 };
 
+/** Contrasting background per status */
+const COLUMN_BG: Record<TaskStatus, string> = {
+  DRAFT: "bg-muted/50",
+  TODO: "bg-blue-500/[0.04]",
+  IN_PROGRESS: "bg-amber-500/[0.05]",
+  COMPLETED: "bg-green-500/[0.05]",
+  FAILED: "bg-red-500/[0.04]",
+};
+
 interface KanbanBoardProps {
   tasks: SerializedTask[];
   updateTaskStatusAction: (formData: FormData) => Promise<void>;
@@ -71,6 +80,7 @@ function isOverdue(deadlineAt: string | null, status: string): boolean {
 
 function KanbanColumn({
   status,
+  label,
   tasks,
   onTaskClick,
 }: {
@@ -84,27 +94,28 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col w-full rounded-xl border border-border bg-muted/30 transition-colors ${
-        isOver ? "bg-coral/5 border-coral/30" : ""
+      className={`flex flex-col rounded-xl border border-border transition-colors ${COLUMN_BG[status]} ${
+        isOver ? "ring-2 ring-primary/20 border-primary/30" : ""
       }`}
     >
       {/* Column header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border/60">
         <div className="flex items-center gap-2">
           <StatusBadge status={status} />
-          <span className="text-xs text-muted-foreground font-medium">
-            {tasks.length}
-          </span>
+          <span className="text-xs font-semibold">{label}</span>
         </div>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {tasks.length}
+        </span>
       </div>
 
-      {/* Cards — 3-column grid with min/max height + scroll */}
-      <div className="flex-1 p-2 min-h-[150px] max-h-[500px] overflow-y-auto">
+      {/* Cards */}
+      <div className="flex-1 p-2 min-h-[120px] max-h-[400px] overflow-y-auto">
         <SortableContext
           items={tasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className="space-y-2">
             {tasks.map((task) => (
               <SortableKanbanCard
                 key={task.id}
@@ -116,7 +127,7 @@ function KanbanColumn({
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex items-center justify-center h-20 text-xs text-muted-foreground/50">
+          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground/50">
             Drop here
           </div>
         )}
@@ -156,7 +167,7 @@ function SortableKanbanCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`rounded-lg border bg-card p-2.5 cursor-pointer group hover:border-coral/30 transition-colors ${
+      className={`rounded-lg border bg-card p-2.5 cursor-pointer group hover:border-primary/30 transition-colors ${
         overdue ? "border-destructive/40" : "border-border"
       }`}
       onClick={() => onTaskClick(task)}
@@ -172,6 +183,13 @@ function SortableKanbanCard({
           <GripVertical className="size-3 text-muted-foreground" />
         </button>
 
+        {/* CircularDate on the left */}
+        {deadline && (
+          <div className="shrink-0 mt-0.5">
+            <CircularDate date={deadline} overdue={overdue} size="xs" />
+          </div>
+        )}
+
         <div className="flex-1 min-w-0">
           {/* Description */}
           <p
@@ -186,16 +204,13 @@ function SortableKanbanCard({
 
           {/* Meta row */}
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            {deadline && (
-              <CircularDate date={deadline} overdue={overdue} size="xs" />
-            )}
             <ImportanceBadge importance={task.importanceSnapshot} />
           </div>
 
           {/* Tags */}
           {task.tagsSnapshot.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1.5">
-              {task.tagsSnapshot.slice(0, 3).map((tag) => (
+              {task.tagsSnapshot.slice(0, 2).map((tag) => (
                 <Badge
                   key={tag}
                   variant="secondary"
@@ -204,9 +219,9 @@ function SortableKanbanCard({
                   #{tag}
                 </Badge>
               ))}
-              {task.tagsSnapshot.length > 3 && (
+              {task.tagsSnapshot.length > 2 && (
                 <span className="text-[0.55rem] text-muted-foreground">
-                  +{task.tagsSnapshot.length - 3}
+                  +{task.tagsSnapshot.length - 2}
                 </span>
               )}
             </div>
@@ -230,14 +245,14 @@ function DragOverlayCard({ task }: { task: SerializedTask }) {
       }`}
     >
       <div className="flex items-start gap-2">
+        {deadline && (
+          <CircularDate date={deadline} overdue={overdue} size="xs" />
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium leading-snug line-clamp-2 text-foreground">
             {task.descriptionSnapshot}
           </p>
           <div className="flex items-center gap-1.5 mt-1.5">
-            {deadline && (
-              <CircularDate date={deadline} overdue={overdue} size="xs" />
-            )}
             <ImportanceBadge importance={task.importanceSnapshot} />
           </div>
         </div>
@@ -289,14 +304,11 @@ export function KanbanBoard({
     if (!task) return;
 
     // Determine target column
-    // "over" can be a column id (TaskStatus) or another task id
     let targetStatus: TaskStatus | null = null;
 
-    // Check if dropped on a column directly
     if (KANBAN_COLUMNS.some((col) => col.status === over.id)) {
       targetStatus = over.id as TaskStatus;
     } else {
-      // Dropped on another task — find which column that task is in
       const overTask = tasks.find((t) => t.id === over.id);
       if (overTask) {
         targetStatus = overTask.status;
@@ -315,11 +327,6 @@ export function KanbanBoard({
     await updateTaskStatusAction(formData);
   }
 
-  // Filter columns that have tasks or are reachable
-  const activeColumns = KANBAN_COLUMNS.filter(
-    (col) => tasksByStatus[col.status].length > 0 || true // show all columns
-  );
-
   return (
     <DndContext
       sensors={sensors}
@@ -327,8 +334,9 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-4">
-        {activeColumns.map((col) => (
+      {/* 3-column grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {KANBAN_COLUMNS.map((col) => (
           <KanbanColumn
             key={col.status}
             status={col.status}

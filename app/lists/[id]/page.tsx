@@ -123,7 +123,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   // List-wide stats (unfiltered)
   const allTasks = await prisma.taskInstance.findMany({
     where: { taskListId: id },
-    select: { status: true, deadlineAt: true },
+    select: { status: true, deadlineAt: true, tagsSnapshot: true },
   });
 
   const totalTasks = allTasks.length;
@@ -137,6 +137,17 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   const completedCount = allTasks.filter((t) => t.status === "COMPLETED").length;
   const progress =
     totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+  // Collect unique tags (max 8)
+  const tagSet = new Set<string>();
+  for (const t of allTasks) {
+    for (const tag of t.tagsSnapshot) {
+      tagSet.add(tag);
+      if (tagSet.size >= 8) break;
+    }
+    if (tagSet.size >= 8) break;
+  }
+  const allTags = Array.from(tagSet);
 
   const canWrite = canWriteList(access.role);
   const allowedStatuses: Record<string, string[]> = {};
@@ -398,6 +409,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
         overdueCount,
         completedCount,
         progress,
+        tags: allTags,
       }}
       tasks={serializedTasks}
       allowedStatuses={allowedStatuses}
