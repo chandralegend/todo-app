@@ -65,12 +65,13 @@ export function TopBar() {
 
   return (
     <header className="border-b border-border bg-card">
-      <div className="mx-auto max-w-5xl px-5 py-3 flex items-center gap-3">
-        {/* Mobile/Tablet: Hamburger + Logo (hidden on desktop) */}
-        <div className="flex items-center gap-3 lg:hidden">
+      <div className="mx-auto max-w-5xl px-5 py-3 flex items-center gap-4">
+        {/* Left group: hamburger (mobile) + logo (always) + nav (desktop) */}
+        <div className="flex items-center gap-3">
+          {/* Mobile hamburger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <IconBtn aria-label="Open menu">
+              <IconBtn aria-label="Open menu" className="lg:hidden">
                 <Menu className="size-4" />
               </IconBtn>
             </SheetTrigger>
@@ -105,35 +106,34 @@ export function TopBar() {
               </nav>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="flex items-center gap-2">
+
+          {/* Logo — always visible */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs">
               T
             </div>
-            <div className="leading-none">
-              <p className="font-semibold text-sm">TodoApp</p>
-              <p className="text-[0.65rem] text-muted-foreground">Task Manager</p>
-            </div>
+            <span className="font-semibold text-sm hidden sm:inline">TodoApp</span>
           </Link>
+
+          {/* Desktop nav links */}
+          <nav className="hidden lg:flex items-center gap-1 ml-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  isActive(link.href)
+                    ? "bg-coral/10 text-coral"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        {/* Desktop: Nav links (hidden on mobile/tablet) */}
-        <nav className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                isActive(link.href)
-                  ? "bg-coral/10 text-coral"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Center: Search (grows to fill space) */}
+        {/* Center: Search */}
         <div className="flex-1 flex justify-center px-2">
           <div className="relative w-full max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
@@ -145,7 +145,7 @@ export function TopBar() {
         </div>
 
         {/* Right: avatar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full hover:bg-muted transition-colors cursor-pointer p-1">
