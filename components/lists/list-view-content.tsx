@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ClipboardList, Plus, ArrowUpDown, Search, X } from "lucide-react";
+import { ClipboardList, Plus, ArrowUpDown, Search, List, LayoutGrid } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { BentoCard } from "@/components/ui/bento-card";
@@ -13,6 +14,12 @@ import { CircularDate } from "@/components/ui/circular-date";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { TaskEditSheet } from "@/components/lists/task-edit-sheet";
+import { KanbanBoard } from "@/components/lists/kanban-board";
 
 type TaskStatus = "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
 type Importance = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -57,6 +64,8 @@ interface ListViewContentProps {
     tag: string;
   };
   updateTaskStatusAction: (formData: FormData) => Promise<void>;
+  editTaskAction: (formData: FormData) => Promise<void>;
+  deleteTaskAction: (formData: FormData) => Promise<void>;
 }
 
 const duePills = [
@@ -95,9 +104,13 @@ export function ListViewContent({
   sidebarLists,
   currentFilters,
   updateTaskStatusAction,
+  editTaskAction,
+  deleteTaskAction,
 }: ListViewContentProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [editingTask, setEditingTask] = useState<SerializedTask | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   function buildFilterUrl(overrides: Partial<typeof currentFilters>) {
     const merged = { ...currentFilters, ...overrides };
@@ -162,65 +175,47 @@ export function ListViewContent({
       </div>
 
       {/* Due filter pills */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
+      <FilterChipGroup className="mb-4">
         {duePills.map((pill) => (
           <button
             key={pill.value}
             onClick={() => router.push(buildFilterUrl({ due: pill.value }))}
-            className={`rounded-full px-4 py-2 sm:py-1.5 text-sm sm:text-xs font-medium border transition-colors cursor-pointer min-h-[44px] sm:min-h-0 ${
-              currentFilters.due === pill.value
-                ? "bg-foreground text-background border-foreground"
-                : "bg-card text-foreground border-border hover:bg-muted"
-            }`}
+            className="cursor-pointer"
           >
-            {pill.label}
+            <FilterChip
+              label={pill.label}
+              active={currentFilters.due === pill.value}
+            />
           </button>
         ))}
-      </div>
+      </FilterChipGroup>
 
       {/* Active filters + sort row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <div className="flex items-center gap-2 flex-wrap">
+        <FilterChipGroup>
           {currentFilters.status !== "ALL" && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
-              <span className="opacity-60">Status:</span>
-              {currentFilters.status.replace("_", " ")}
-              <button
-                onClick={() => router.push(buildFilterUrl({ status: "ALL" }))}
-                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
-                aria-label="Remove status filter"
-              >
-                <X className="size-3" />
-              </button>
-            </span>
+            <FilterChip
+              label="Status:"
+              value={currentFilters.status.replace("_", " ")}
+              active
+              onRemove={() => router.push(buildFilterUrl({ status: "ALL" }))}
+            />
           )}
           {currentFilters.importance !== "ALL" && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
-              <span className="opacity-60">Importance:</span>
-              {currentFilters.importance}
-              <button
-                onClick={() =>
-                  router.push(buildFilterUrl({ importance: "ALL" }))
-                }
-                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
-                aria-label="Remove importance filter"
-              >
-                <X className="size-3" />
-              </button>
-            </span>
+            <FilterChip
+              label="Importance:"
+              value={currentFilters.importance}
+              active
+              onRemove={() => router.push(buildFilterUrl({ importance: "ALL" }))}
+            />
           )}
           {currentFilters.tag && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
-              <span className="opacity-60">Tag:</span>
-              #{currentFilters.tag}
-              <button
-                onClick={() => router.push(buildFilterUrl({ tag: "" }))}
-                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
-                aria-label="Remove tag filter"
-              >
-                <X className="size-3" />
-              </button>
-            </span>
+            <FilterChip
+              label="Tag:"
+              value={`#${currentFilters.tag}`}
+              active
+              onRemove={() => router.push(buildFilterUrl({ tag: "" }))}
+            />
           )}
           {hasActiveFilters && (
             <button
@@ -244,7 +239,7 @@ export function ListViewContent({
             currentFilters={currentFilters}
             onApply={(overrides) => router.push(buildFilterUrl(overrides))}
           />
-        </div>
+        </FilterChipGroup>
 
         {/* Sort */}
         <div className="flex items-center gap-2">
@@ -263,160 +258,229 @@ export function ListViewContent({
         </div>
       </div>
 
-      {/* Task cards */}
-      {tasks.length === 0 ? (
-        <EmptyState
-          icon={hasActiveFilters ? Search : ClipboardList}
-          title={hasActiveFilters ? "No tasks match" : "No tasks yet"}
-          description={
-            hasActiveFilters
-              ? "Try adjusting your filters to find tasks."
-              : "Add a task to get started!"
-          }
-          action={
-            hasActiveFilters ? (
-              <Button
-                variant="outline"
-                onClick={() =>
-                  router.push(
-                    buildFilterUrl({
-                      status: "ALL",
-                      importance: "ALL",
-                      due: "all",
-                      tag: "",
-                    })
-                  )
-                }
-              >
-                Clear Filters
-              </Button>
-            ) : canWrite ? (
-              <Link href={`/lists/${list.id}/tasks/new`}>
-                <PillButton>Add Task</PillButton>
-              </Link>
-            ) : null
-          }
-        />
-      ) : (
-        <div className="space-y-3">
-          {tasks.map((task) => {
-            const overdue = isOverdue(task.deadlineAt, task.status);
-            const deadline = task.deadlineAt
-              ? new Date(task.deadlineAt)
-              : null;
+      {/* View toggle tabs */}
+      <Tabs defaultValue="list">
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">
+            <List className="size-3.5" />
+            List
+          </TabsTrigger>
+          <TabsTrigger value="board">
+            <LayoutGrid className="size-3.5" />
+            Board
+          </TabsTrigger>
+        </TabsList>
 
-            return (
-              <BentoCard
-                key={task.id}
-                accent={overdue ? "destructive" : "none"}
-                interactive={false}
-                className="p-4"
-              >
-                <div className="flex items-start gap-4">
-                  {/* Circular date */}
-                  {deadline && (
-                    <CircularDate
-                      date={deadline}
-                      overdue={overdue}
-                      size="md"
-                      className="hidden sm:flex shrink-0"
-                    />
-                  )}
+        {/* List View */}
+        <TabsContent value="list">
+          {tasks.length === 0 ? (
+            <EmptyState
+              icon={hasActiveFilters ? Search : ClipboardList}
+              title={hasActiveFilters ? "No tasks match" : "No tasks yet"}
+              description={
+                hasActiveFilters
+                  ? "Try adjusting your filters to find tasks."
+                  : "Add a task to get started!"
+              }
+              action={
+                hasActiveFilters ? (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      router.push(
+                        buildFilterUrl({
+                          status: "ALL",
+                          importance: "ALL",
+                          due: "all",
+                          tag: "",
+                        })
+                      )
+                    }
+                  >
+                    Clear Filters
+                  </Button>
+                ) : canWrite ? (
+                  <Link href={`/lists/${list.id}/tasks/new`}>
+                    <PillButton>Add Task</PillButton>
+                  </Link>
+                ) : null
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {tasks.map((task) => {
+                const overdue = isOverdue(task.deadlineAt, task.status);
+                const deadline = task.deadlineAt
+                  ? new Date(task.deadlineAt)
+                  : null;
 
-                  {/* Task content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3
-                        className={`text-sm font-medium leading-snug ${
-                          task.status === "COMPLETED"
-                            ? "line-through text-muted-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {task.descriptionSnapshot}
-                      </h3>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <ImportanceBadge
-                          importance={task.importanceSnapshot}
+                return (
+                  <BentoCard
+                    key={task.id}
+                    accent={overdue ? "destructive" : "none"}
+                    interactive
+                    className="p-4"
+                    onClick={() => {
+                      setEditingTask(task);
+                      setSheetOpen(true);
+                    }}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Circular date */}
+                      {deadline && (
+                        <CircularDate
+                          date={deadline}
+                          overdue={overdue}
+                          size="md"
+                          className="hidden sm:flex shrink-0"
                         />
-                      </div>
-                    </div>
-
-                    {/* Deadline text (visible on mobile when no circular date) */}
-                    {deadline && (
-                      <p
-                        className={`text-xs mt-1 ${
-                          overdue
-                            ? "text-destructive font-medium"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {formatDue(task.deadlineAt)}
-                      </p>
-                    )}
-
-                    {/* Tags */}
-                    {task.tagsSnapshot.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {task.tagsSnapshot.map((tag) => (
-                          <button
-                            key={tag}
-                            onClick={() =>
-                              router.push(buildFilterUrl({ tag }))
-                            }
-                            className="text-[0.65rem] text-muted-foreground bg-muted px-2.5 py-1.5 rounded-full hover:bg-muted/80 transition-colors cursor-pointer"
-                          >
-                            #{tag}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Status row */}
-                    <div className="flex items-center gap-2 mt-3">
-                      <StatusBadge status={task.status} />
-
-                      {canWrite && (
-                        <form
-                          action={updateTaskStatusAction}
-                          className="flex items-center gap-1.5 ml-auto"
-                        >
-                          <input
-                            type="hidden"
-                            name="taskId"
-                            value={task.id}
-                          />
-                          <select
-                            name="status"
-                            defaultValue={task.status}
-                            className="h-9 sm:h-7 rounded-lg border border-border bg-card px-2 py-0.5 text-sm sm:text-xs cursor-pointer"
-                          >
-                            {(allowedStatuses[task.id] ?? []).map(
-                              (option: string) => (
-                                <option key={option} value={option}>
-                                  {option.replace("_", " ")}
-                                </option>
-                              )
-                            )}
-                          </select>
-                          <Button
-                            type="submit"
-                            size="sm"
-                            variant="outline"
-                            className="h-9 sm:h-7 px-3 sm:px-2.5 text-sm sm:text-xs"
-                          >
-                            Update
-                          </Button>
-                        </form>
                       )}
+
+                      {/* Task content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3
+                            className={`text-sm font-medium leading-snug ${
+                              task.status === "COMPLETED"
+                                ? "line-through text-muted-foreground"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {task.descriptionSnapshot}
+                          </h3>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <ImportanceBadge
+                              importance={task.importanceSnapshot}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Deadline text (visible on mobile when no circular date) */}
+                        {deadline && (
+                          <p
+                            className={`text-xs mt-1 ${
+                              overdue
+                                ? "text-destructive font-medium"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            {formatDue(task.deadlineAt)}
+                          </p>
+                        )}
+
+                        {/* Tags */}
+                        {task.tagsSnapshot.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {task.tagsSnapshot.map((tag) => (
+                              <button
+                                key={tag}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(buildFilterUrl({ tag }));
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <Badge variant="secondary" className="text-[0.6rem] h-4 px-1.5 hover:bg-secondary/80 transition-colors">
+                                  #{tag}
+                                </Badge>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Status row */}
+                        <div className="flex items-center gap-2 mt-3">
+                          <StatusBadge status={task.status} />
+
+                          {canWrite && (
+                            <form
+                              action={updateTaskStatusAction}
+                              className="flex items-center gap-1.5 ml-auto"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <input
+                                type="hidden"
+                                name="taskId"
+                                value={task.id}
+                              />
+                              <select
+                                name="status"
+                                defaultValue={task.status}
+                                className="h-9 sm:h-7 rounded-lg border border-border bg-card px-2 py-0.5 text-sm sm:text-xs cursor-pointer"
+                              >
+                                {(allowedStatuses[task.id] ?? []).map(
+                                  (option: string) => (
+                                    <option key={option} value={option}>
+                                      {option.replace("_", " ")}
+                                    </option>
+                                  )
+                                )}
+                              </select>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="submit"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-9 sm:h-7 px-3 sm:px-2.5 text-sm sm:text-xs"
+                                  >
+                                    Update
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Change task status</TooltipContent>
+                              </Tooltip>
+                            </form>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </BentoCard>
-            );
-          })}
-        </div>
-      )}
+                  </BentoCard>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Board (Kanban) View */}
+        <TabsContent value="board">
+          {tasks.length === 0 ? (
+            <EmptyState
+              icon={ClipboardList}
+              title="No tasks yet"
+              description="Add a task to see it on the board."
+              action={
+                canWrite ? (
+                  <Link href={`/lists/${list.id}/tasks/new`}>
+                    <PillButton>Add Task</PillButton>
+                  </Link>
+                ) : null
+              }
+            />
+          ) : (
+            <KanbanBoard
+              tasks={tasks}
+              updateTaskStatusAction={updateTaskStatusAction}
+              onTaskClick={(task) => {
+                setEditingTask(task);
+                setSheetOpen(true);
+              }}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
+      {/* Task Edit Sheet */}
+      <TaskEditSheet
+        task={editingTask}
+        open={sheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) setEditingTask(null);
+        }}
+        allowedStatuses={editingTask ? (allowedStatuses[editingTask.id] ?? []) : []}
+        canWrite={canWrite}
+        editTaskAction={editTaskAction}
+        deleteTaskAction={deleteTaskAction}
+      />
     </AppShell>
   );
 }
@@ -451,13 +515,12 @@ function FilterDropdown({
                 <button
                   key={s}
                   onClick={() => onApply({ status: s })}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                    currentFilters.status === s
-                      ? "bg-foreground text-background border-foreground"
-                      : "border-border hover:bg-muted"
-                  }`}
+                  className="cursor-pointer"
                 >
-                  {s.replace("_", " ")}
+                  <FilterChip
+                    label={s.replace("_", " ")}
+                    active={currentFilters.status === s}
+                  />
                 </button>
               ))}
             </div>
@@ -471,13 +534,12 @@ function FilterDropdown({
                 <button
                   key={i}
                   onClick={() => onApply({ importance: i })}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
-                    currentFilters.importance === i
-                      ? "bg-foreground text-background border-foreground"
-                      : "border-border hover:bg-muted"
-                  }`}
+                  className="cursor-pointer"
                 >
-                  {i}
+                  <FilterChip
+                    label={i}
+                    active={currentFilters.importance === i}
+                  />
                 </button>
               ))}
             </div>

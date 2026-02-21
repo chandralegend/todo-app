@@ -15,7 +15,7 @@ export function BentoCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card p-4 sm:p-6",
+        "rounded-2xl border border-border bg-card p-4",
         interactive && "bento-card cursor-pointer",
         accent === "coral" && "border-l-[3px] border-l-coral",
         accent === "destructive" && "border-l-[3px] border-l-destructive",
@@ -37,7 +37,7 @@ export function BentoGrid({
   return (
     <div
       className={cn(
-        "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+        "grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
         className
       )}
       {...props}

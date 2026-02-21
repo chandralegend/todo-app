@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 interface CircularDateProps {
   date: Date;
   overdue?: boolean;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -25,6 +25,7 @@ export function CircularDate({
     <div
       className={cn(
         "circular-date border-2 select-none",
+        size === "xs" && "!w-7 !h-7",
         size === "sm" && "!w-10 !h-10",
         size === "md" && "!w-14 !h-14",
         size === "lg" && "!w-20 !h-20",
@@ -37,6 +38,7 @@ export function CircularDate({
       <span
         className={cn(
           "font-bold leading-none",
+          size === "xs" && "text-[0.6rem]",
           size === "sm" && "text-sm",
           size === "md" && "text-xl",
           size === "lg" && "text-3xl"
@@ -48,6 +50,7 @@ export function CircularDate({
         className={cn(
           "uppercase tracking-wider leading-none",
           overdue ? "text-destructive/70" : "text-muted-foreground",
+          size === "xs" && "text-[0.35rem]",
           size === "sm" && "text-[0.45rem]",
           size === "md" && "text-[0.6rem]",
           size === "lg" && "text-xs"

@@ -237,6 +237,112 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     revalidatePath(`/lists/${id}`);
   }
 
+  async function editTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const taskId = String(formData.get("taskId") ?? "");
+    if (!taskId) return;
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const task = await prisma.taskInstance.findFirst({
+      where: { id: taskId, taskListId: id },
+      select: { id: true, status: true },
+    });
+    if (!task) return;
+
+    const description = String(formData.get("description") ?? "").trim();
+    const deadlineAtStr = String(formData.get("deadlineAt") ?? "").trim();
+    const importance = String(formData.get("importance") ?? "MEDIUM") as
+      | "LOW"
+      | "MEDIUM"
+      | "HIGH"
+      | "CRITICAL";
+    const newStatus = String(formData.get("status") ?? task.status) as
+      | "DRAFT"
+      | "TODO"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "FAILED";
+    const tagsStr = String(formData.get("tags") ?? "").trim();
+    const tags = tagsStr
+      ? tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const updateData: any = {
+      descriptionSnapshot: description || undefined,
+      importanceSnapshot: importance,
+      tagsSnapshot: tags,
+      deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
+    };
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    // Handle status change if different
+    if (newStatus !== task.status && canTransitionStatus(task.status, newStatus)) {
+      const nowDate = new Date();
+      updateData.status = newStatus;
+      if (newStatus === "IN_PROGRESS") {
+        updateData.startedAt = nowDate;
+      } else if (newStatus === "COMPLETED") {
+        updateData.completedAt = nowDate;
+        updateData.completedByUserId = currentSession.user.id;
+        updateData.failedAt = null;
+        updateData.failedByUserId = null;
+      } else if (newStatus === "FAILED") {
+        updateData.failedAt = nowDate;
+        updateData.failedByUserId = currentSession.user.id;
+        updateData.completedAt = null;
+        updateData.completedByUserId = null;
+      } else {
+        updateData.completedAt = null;
+        updateData.completedByUserId = null;
+        updateData.failedAt = null;
+        updateData.failedByUserId = null;
+      }
+    }
+
+    await prisma.taskInstance.update({
+      where: { id: task.id },
+      data: updateData,
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
+  async function deleteTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const taskId = String(formData.get("taskId") ?? "");
+    if (!taskId) return;
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const task = await prisma.taskInstance.findFirst({
+      where: { id: taskId, taskListId: id },
+      select: { id: true },
+    });
+    if (!task) return;
+
+    await prisma.taskInstance.delete({
+      where: { id: task.id },
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
   return (
     <ListViewContent
       list={{
@@ -260,6 +366,8 @@ export default async function ListPage({ params, searchParams }: PageProps) {
         tag: tagFilter,
       }}
       updateTaskStatusAction={updateTaskStatus}
+      editTaskAction={editTask}
+      deleteTaskAction={deleteTask}
     />
   );
 }

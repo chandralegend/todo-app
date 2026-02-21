@@ -16,6 +16,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-card";
 import { PillButton } from "@/components/ui/pill-button";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 
@@ -139,7 +140,7 @@ export function DashboardContent({
                 {/* Header */}
                 <div>
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-base text-foreground leading-tight line-clamp-1">
+                    <h3 className="font-semibold text-sm text-foreground leading-tight line-clamp-1">
                       {list.name}
                     </h3>
                     {!list.isOwner && (
@@ -155,7 +156,7 @@ export function DashboardContent({
                   )}
 
                   {/* Stats row */}
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
                     <span>{list.taskCount} tasks</span>
                     {list.overdue > 0 && (
                       <span className="text-destructive font-medium">
@@ -167,22 +168,24 @@ export function DashboardContent({
 
                 {/* Progress + tags */}
                 <div>
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-3 mb-2">
                     <ProgressRing value={list.progress} size="sm" />
-                    <span className="text-sm text-muted-foreground">
-                      {list.progress}% complete
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-muted-foreground">
+                          {list.progress}% complete
+                        </span>
+                      </div>
+                      <Progress value={list.progress} className="h-1" />
+                    </div>
                   </div>
 
                   {list.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1 mt-2">
                       {list.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="text-[0.65rem] text-muted-foreground bg-muted px-2 py-0.5 rounded-full"
-                        >
+                        <Badge key={tag} variant="secondary" className="text-[0.6rem] h-4 px-1.5">
                           #{tag}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   )}
@@ -204,10 +207,10 @@ export function DashboardContent({
               <div className="rounded-full border border-border p-3 mb-3">
                 <Plus className="size-5 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-base text-foreground mb-1">
+              <h3 className="font-semibold text-sm text-foreground mb-1">
                 New List
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-xs text-muted-foreground mb-3">
                 Create a new list to organize your tasks
               </p>
               <PillButton size="sm" variant="primary">

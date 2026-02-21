@@ -38,7 +38,7 @@ export function AppShell({
             </div>
 
             {/* Main content */}
-            <main className="flex-1 px-4 sm:px-6 py-4 sm:py-6">{children}</main>
+            <main className="flex-1 px-4 py-4">{children}</main>
 
             {/* Footer */}
             <Footer />

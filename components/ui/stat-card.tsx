@@ -19,7 +19,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-border bg-card p-4 sm:p-6",
+        "rounded-2xl border border-border bg-card p-4",
         className
       )}
     >
@@ -28,7 +28,7 @@ export function StatCard({
           <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             {label}
           </p>
-          <p className="text-3xl font-bold tracking-tight text-foreground">
+          <p className="text-2xl font-bold tracking-tight text-foreground">
             {value}
           </p>
           {description && (
