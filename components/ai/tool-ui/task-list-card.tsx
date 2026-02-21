@@ -30,20 +30,20 @@ export function TaskListsResult({ data }: { data: TaskListItem[] }) {
         return (
           <div
             key={list.id}
-            className="rounded-lg border border-border bg-card p-3"
+            className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
           >
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-medium truncate flex-1 min-w-0">{list.name}</p>
-              <ProgressRing value={progress} size="sm" />
-              <Badge variant="secondary" className="text-[0.65rem] shrink-0">
-                {list.completedTasks}/{list.totalTasks}
-              </Badge>
+            <ProgressRing value={progress} size="sm" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{list.name}</p>
+              {list.description && (
+                <p className="text-xs text-muted-foreground truncate">
+                  {list.description}
+                </p>
+              )}
             </div>
-            {list.description && (
-              <p className="text-xs text-muted-foreground truncate mt-1">
-                {list.description}
-              </p>
-            )}
+            <Badge variant="secondary" className="text-[0.65rem] shrink-0">
+              {list.completedTasks}/{list.totalTasks}
+            </Badge>
           </div>
         );
       })}
