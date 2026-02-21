@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 
 export default function ListLoading() {
   return (
-    <AppShell lists={[]}>
+    <AppShell>
       <ListViewSkeleton />
     </AppShell>
   );

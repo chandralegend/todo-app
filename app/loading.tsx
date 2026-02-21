@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/app-shell";
 
 export default function DashboardLoading() {
   return (
-    <AppShell lists={[]}>
+    <AppShell>
       <DashboardSkeleton />
     </AppShell>
   );

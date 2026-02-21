@@ -11,15 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
 
-type SidebarListItem = {
-  id: string;
-  name: string;
-  taskCount: number;
-};
-
 interface NewTaskContentProps {
   list: { id: string; name: string };
-  sidebarLists: SidebarListItem[];
   createTaskAction: (formData: FormData) => Promise<void>;
 }
 
@@ -29,14 +22,10 @@ const recurrenceOptions = ["DAILY", "WEEKLY", "MONTHLY", "CUSTOM"] as const;
 
 export function NewTaskContent({
   list,
-  sidebarLists,
   createTaskAction,
 }: NewTaskContentProps) {
   return (
-    <AppShell
-      lists={sidebarLists}
-      breadcrumbOverrides={{ [list.id]: list.name, new: "New Task" }}
-    >
+    <AppShell>
       <div className="max-w-2xl">
         {/* Header */}
         <div className="mb-6">

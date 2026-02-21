@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { listAccessibleWhere } from "@/lib/permissions";
 import { NewListContent } from "@/components/lists/new-list-content";
 
 export default async function NewListPage() {
@@ -11,23 +10,6 @@ export default async function NewListPage() {
   if (!session?.user) {
     redirect("/login");
   }
-
-  // Sidebar lists
-  const taskLists = await prisma.taskList.findMany({
-    where: listAccessibleWhere(session.user.id),
-    select: {
-      id: true,
-      name: true,
-      _count: { select: { instances: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const sidebarLists = taskLists.map((l) => ({
-    id: l.id,
-    name: l.name,
-    taskCount: l._count.instances,
-  }));
 
   async function createList(formData: FormData) {
     "use server";
@@ -62,7 +44,6 @@ export default async function NewListPage() {
 
   return (
     <NewListContent
-      sidebarLists={sidebarLists}
       createListAction={createList}
     />
   );

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { listAccessibleWhere } from "@/lib/permissions";
 import { RecurrenceContent } from "@/components/admin/recurrence-content";
 
 export default async function RecurrenceAdminPage() {
@@ -15,23 +14,6 @@ export default async function RecurrenceAdminPage() {
     orderBy: { createdAt: "desc" },
     take: 20,
   });
-
-  // Sidebar lists
-  const taskLists = await prisma.taskList.findMany({
-    where: listAccessibleWhere(session.user.id),
-    select: {
-      id: true,
-      name: true,
-      _count: { select: { instances: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const sidebarLists = taskLists.map((l: { id: string; name: string; _count: { instances: number } }) => ({
-    id: l.id,
-    name: l.name,
-    taskCount: l._count.instances,
-  }));
 
   // Compute stats
   const totalRuns = logs.length;
@@ -73,7 +55,6 @@ export default async function RecurrenceAdminPage() {
         lastRun: lastRun ? lastRun.toISOString() : null,
         createdToday,
       }}
-      sidebarLists={sidebarLists}
     />
   );
 }

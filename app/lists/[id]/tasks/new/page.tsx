@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateRecurringInstances } from "@/lib/recurrence";
-import { canWriteList, getListAccess, listAccessibleWhere } from "@/lib/permissions";
+import { canWriteList, getListAccess } from "@/lib/permissions";
 import { NewTaskContent } from "@/components/lists/new-task-content";
 
 type PageProps = {
@@ -31,23 +31,6 @@ export default async function NewTaskPage({ params }: PageProps) {
   if (!list) {
     notFound();
   }
-
-  // Sidebar lists
-  const taskLists = await prisma.taskList.findMany({
-    where: listAccessibleWhere(session.user.id),
-    select: {
-      id: true,
-      name: true,
-      _count: { select: { instances: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const sidebarLists = taskLists.map((l) => ({
-    id: l.id,
-    name: l.name,
-    taskCount: l._count.instances,
-  }));
 
   async function createTask(formData: FormData) {
     "use server";
@@ -190,7 +173,6 @@ export default async function NewTaskPage({ params }: PageProps) {
   return (
     <NewTaskContent
       list={{ id: list.id, name: list.name }}
-      sidebarLists={sidebarLists}
       createTaskAction={createTask}
     />
   );

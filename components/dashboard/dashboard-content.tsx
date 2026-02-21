@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   ListTodo,
   Plus,
-  Calendar,
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -19,8 +18,6 @@ import { ProgressRing } from "@/components/ui/progress-ring";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
-import { CircularDate } from "@/components/ui/circular-date";
-import { Separator } from "@/components/ui/separator";
 
 type ListSummary = {
   id: string;
@@ -34,14 +31,7 @@ type ListSummary = {
   role: string;
 };
 
-type SidebarListItem = {
-  id: string;
-  name: string;
-  taskCount: number;
-};
-
 interface DashboardContentProps {
-  userName: string;
   stats: {
     today: number;
     overdue: number;
@@ -49,66 +39,12 @@ interface DashboardContentProps {
     completedThisWeek: number;
   };
   lists: ListSummary[];
-  sidebarLists: SidebarListItem[];
 }
 
-function IconBtn({ children, className }: { children: React.ReactNode; className?: string }) {
+export function DashboardContent({ stats, lists }: DashboardContentProps) {
   return (
-    <button className={`flex items-center justify-center rounded-full border border-border bg-card p-2 transition-colors hover:bg-muted ${className ?? ""}`}>
-      {children}
-    </button>
-  );
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
-}
-
-export function DashboardContent({
-  userName,
-  stats,
-  lists,
-  sidebarLists,
-}: DashboardContentProps) {
-  const greeting = getGreeting();
-  const now = new Date();
-
-  return (
-    <AppShell lists={sidebarLists}>
+    <AppShell>
       <div className="space-y-8">
-        {/* Hero row — matches /design */}
-        <section>
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
-            <div className="flex items-center gap-3">
-              <CircularDate date={now} size="lg" />
-              <div className="hidden sm:block leading-tight">
-                <p className="text-xs text-muted-foreground">
-                  {now.toLocaleDateString("en-US", { weekday: "short" })},
-                </p>
-                <p className="text-xs font-medium">
-                  {now.toLocaleDateString("en-US", { month: "long" })}
-                </p>
-              </div>
-              <Separator orientation="vertical" className="h-8 hidden sm:block" />
-              <PillButton variant="primary" size="sm">Show my Tasks</PillButton>
-              <IconBtn><Calendar className="size-4" /></IconBtn>
-            </div>
-            <div className="rounded-2xl border border-border bg-card px-5 py-4 flex items-center justify-between">
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold">
-                  {greeting}, {userName}
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Here&apos;s your overview for today
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Stat cards */}
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <StatCard

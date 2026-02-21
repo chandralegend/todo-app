@@ -72,13 +72,6 @@ export default async function HomePage() {
     }
   }
 
-  // Build list summaries for sidebar and dashboard
-  const listsForSidebar = taskLists.map((l) => ({
-    id: l.id,
-    name: l.name,
-    taskCount: l._count.instances,
-  }));
-
   const listsForDashboard = taskLists.map((l) => {
     const total = l.instances.length;
     const completed = l.instances.filter((i) => i.status === "COMPLETED").length;
@@ -116,7 +109,6 @@ export default async function HomePage() {
 
   return (
     <DashboardContent
-      userName={session.user.name ?? "there"}
       stats={{
         today: todayCount,
         overdue: overdueCount,
@@ -124,7 +116,6 @@ export default async function HomePage() {
         completedThisWeek: completedThisWeekCount,
       }}
       lists={listsForDashboard}
-      sidebarLists={listsForSidebar}
     />
   );
 }

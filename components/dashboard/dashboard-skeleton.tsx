@@ -3,19 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function DashboardSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Hero row skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-center">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-20 w-20 rounded-full" />
-          <div className="hidden sm:block space-y-1">
-            <Skeleton className="h-3 w-10" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-          <Skeleton className="h-8 w-28 rounded-full" />
-        </div>
-        <Skeleton className="h-20 rounded-2xl" />
-      </div>
-
       {/* Stat cards skeleton */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (

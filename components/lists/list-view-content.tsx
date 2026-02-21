@@ -44,18 +44,11 @@ type ListInfo = {
   progress: number;
 };
 
-type SidebarListItem = {
-  id: string;
-  name: string;
-  taskCount: number;
-};
-
 interface ListViewContentProps {
   list: ListInfo;
   tasks: SerializedTask[];
   allowedStatuses: Record<string, string[]>;
   canWrite: boolean;
-  sidebarLists: SidebarListItem[];
   currentFilters: {
     status: string;
     importance: string;
@@ -102,7 +95,6 @@ export function ListViewContent({
   tasks,
   allowedStatuses,
   canWrite,
-  sidebarLists,
   currentFilters,
   updateTaskStatusAction,
   editTaskAction,
@@ -134,10 +126,7 @@ export function ListViewContent({
     currentFilters.tag !== "";
 
   return (
-    <AppShell
-      lists={sidebarLists}
-      breadcrumbOverrides={{ [list.id]: list.name }}
-    >
+    <AppShell>
       {/* List header */}
       <div className="mb-6">
         <div className="flex items-start justify-between gap-4">
@@ -315,7 +304,7 @@ export function ListViewContent({
               }
             />
           ) : (
-            <div className="space-y-3 max-w-2xl">
+            <div className="space-y-3 max-w-3xl">
               {tasks.map((task) => {
                 const overdue = isOverdue(task.deadlineAt, task.status);
                 const deadline = task.deadlineAt

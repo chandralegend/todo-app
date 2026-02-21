@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canTransitionStatus, getAllowedTaskStatuses } from "@/lib/task-status";
-import { canWriteList, getListAccess, listAccessibleWhere } from "@/lib/permissions";
+import { canWriteList, getListAccess } from "@/lib/permissions";
 import { ListViewContent } from "@/components/lists/list-view-content";
 
 type PageProps = {
@@ -137,23 +137,6 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   const completedCount = allTasks.filter((t) => t.status === "COMPLETED").length;
   const progress =
     totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-
-  // Sidebar lists
-  const taskLists = await prisma.taskList.findMany({
-    where: listAccessibleWhere(session.user.id),
-    select: {
-      id: true,
-      name: true,
-      _count: { select: { instances: true } },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const sidebarLists = taskLists.map((l) => ({
-    id: l.id,
-    name: l.name,
-    taskCount: l._count.instances,
-  }));
 
   const canWrite = canWriteList(access.role);
   const allowedStatuses: Record<string, string[]> = {};
@@ -419,7 +402,6 @@ export default async function ListPage({ params, searchParams }: PageProps) {
       tasks={serializedTasks}
       allowedStatuses={allowedStatuses}
       canWrite={canWrite}
-      sidebarLists={sidebarLists}
       currentFilters={{
         status: statusFilter,
         importance: importanceFilter,

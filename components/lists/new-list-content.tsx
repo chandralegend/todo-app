@@ -10,23 +10,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 
-type SidebarListItem = {
-  id: string;
-  name: string;
-  taskCount: number;
-};
-
 interface NewListContentProps {
-  sidebarLists: SidebarListItem[];
   createListAction: (formData: FormData) => Promise<void>;
 }
 
 export function NewListContent({
-  sidebarLists,
   createListAction,
 }: NewListContentProps) {
   return (
-    <AppShell lists={sidebarLists}>
+    <AppShell>
       <div className="max-w-lg">
         {/* Header */}
         <div className="mb-6">

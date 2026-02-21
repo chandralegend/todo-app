@@ -21,12 +21,6 @@ type SerializedLog = {
   errorMessage: string | null;
 };
 
-type SidebarListItem = {
-  id: string;
-  name: string;
-  taskCount: number;
-};
-
 interface RecurrenceContentProps {
   logs: SerializedLog[];
   stats: {
@@ -34,7 +28,6 @@ interface RecurrenceContentProps {
     lastRun: string | null;
     createdToday: number;
   };
-  sidebarLists: SidebarListItem[];
 }
 
 function formatTimeAgo(dateStr: string): string {
@@ -53,10 +46,9 @@ function formatTimeAgo(dateStr: string): string {
 export function RecurrenceContent({
   logs,
   stats,
-  sidebarLists,
 }: RecurrenceContentProps) {
   return (
-    <AppShell lists={sidebarLists}>
+    <AppShell>
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Recurrence Logs</h1>
