@@ -34,6 +34,11 @@ enum RecurrenceFrequency {
   CUSTOM
 }
 
+enum RecurrenceRunStatus {
+  SUCCESS
+  FAILED
+}
+
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -165,4 +170,21 @@ model TaskInstance {
   @@index([deadlineAt])
   @@index([occurrenceDate])
   @@map("task_instances")
+}
+
+model RecurrenceRunLog {
+  id                String              @id @default(cuid())
+  status            RecurrenceRunStatus
+  templatesScanned  Int                 @default(0) @map("templates_scanned")
+  attempted         Int                 @default(0)
+  generated         Int                 @default(0)
+  duplicateOrExisting Int               @default(0) @map("duplicate_or_existing")
+  windowStart       DateTime            @map("window_start")
+  windowEnd         DateTime            @map("window_end")
+  errorMessage      String?             @map("error_message")
+  createdAt         DateTime            @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("recurrence_run_logs")
 }

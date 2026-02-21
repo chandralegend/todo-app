@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canTransitionStatus, getAllowedTaskStatuses } from "@/lib/task-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -143,6 +144,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
       },
       select: {
         id: true,
+        status: true,
       },
     });
 
@@ -152,6 +154,10 @@ export default async function ListPage({ params, searchParams }: PageProps) {
 
     const nowDate = new Date();
     const status = nextStatus as "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+
+    if (!canTransitionStatus(task.status, status)) {
+      return;
+    }
 
     await prisma.taskInstance.update({
       where: { id: task.id },
@@ -300,7 +306,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
                   <form action={updateTaskStatus} className="flex items-center gap-2 pt-2">
                     <input type="hidden" name="taskId" value={task.id} />
                     <select name="status" defaultValue={task.status} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                      {statusOptions.filter((s) => s !== "ALL").map((option) => (
+                      {getAllowedTaskStatuses(task.status).map((option) => (
                         <option key={option} value={option}>{option.replace("_", " ")}</option>
                       ))}
                     </select>

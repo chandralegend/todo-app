@@ -97,14 +97,19 @@
 ### Phase 3: Polishing and Hardening
 **Description:** Mobile UX improvements, filter/sort polish, validation, production readiness.
 
-**Status:** Not Started
+**Status:** In Progress
 
 **Sub Tasks:**
-- [ ] Improve mobile UX (filter drawer, task cards)
-- [ ] Polish filter and sort controls
-- [ ] Add validation and error messaging
+- [x] Improve mobile UX (filter drawer, task cards)
+- [x] Polish filter and sort controls
+- [x] Add validation and error messaging
 - [ ] Performance review on main task queries
 - [ ] Production readiness checklist
+
+**Notes:**
+- Enforced status transition rules in `lib/task-status.ts` and list update actions
+- Added recurrence run admin visibility page at `/admin/recurrence`
+- Added recurrence run logging persistence via `RecurrenceRunLog`
 
 ---
 

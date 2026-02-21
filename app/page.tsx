@@ -33,6 +33,9 @@ export default async function HomePage() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold">Todo App</h1>
           <div className="flex items-center gap-4">
+            <Link href="/admin/recurrence" className="text-sm text-gray-600 hover:underline">
+              Recurrence
+            </Link>
             <span className="text-sm text-gray-600">{session.user.email}</span>
             <form
               action={async () => {

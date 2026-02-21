@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { generateRecurringInstances } from "@/lib/recurrence";
+import { prisma } from "@/lib/prisma";
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -20,12 +21,39 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await generateRecurringInstances();
+  try {
+    const result = await generateRecurringInstances();
 
-  return NextResponse.json({
-    ok: true,
-    ...result,
-  });
+    await prisma.recurrenceRunLog.create({
+      data: {
+        status: "SUCCESS",
+        templatesScanned: result.templatesScanned,
+        attempted: result.attempted,
+        generated: result.generated,
+        duplicateOrExisting: result.duplicateOrExisting,
+        windowStart: result.windowStart,
+        windowEnd: result.windowEnd,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      ...result,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+
+    await prisma.recurrenceRunLog.create({
+      data: {
+        status: "FAILED",
+        errorMessage: message,
+        windowStart: new Date(),
+        windowEnd: new Date(),
+      },
+    });
+
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
