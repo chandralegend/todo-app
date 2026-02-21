@@ -191,9 +191,9 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Header */}
-      <div className="border-b border-border px-4 py-3 shrink-0">
-        <div className="flex items-center justify-between">
+      {/* Header — height aligned with TopBar */}
+      <div className="border-b border-border px-4 py-3 shrink-0 min-h-14 flex items-center">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2 text-sm font-semibold">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
               <Sparkles className="size-3.5 text-primary" />
@@ -334,9 +334,9 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         </div>
       )}
 
-      {/* Input area */}
-      <div className="border-t border-border px-4 py-3 shrink-0">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      {/* Input area — height aligned with Footer */}
+      <div className="border-t border-border px-4 py-2 shrink-0 min-h-12 flex items-center">
+        <form onSubmit={handleSubmit} className="flex gap-2 w-full">
           <Input
             ref={inputRef}
             name="message"

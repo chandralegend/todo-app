@@ -71,8 +71,8 @@ export function TopBar({ onAiClick, chatOpen }: TopBarProps = {}) {
   }
 
   return (
-    <header className="border-b border-border bg-card">
-      <div className="mx-auto max-w-5xl px-5 py-3 flex items-center gap-4">
+    <header className="border-b border-border bg-card min-h-14">
+      <div className="mx-auto max-w-5xl px-5 py-3 flex items-center gap-4 h-full">
         {/* Left group: hamburger (mobile) + logo (always) + nav (desktop) */}
         <div className="flex items-center gap-3">
           {/* Mobile hamburger */}
