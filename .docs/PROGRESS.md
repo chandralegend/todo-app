@@ -301,6 +301,35 @@
 
 ---
 
+### Phase 5e: Component Polish & Seed Data
+**Description:** Replace all remaining native HTML form elements with shadcn/ui equivalents, replace linear Progress bars with circular ProgressRing, and seed the database with realistic demo data.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Add prisma seed config to package.json
+- [x] Write and run seed script (alice@example.com / password123, 5 lists, 42 tasks)
+- [x] Replace 11 native `<select>` elements with shadcn `Select` (Radix) across 4 files
+- [x] Replace 2 native `<input type="checkbox">` with shadcn `Checkbox` across 2 files
+- [x] Replace linear `Progress` bar with circular `ProgressRing` in dashboard and list view
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **Seed data:** Created `prisma/seed.ts` with user Alice Johnson (alice@example.com / password123) and 5 lists: Work Projects (12 tasks), Personal Errands (8 tasks), Learning & Development (9 tasks), Home Renovation (7 tasks), Fitness Goals (6 tasks). Tasks have varied statuses, importance levels, tags, and deadlines. Added `"prisma": { "seed": "bun run prisma/seed.ts" }` to package.json.
+- **shadcn Select:** Replaced all native `<select>` elements with Radix Select using the `name` prop for native form submission support. Files: `list-view-content.tsx` (sort dropdown), `task-edit-sheet.tsx` (importance + status), `quick-add-dialog.tsx` (importance, status, frequency, weekday), `new-task-content.tsx` (importance, status, frequency, weekday).
+- **shadcn Checkbox:** Replaced native `<input type="checkbox">` with Radix Checkbox in `quick-add-dialog.tsx` and `new-task-content.tsx` (recurring task toggle).
+- **ProgressRing:** Replaced linear `Progress` bar with circular `ProgressRing` (sm size) in `dashboard-content.tsx` (list cards) and `list-view-content.tsx` (list header card). Design page keeps both for reference.
+
+**What is left to do:**
+- Merge `ui-redesign` branch to `main` (pending user approval)
+
+**Notes:**
+- Radix Select supports `name` prop which renders a hidden `<input>` for native form submission — no manual hidden inputs needed
+- Task edit sheet uses `key={task.id}` on form to remount Select components with correct defaultValue when switching between tasks
+- 7 commits on `ui-redesign` branch total (6 prior + 1 new)
+
+---
+
 ## Future Plans
 
 ### Description
@@ -317,7 +346,7 @@ After redesign is merged, the following features could be considered:
    - Natural language task entry
 
 ### Timeline
-- UI/UX Redesign: Completed (Phase 5 + 5b), pending merge
+- UI/UX Redesign: Completed (Phase 5 through 5e), pending merge
 - Shared lists: Post-merge
 - AI features: Future roadmap
 
