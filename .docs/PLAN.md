@@ -22,7 +22,7 @@ Primary goal of PoC is to validate:
 
 ### Architecture decisions
 
-1. Monolithic fullstack app with Next.js
+1. Monolithic fullstack app with Next.js (App Router)
 2. PostgreSQL as the main database
 3. Prisma for schema and migrations
 4. tRPC for typed backend operations
@@ -30,6 +30,13 @@ Primary goal of PoC is to validate:
 6. Vercel deployment target
 7. Scheduled recurrence generation using Vercel Cron (idempotent job)
 8. Future AI features planned via Vercel AI SDK integration points
+
+### Current Boilerplate Stack
+
+- **Next.js:** 16.1.6 (App Router)
+- **UI:** Tailwind CSS 4, Base UI + Radix UI, shadcn patterns
+- **Package Manager:** Bun
+- **Fonts:** Outfit (headings), Geist (body/mono)
 
 ### Important design decisions
 
@@ -469,6 +476,8 @@ Components
 * PostgreSQL database
 * Vercel Cron for scheduled recurrence generation
 * Future AI modules via Vercel AI SDK
+* Tailwind CSS 4 + Base UI/Radix UI for components
+* shadcn patterns for component structure
 
 ## 9.2 Runtime decisions
 
@@ -618,6 +627,17 @@ Future ready
 * server side authorization checks, never UI only
 
 ## 13. UI and UX Plan (PoC)
+
+## Available UI Components
+
+The project has shadcn/ui patterns configured with the following components:
+- button, input, card, badge
+- select, combobox
+- dropdown-menu, alert-dialog
+- textarea, field, label
+- separator, input-group
+
+Tailwind CSS 4 is configured. CSS variables are used for theming.
 
 ## UI goals
 
@@ -925,3 +945,539 @@ The PoC is successful when:
 5. The UI is usable on desktop and mobile browsers.
 6. Data persists in PostgreSQL and survives redeploys.
 7. App can be deployed on Vercel with environment based configuration.
+
+---
+
+# 23. Current Technology Stack (Boilerplate)
+
+This section documents the technology stack currently in place after initial scaffolding.
+
+## Core Framework
+- **Next.js:** 16.1.6 (App Router)
+- **React:** 19.2.3
+- **Package Manager:** Bun
+
+## UI Layer
+- **Tailwind CSS:** v4 (with @tailwindcss/postcss)
+- **Component Library:** Base UI (@base-ui/react) + Radix UI (radix-ui)
+- **shadcn:** v3.8.5 (for component patterns)
+- **Icons:** lucide-react
+- **Animations:** tw-animate-css
+- **Utilities:** class-variance-authority, clsx, tailwind-merge
+
+## Fonts Configured
+- **Outfit:** Sans-serif (primary, via CSS variable --font-sans)
+- **Geist:** Sans and Mono (secondary)
+
+## Current Components Available
+- button, input, card, badge
+- select, combobox
+- dropdown-menu, alert-dialog
+- textarea, field, label
+- separator, input-group
+
+---
+
+# 24. UI Design Plan
+
+## 24.1 Design System
+
+### Color Palette
+Will use CSS variables for theming. Base on default shadcn/ui patterns with potential customizations:
+- Primary: Slate/Neutral based
+- Accent: For CTAs and highlights
+- Status colors:
+  - Draft: Gray
+  - Todo: Blue
+  - In Progress: Amber/Orange
+  - Completed: Green
+  - Failed: Red
+- Importance colors:
+  - Low: Gray
+  - Medium: Blue
+  - High: Orange
+  - Critical: Red
+
+### Typography
+- **Headings:** Outfit (via --font-sans variable)
+- **Body:** Geist Sans
+- **Code/Mono:** Geist Mono
+
+### Spacing
+- Use Tailwind's default spacing scale
+- Mobile-first breakpoints
+- Consistent padding: 4px, 8px, 12px, 16px, 24px, 32px
+
+## 24.2 Screen Layouts
+
+### Login Screen
+- Centered card layout
+- Email/password fields
+- Sign in button
+- Error message display area
+
+### Lists Screen (Dashboard)
+- Header with app title and user menu
+- Grid or list of task lists
+- Create list button
+- Each list card shows: name, task count, quick actions
+- Archive action in dropdown menu
+
+### Task List View (Per List)
+- Header: List name, filter/sort controls
+- Quick filters: Today, Overdue, Active, Completed (pill buttons)
+- Filter drawer (collapsible on mobile): status, importance, tags
+- Sort dropdown: deadline, importance, created date
+- Task cards in vertical list
+- Each task card shows: checkbox, description, deadline, importance badge, tags
+- Quick status change via checkbox or dropdown
+- Floating action button (FAB) for mobile to add task
+- Desktop: Add task button in header
+
+### Task Create/Edit
+- Modal or dedicated page
+- Form fields:
+  - Description (textarea)
+  - Deadline (date picker)
+  - Importance (select dropdown)
+  - Tags (combobox with free text)
+  - Status (select dropdown)
+  - Repeating toggle
+  - Recurrence settings (if repeating): frequency, interval, time, days
+- Save as Draft or Save buttons
+
+### Task Detail Panel
+- Slide-over panel from right
+- Full metadata display
+- Status change controls
+- Edit and delete actions
+
+## 24.3 Mobile Considerations
+
+### Responsive Breakpoints
+- Mobile: < 640px
+- Tablet: 640px - 1024px
+- Desktop: > 1024px
+
+### Mobile Patterns
+- Filter drawer: Full-screen overlay, close button
+- Task cards: Larger touch targets (min 44px)
+- Status changes: Tap to cycle or long-press menu
+- FAB: Bottom-right for quick add
+- Swipe actions on task cards (optional enhancement)
+
+## 24.4 Component Mapping
+
+| Feature | Component(s) to Use |
+|---------|---------------------|
+| Buttons | button.tsx |
+| Inputs | input.tsx, textarea.tsx |
+| Forms | field.tsx, label.tsx |
+| Dropdowns | select.tsx, dropdown-menu.tsx |
+| Tags | badge.tsx, combobox.tsx |
+| Task Cards | card.tsx with custom layout |
+| Dialogs | dialog.tsx for task create/edit |
+| Confirmations | alert-dialog.tsx |
+| Task Detail Panel | sheet.tsx (slide-over) |
+| Mobile Filters | drawer.tsx |
+| Date Picker | calendar.tsx, date-picker.tsx |
+| Quick Status Toggle | checkbox.tsx, toggle.tsx |
+| Quick Filters | toggle-group.tsx |
+| User Avatar | avatar.tsx |
+| Loading States | skeleton.tsx |
+| Notifications | toast.tsx, sonner.tsx |
+| Hints | tooltip.tsx |
+| Desktop Task Table | table.tsx |
+| View Tabs | tabs.tsx |
+| Empty States | empty.tsx |
+| Lists | custom with separator.tsx |
+| Status indicators | badge.tsx with color variants |
+| Progress | progress.tsx |
+| Keyboard shortcuts | kbd.tsx |
+
+## 24.5 Implementation Notes
+
+1. Use CSS variables in globals.css for theming
+2. Build reusable layouts in app/ directory
+3. Create domain-specific components in components/ directory
+4. Keep UI components in components/ui/
+5. Use tRPC for data fetching with React Query patterns
+6. Implement optimistic updates for better UX
+
+---
+
+## 24.6 Additional Components to Install
+
+Based on shadcn/ui library, install these additional components as needed:
+
+| Component | Purpose |
+|-----------|---------|
+| dialog.tsx | Modal dialogs for task create/edit |
+| sheet.tsx | Slide-over panels (task detail) |
+| drawer.tsx | Mobile filter drawer |
+| calendar.tsx | Date picker for deadlines |
+| date-picker.tsx | Combined date picker |
+| checkbox.tsx | Quick status toggle on tasks |
+| toggle.tsx | Quick filter toggles |
+| avatar.tsx | User avatar in header |
+| popover.tsx | Dropdown positioning |
+| progress.tsx | Task completion progress |
+| skeleton.tsx | Loading states |
+| toast.tsx / sonner.tsx | Notifications |
+| tooltip.tsx | Helpful hints |
+| table.tsx | Desktop task list view |
+| tabs.tsx | View switching (list/all/completed) |
+| resizable.tsx | Panel resizing |
+| navigation-menu.tsx | Main navigation |
+| scroll-area.tsx | Scrollable containers |
+| empty.tsx | Empty state displays |
+| hover-card.tsx | Quick preview on hover |
+| kbd.tsx | Keyboard shortcuts display |
+
+---
+
+## 24.7 ASCII Wireframes
+
+### Login Screen
+```
+┌─────────────────────────────────────────┐
+│                                         │
+│              ┌───────────────┐          │
+│              │   📝 Todo App  │          │
+│              └───────────────┘          │
+│                                         │
+│         ┌─────────────────────┐         │
+│         │  Email              │         │
+│         └─────────────────────┘         │
+│         ┌─────────────────────┐         │
+│         │  Password           │         │
+│         └─────────────────────┘         │
+│                                         │
+│         ┌─────────────────────┐         │
+│         │      Sign In         │         │
+│         └─────────────────────┘         │
+│                                         │
+│         ┌─────────────────────┐         │
+│         │  Create Account     │         │
+│         └─────────────────────┘         │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### Lists Screen (Dashboard)
+```
+┌──────────────────────────────────────────────────────────┐
+│  📝 TodoApp                        [Avatar ▼]            │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  My Lists                          [+ New List]          │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │ 📋 Work Tasks                            12 tasks   │ │
+│  │    3 overdue                                    ⋮   │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │ 📋 Personal                          8 tasks     │ │
+│  │    1 overdue                                    ⋮   │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                          │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │ 📋 Shopping                               5 tasks │ │
+│  │                                              ⋮   │ │
+│  └────────────────────────────────────────────────────┘ │
+│                                                          │
+│                      [+ Create List]                     │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Task List View (Main Screen)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ← Work Tasks                          [Filter ▼] [Sort ▼] │
+├─────────────────────────────────────────────────────────────┤
+│  [All] [Today] [Overdue] [Active] [Done]                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ ☐ Review PR #234                                     │ │
+│  │    📅 Tomorrow  ●High  #code  #urgent                │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ ☑ Write documentation                        ✓ DONE │ │
+│  │    📅 Feb 20  ●Medium  #docs                     2d   │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ ☐ Fix login bug                                       │ │
+│  │    📅 Today  ⚠ OVERDUE  ●Critical  #bug   #urgent    │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ ⟳ Weekly team meeting (recurring)           ▶        │ │
+│  │    📅 Every Monday 10:00  ●Medium  #meeting           │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│                                     [+ Add Task]           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Task Create/Edit Modal
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ✕                                                         │
+│                                                             │
+│  Add Task                                          [Save]  │
+│                                                             │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ Description *                                        │ │
+│  │                                                       │ │
+│  │                                                       │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  Deadline                                                 │
+│  ┌──────────────────────┐  ┌──────────────────────┐        │
+│  │ Feb 21, 2026        │  │ 10:00 AM            │        │
+│  └──────────────────────┘  └──────────────────────┘        │
+│                                                             │
+│  Importance                                               │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ ○ Low  ● Medium  ○ High  ○ Critical                 │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  Status                                                    │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ Draft  ● Todo  ○ In Progress  ○ Completed           │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  Tags                                                      │
+│  ┌───────────────────────────────────────────────────────┐ │
+│  │ work [x]  personal [x]  + add tag                   │ │
+│  └───────────────────────────────────────────────────────┘ │
+│                                                             │
+│  ───────────────────────────────────────────────────────── │
+│                                                             │
+│  ⟳  Repeat                                                 │
+│                                                             │
+│  Frequency:  ┌────────────────────────────────┐  ▼        │
+│              │ Daily                          │            │
+│              └────────────────────────────────┘            │
+│                                                             │
+│  Every:     ┌──┐  days                                        │
+│                                                             │
+│  Time:      ┌────────────────────┐                           │
+│              │ 10:00 AM           │                           │
+│              └────────────────────┘                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Mobile Task View
+```
+┌─────────────────────┐
+│  ← Work Tasks    ⋮  │
+├─────────────────────┤
+│ [All][Today][Overdue]│
+│ [Active]  [Done]    │
+├─────────────────────┤
+│                     │
+│ ┌─────────────────┐ │
+│ │ ☐ Task one      │ │
+│ │    📅 Tomorrow  │ │
+│ └─────────────────┘ │
+│                     │
+│ ┌─────────────────┐ │
+│ │ ☐ Task two      │ │
+│ │    📅 Today     │ │
+│ └─────────────────┘ │
+│                     │
+│ ┌─────────────────┐ │
+│ │ ☐ Task three    │ │
+│ │    📅 Overdue   │ │
+│ └─────────────────┘ │
+│                     │
+│              [+]   │
+└─────────────────────┘
+```
+
+### Task Detail Panel (Sheet)
+```
+┌─────────────────────────────────┐
+│  Task Details           ✕      │
+├─────────────────────────────────┤
+│                                 │
+│  Review PR #234                 │
+│                                 │
+│  Status:  [In Progress    ▼]    │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Deadline:  Feb 22, 2026       │
+│              10:00 AM          │
+│                                 │
+│  Importance:  ● High           │
+│                                 │
+│  Tags:  #code  #urgent         │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Created:  Feb 15, 2026        │
+│  Updated:  Feb 20, 2026        │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Recurring:  Daily              │
+│  Next:  Feb 22, 2026           │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  [      Edit Task      ]       │
+│                                 │
+│  [    Delete Task     ]       │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Filter Drawer (Mobile)
+```
+┌─────────────────────────────────┐
+│  ✕  Filters           [Clear]  │
+├─────────────────────────────────┤
+│                                 │
+│  Status                         │
+│  ┌─────────────────────────┐    │
+│  │ □ Draft                 │    │
+│  │ ☑ Todo                  │    │
+│  │ □ In Progress           │    │
+│  │ □ Completed             │    │
+│  │ □ Failed                 │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Importance                     │
+│  ┌─────────────────────────┐    │
+│  │ □ Low                   │    │
+│  │ ☑ Medium               │    │
+│  │ □ High                  │    │
+│  │ □ Critical              │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Tags                           │
+│  ┌─────────────────────────┐    │
+│  │ #work [x]               │    │
+│  │ #personal [x]           │    │
+│  │ #urgent                 │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  ─────────────────────────     │
+│                                 │
+│  Due Date                       │
+│  ┌─────────────────────────┐    │
+│  │ Today                   │    │
+│  │ This Week               │    │
+│  │ Overdue                 │    │
+│  │ Custom Range            │    │
+│  └─────────────────────────┘    │
+│                                 │
+│  ┌─────────────────────────┐    │
+│  │     Apply Filters       │    │
+│  └─────────────────────────┘    │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### Empty States
+```
+Lists Empty:
+┌─────────────────────────────────────────┐
+│                                         │
+│           📋 No lists yet              │
+│                                         │
+│    Create your first list to get        │
+│           started!                     │
+│                                         │
+│         ┌───────────────────┐           │
+│         │  Create List     │           │
+│         └───────────────────┘           │
+│                                         │
+└─────────────────────────────────────────┘
+
+Tasks Empty:
+┌─────────────────────────────────────────┐
+│                                         │
+│         ✓ No tasks yet                 │
+│                                         │
+│      Add a task to get started!        │
+│                                         │
+│         ┌───────────────────┐           │
+│         │   Add Task       │           │
+│         └───────────────────┘           │
+│                                         │
+└─────────────────────────────────────────┘
+
+No Results (Filtered):
+┌─────────────────────────────────────────┐
+│                                         │
+│         🔍 No tasks found              │
+│                                         │
+│    No tasks match your filters.        │
+│       Try adjusting them.              │
+│                                         │
+│         [Clear Filters]                │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### User Menu Dropdown
+```
+┌─────────────────────────┐
+│ 👤 John Doe            │
+│    john@example.com    │
+├─────────────────────────┤
+│ ⚙️  Settings           │
+│ 📊  Statistics         │
+├─────────────────────────┤
+│ 🚪  Sign Out           │
+└─────────────────────────┘
+```
+
+## 24.8 Component State Patterns
+
+### Button States
+- Default: Primary action visible
+- Hover: Slight elevation/shadow
+- Active: Pressed effect
+- Disabled: 50% opacity, no pointer events
+- Loading: Spinner icon, disabled state
+
+### Task Card States
+- Default: White background
+- Hover: Subtle shadow, border highlight
+- Selected: Blue border
+- Overdue: Red left border accent
+- Completed: Muted text, strikethrough optional
+
+### Form Field States
+- Default: Gray border
+- Focus: Blue border, ring
+- Error: Red border, error message below
+- Disabled: Gray background
+
+### Status Badge Colors
+- Draft: Gray (#6b7280)
+- Todo: Blue (#3b82f6)
+- In Progress: Amber (#f59e0b)
+- Completed: Green (#10b981)
+- Failed: Red (#ef4444)
+
+### Importance Badge Colors
+- Low: Gray (#6b7280)
+- Medium: Blue (#3b82f6)
+- High: Orange (#f97316)
+- Critical: Red (#dc2626)
+

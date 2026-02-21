@@ -1,0 +1,148 @@
+# Project Progress
+
+## Phased Plan with Each Phase's Tasks
+
+### Phase 0: Foundation
+**Description:** Set up the core infrastructure - database, authentication, and deployment baseline.
+
+**Status:** Not Started
+
+**Sub Tasks:**
+- [ ] Initialize Prisma with PostgreSQL schema
+- [ ] Set up NextAuth/Auth.js with credentials provider
+- [ ] Create base layout with authentication state
+- [ ] Set up route protection (middleware)
+- [ ] Configure Vercel deployment pipeline
+- [ ] Create local env setup documentation
+
+**Summary of what has been done so far:**
+- Next.js project scaffolded with App Router
+- Tailwind CSS configured
+- shadcn/ui components set up (buttons, inputs, cards, badges, forms, dialogs, dropdowns, selects, comboboxes, etc.)
+- Base fonts configured (Outfit, Geist)
+
+**What is left to do:**
+- All Phase 0 tasks listed above
+
+**Notes:**
+- Current package.json uses bun (bun.lock present)
+- Next.js 16.1.6, React 19.2.3
+- Uses Base UI and Radix UI for components
+- No tRPC installed yet - will need to add
+
+---
+
+### Phase 1: Lists and One Off Tasks
+**Description:** Core task management - TaskList CRUD, TaskTemplate/TaskInstance models, task list UI with filters.
+
+**Status:** Not Started
+
+**Sub Tasks:**
+- [ ] Create TaskList CRUD operations
+- [ ] Implement TaskTemplate and TaskInstance Prisma models
+- [ ] Build task list screen (main productivity view)
+- [ ] Add filtering controls (status, importance, tag, due state)
+- [ ] Add sorting controls (deadline, importance, created date)
+- [ ] Implement quick status change from task list
+- [ ] Build task create/edit form
+- [ ] Ensure responsive UI for mobile
+
+**Notes:**
+- Will need tRPC for API layer
+- UI should support quick capture and quick status updates per PLAN.md
+
+---
+
+### Phase 2: Recurrence
+**Description:** Implement recurring tasks with idempotent instance generation.
+
+**Status:** Not Started
+
+**Sub Tasks:**
+- [ ] Create RecurrenceRule Prisma model
+- [ ] Implement recurrence settings in task create/edit form
+- [ ] Build occurrence computation logic
+- [ ] Create cron-triggered generation endpoint
+- [ ] Implement idempotent instance generation
+- [ ] Add unique constraint to prevent duplicates
+- [ ] Add logs for admin visibility
+
+**Notes:**
+- Use Vercel Cron for scheduling
+- Must be idempotent - repeat runs should not create duplicates
+
+---
+
+### Phase 3: Polishing and Hardening
+**Description:** Mobile UX improvements, filter/sort polish, validation, production readiness.
+
+**Status:** Not Started
+
+**Sub Tasks:**
+- [ ] Improve mobile UX (filter drawer, task cards)
+- [ ] Polish filter and sort controls
+- [ ] Add validation and error messaging
+- [ ] Performance review on main task queries
+- [ ] Production readiness checklist
+
+---
+
+### Phase 4: Future Ready Hooks
+**Description:** Groundwork for shared lists and AI extension points.
+
+**Status:** Not Started
+
+**Sub Tasks:**
+- [ ] Wire TaskListMember model into permission abstraction
+- [ ] Add hidden/minimal shared list support groundwork
+- [ ] Plan and document AI extension points
+
+---
+
+## Future Plans
+
+### Description
+After PoC is complete, the following features could be considered:
+
+1. **Shared Lists** - Allow users to share lists with others (editors, viewers)
+2. **AI Features** (Vercel AI SDK):
+   - Smart task breakdown from long descriptions
+   - Auto tagging suggestions
+   - Due date suggestions from natural language
+   - Weekly review summaries
+   - Prioritization assistance
+   - Recurrence pattern suggestions
+   - Natural language task entry
+
+### Timeline
+- Shared lists: Post-PoC (Phase 4 handles groundwork)
+- AI features: Future roadmap, not in PoC scope
+
+### Dependencies and Requirements
+- TaskListMember model and permission system must be in place
+- Clean service layer around tasks for AI context feeding
+- Authorization checks reusable by AI endpoints
+
+---
+
+## Current Project State
+
+### Technology Stack
+- **Framework:** Next.js 16.1.6 (App Router)
+- **UI:** React 19.2.3, Tailwind CSS 4, Base UI + Radix UI
+- **Package Manager:** Bun
+- **Components Available:** button, input, card, badge, select, combobox, dropdown-menu, alert-dialog, textarea, field, label, separator, input-group
+
+### What's Built
+- Basic Next.js scaffold
+- shadcn/ui component library configured
+- Global styles with CSS variables
+
+### What's Missing
+- Prisma/PostgreSQL
+- NextAuth/Auth.js
+- tRPC
+- Database models
+- Domain logic
+- UI screens (login, lists, tasks)
+- Recurrence system

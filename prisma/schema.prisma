@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum TaskStatus {
+  DRAFT
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum Importance {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String?   @unique
+  passwordHash String    @map("password_hash")
+  displayName  String?   @map("display_name")
+  timezone     String    @default("Asia/Colombo")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  taskLists          TaskList[]
+  taskListMembers    TaskListMember[]
+  taskTemplates      TaskTemplate[]
+  completedInstances TaskInstance[] @relation("CompletedByUser")
+  failedInstances    TaskInstance[] @relation("FailedByUser")
+
+  @@map("users")
+}
+
+model TaskList {
+  id          String    @id @default(cuid())
+  ownerUserId String    @map("owner_user_id")
+  name        String
+  description String?
+  isArchived  Boolean   @default(false) @map("is_archived")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  owner       User              @relation(fields: [ownerUserId], references: [id])
+  members     TaskListMember[]
+  templates   TaskTemplate[]
+  instances   TaskInstance[]
+
+  @@index([ownerUserId])
+  @@index([isArchived])
+  @@map("task_lists")
+}
+
+model TaskListMember {
+  id          String    @id @default(cuid())
+  taskListId  String    @map("task_list_id")
+  userId      String    @map("user_id")
+  role        UserRole  @default(EDITOR)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  taskList    TaskList  @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskListId, userId])
+  @@index([taskListId])
+  @@index([userId])
+  @@map("task_list_members")
+}
+
+model TaskTemplate {
+  id                    String   @id @default(cuid())
+  taskListId            String   @map("task_list_id")
+  createdByUserId       String   @map("created_by_user_id")
+  description           String
+  defaultDeadlineTime  String?  @map("default_deadline_time")
+  importance            Importance @default(MEDIUM)
+  isRecurring           Boolean  @default(false) @map("is_recurring")
+  isActive              Boolean  @default(true) @map("is_active")
+  templateStatus        TaskStatus @default(DRAFT) @map("template_status")
+  tags                  String[] @default([])
+  recurrenceRuleId      String?  @unique @map("recurrence_rule_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  taskList      TaskList       @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+  createdBy     User           @relation(fields: [createdByUserId], references: [id])
+  recurrenceRule RecurrenceRule? @relation(fields: [recurrenceRuleId], references: [id], onDelete: SetNull)
+  instances     TaskInstance[]
+
+  @@index([taskListId])
+  @@index([createdByUserId])
+  @@index([isActive])
+  @@index([isRecurring])
+  @@map("task_templates")
+}
+
+model RecurrenceRule {
+  id              String    @id @default(cuid())
+  frequency       RecurrenceFrequency @default(DAILY)
+  intervalValue   Int       @default(1) @map("interval_value")
+  timeOfDay       String?   @map("time_of_day")
+  startDate       DateTime  @map("start_date") @default(now())
+  endDate         DateTime? @map("end_date")
+  timezone        String    @default("Asia/Colombo")
+  daysOfWeek      Int[]     @default([]) @map("days_of_week")
+  nextGenerationCursor DateTime? @map("next_generation_cursor")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  template        TaskTemplate?
+
+  @@map("recurrence_rules")
+}
+
+model TaskInstance {
+  id                    String    @id @default(cuid())
+  taskTemplateId        String    @map("task_template_id")
+  taskListId            String    @map("task_list_id")
+  occurrenceDate        DateTime  @map("occurrence_date")
+  scheduledFor          DateTime? @map("scheduled_for")
+  deadlineAt            DateTime? @map("deadline_at")
+  descriptionSnapshot   String    @map("description_snapshot")
+  importanceSnapshot    Importance @map("importance_snapshot")
+  tagsSnapshot          String[]  @default([]) @map("tags_snapshot")
+  status                TaskStatus @default(TODO)
+  startedAt             DateTime? @map("started_at")
+  completedAt           DateTime? @map("completed_at")
+  failedAt              DateTime? @map("failed_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  completedByUserId      String?   @map("completed_by_user_id")
+  failedByUserId        String?   @map("failed_by_user_id")
+
+  template              TaskTemplate @relation(fields: [taskTemplateId], references: [id], onDelete: Cascade)
+  taskList              TaskList      @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+  completedBy           User?         @relation("CompletedByUser", fields: [completedByUserId], references: [id])
+  failedBy             User?         @relation("FailedByUser", fields: [failedByUserId], references: [id])
+
+  @@unique([taskTemplateId, occurrenceDate])
+  @@index([taskListId])
+  @@index([status])
+  @@index([deadlineAt])
+  @@index([occurrenceDate])
+  @@map("task_instances")
+}
