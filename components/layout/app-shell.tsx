@@ -20,41 +20,38 @@ export function AppShell({ children, breadcrumbOverrides, action }: AppShellProp
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex min-h-svh flex-col">
-        <TopBar
-          onAiClick={() => setChatOpen((o) => !o)}
-          chatOpen={chatOpen}
-        />
+      <div className="flex min-h-svh">
+        {/* Main content column — full height, scrolls independently */}
+        <div
+          className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
+            chatOpen ? "hidden sm:flex" : "flex"
+          }`}
+        >
+          <TopBar
+            onAiClick={() => setChatOpen((o) => !o)}
+            chatOpen={chatOpen}
+          />
+          <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <AppBreadcrumbs overrides={breadcrumbOverrides} />
+              {action}
+            </div>
+            {children}
+          </main>
+          <Footer />
+        </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main content — hidden on mobile when chat is open, shrinks on sm+ */}
-          <div
-            className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
-              chatOpen ? "hidden sm:flex" : "flex"
-            }`}
-          >
-            <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <AppBreadcrumbs overrides={breadcrumbOverrides} />
-                {action}
-              </div>
-              {children}
-            </main>
-            <Footer />
-          </div>
-
-          {/* Chat panel — full height, full width on mobile, fixed width on sm+ */}
-          <div
-            className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden h-[calc(100svh-57px)] ${
-              chatOpen
-                ? "w-full sm:w-[380px] lg:w-[420px]"
-                : "w-0 border-l-0"
-            }`}
-          >
-            {chatOpen && (
-              <ChatPanel onClose={() => setChatOpen(false)} />
-            )}
-          </div>
+        {/* Chat panel — full viewport height, pushes content */}
+        <div
+          className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden h-svh sticky top-0 ${
+            chatOpen
+              ? "w-full sm:w-[380px] lg:w-[420px]"
+              : "w-0 border-l-0"
+          }`}
+        >
+          {chatOpen && (
+            <ChatPanel onClose={() => setChatOpen(false)} />
+          )}
         </div>
       </div>
 
