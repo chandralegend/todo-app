@@ -43,9 +43,9 @@ export function AppShell({ children, breadcrumbOverrides, action }: AppShellProp
             <Footer />
           </div>
 
-          {/* Chat panel — full width on mobile, fixed width on sm+ */}
+          {/* Chat panel — full height, full width on mobile, fixed width on sm+ */}
           <div
-            className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+            className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden h-[calc(100svh-57px)] ${
               chatOpen
                 ? "w-full sm:w-[380px] lg:w-[420px]"
                 : "w-0 border-l-0"

@@ -190,7 +190,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   /* eslint-enable @typescript-eslint/no-explicit-any */
 
   return (
-    <div className="flex flex-col h-full w-full sm:w-[400px] md:w-[440px]">
+    <div className="flex flex-col h-full w-full">
       {/* Header */}
       <div className="border-b border-border px-4 py-3 shrink-0">
         <div className="flex items-center justify-between">
@@ -335,7 +335,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       )}
 
       {/* Input area */}
-      <div className="border-t border-border p-3 shrink-0">
+      <div className="border-t border-border px-4 py-3 shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             ref={inputRef}
