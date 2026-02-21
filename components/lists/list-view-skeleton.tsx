@@ -3,17 +3,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function ListViewSkeleton() {
   return (
     <div className="space-y-5 animate-in fade-in duration-300">
+      {/* Breadcrumb skeleton */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-3 w-3" />
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-3 w-3" />
+        <Skeleton className="h-4 w-24" />
+      </div>
+
       {/* Header card skeleton */}
       <div className="rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center justify-between gap-4 mb-3">
-          <Skeleton className="h-4 w-24" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-20 rounded-full" />
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Skeleton className="h-6 w-48 mb-1" />
+            <Skeleton className="h-4 w-64" />
           </div>
+          <Skeleton className="h-8 w-28 rounded-full" />
         </div>
-        <Skeleton className="h-6 w-48 mb-1" />
-        <Skeleton className="h-4 w-64" />
         <div className="flex items-center gap-3 mt-4">
           <Skeleton className="h-4 w-16" />
           <Skeleton className="h-4 w-20" />
@@ -41,21 +48,26 @@ export function ListViewSkeleton() {
       {/* Tabs skeleton */}
       <Skeleton className="h-8 w-36 rounded-lg" />
 
-      {/* Task rows skeleton */}
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3">
-            <Skeleton className="h-12 w-12 rounded-full hidden sm:block shrink-0" />
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-4 w-3/5" />
-                <Skeleton className="h-5 w-14 rounded-full" />
-                <Skeleton className="h-5 w-16 rounded-full ml-auto" />
-              </div>
-              <div className="flex items-center gap-2 mt-1.5">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-4 w-10 rounded-full" />
-              </div>
+      {/* Table skeleton */}
+      <div className="rounded-xl border border-border bg-card overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-4 px-4 py-2.5 border-b border-border bg-muted/30">
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-3 w-10 hidden sm:block" />
+          <Skeleton className="h-3 w-16 hidden md:block" />
+          <Skeleton className="h-3 w-8 hidden sm:block" />
+          <Skeleton className="h-3 w-10 hidden lg:block" />
+        </div>
+        {/* Rows */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0">
+            <Skeleton className="h-4 w-2/5" />
+            <Skeleton className="h-5 w-16 rounded-full hidden sm:block" />
+            <Skeleton className="h-5 w-14 rounded-full hidden md:block" />
+            <Skeleton className="h-3 w-16 hidden sm:block" />
+            <div className="hidden lg:flex gap-1">
+              <Skeleton className="h-4 w-10 rounded-full" />
+              <Skeleton className="h-4 w-8 rounded-full" />
             </div>
           </div>
         ))}

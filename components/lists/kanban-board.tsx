@@ -84,7 +84,7 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col min-w-[220px] w-full rounded-xl border border-border bg-muted/30 transition-colors ${
+      className={`flex flex-col w-full rounded-xl border border-border bg-muted/30 transition-colors ${
         isOver ? "bg-coral/5 border-coral/30" : ""
       }`}
     >
@@ -98,23 +98,25 @@ function KanbanColumn({
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="flex-1 p-2 space-y-2 min-h-[100px]">
+      {/* Cards — 3-column grid with min/max height + scroll */}
+      <div className="flex-1 p-2 min-h-[150px] max-h-[500px] overflow-y-auto">
         <SortableContext
           items={tasks.map((t) => t.id)}
           strategy={verticalListSortingStrategy}
         >
-          {tasks.map((task) => (
-            <SortableKanbanCard
-              key={task.id}
-              task={task}
-              onTaskClick={onTaskClick}
-            />
-          ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {tasks.map((task) => (
+              <SortableKanbanCard
+                key={task.id}
+                task={task}
+                onTaskClick={onTaskClick}
+              />
+            ))}
+          </div>
         </SortableContext>
 
         {tasks.length === 0 && (
-          <div className="flex items-center justify-center h-16 text-xs text-muted-foreground/50">
+          <div className="flex items-center justify-center h-20 text-xs text-muted-foreground/50">
             Drop here
           </div>
         )}
@@ -325,7 +327,7 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="space-y-4">
         {activeColumns.map((col) => (
           <KanbanColumn
             key={col.status}

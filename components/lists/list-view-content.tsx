@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   ClipboardList,
@@ -10,7 +9,6 @@ import {
   Search,
   List,
   LayoutGrid,
-  ArrowLeft,
   Clock,
   AlertTriangle,
   CheckCircle2,
@@ -20,7 +18,6 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PillButton } from "@/components/ui/pill-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ImportanceBadge } from "@/components/ui/importance-badge";
-import { CircularDate } from "@/components/ui/circular-date";
 import { Progress } from "@/components/ui/progress";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
@@ -86,7 +83,7 @@ function isOverdue(deadlineAt: string | null, status: string): boolean {
 }
 
 function formatDue(deadlineAt: string | null): string {
-  if (!deadlineAt) return "No deadline";
+  if (!deadlineAt) return "\u2014";
   const d = new Date(deadlineAt);
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
@@ -115,7 +112,7 @@ export function ListViewContent({
   const pathname = usePathname();
   const [editingTask, setEditingTask] = useState<SerializedTask | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   function buildFilterUrl(overrides: Partial<typeof currentFilters>) {
     const merged = { ...currentFilters, ...overrides };
@@ -136,42 +133,28 @@ export function ListViewContent({
     currentFilters.tag !== "";
 
   return (
-    <AppShell>
+    <AppShell breadcrumbOverrides={{ [list.id]: list.name }}>
       <div className="space-y-5">
         {/* ── Header card ── */}
         <div className="rounded-2xl border border-border bg-card p-5">
-          {/* Back link + actions row */}
-          <div className="flex items-center justify-between gap-4 mb-3">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="size-3.5" />
-              Dashboard
-            </Link>
+          {/* Title + add button */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">{list.name}</h1>
+              {list.description && (
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {list.description}
+                </p>
+              )}
+            </div>
             {canWrite && (
-              <div className="flex items-center gap-2">
-                <PillButton size="sm" onClick={() => setQuickAddOpen(true)}>
-                  <Plus className="size-3.5" /> Quick Add
-                </PillButton>
-                <Link href={`/lists/${list.id}/tasks/new`}>
-                  <PillButton size="sm" variant="outline" showArrow={false}>
-                    Full Form
-                  </PillButton>
-                </Link>
-              </div>
+              <PillButton size="sm" onClick={() => setAddOpen(true)}>
+                <Plus className="size-3.5" /> Add Task
+              </PillButton>
             )}
           </div>
 
-          {/* Title + description */}
-          <h1 className="text-xl font-bold tracking-tight">{list.name}</h1>
-          {list.description && (
-            <p className="text-sm text-muted-foreground mt-0.5">
-              {list.description}
-            </p>
-          )}
-
-          {/* Stats row + progress bar */}
+          {/* Stats + progress */}
           <div className="mt-4 flex flex-col gap-3">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -199,9 +182,8 @@ export function ListViewContent({
           </div>
         </div>
 
-        {/* ── Toolbar: due pills + sort + view toggle ── */}
+        {/* ── Toolbar ── */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          {/* Left: due pills */}
           <FilterChipGroup>
             {duePills.map((pill) => (
               <button
@@ -217,7 +199,6 @@ export function ListViewContent({
             ))}
           </FilterChipGroup>
 
-          {/* Right: sort */}
           <div className="flex items-center gap-2">
             <ArrowUpDown className="size-3.5 text-muted-foreground" />
             <select
@@ -234,33 +215,33 @@ export function ListViewContent({
           </div>
         </div>
 
-        {/* Active filters row (only when filters are applied) */}
-        {(hasActiveFilters) && (
-          <FilterChipGroup>
-            {currentFilters.status !== "ALL" && (
-              <FilterChip
-                label="Status:"
-                value={currentFilters.status.replace("_", " ")}
-                active
-                onRemove={() => router.push(buildFilterUrl({ status: "ALL" }))}
-              />
-            )}
-            {currentFilters.importance !== "ALL" && (
-              <FilterChip
-                label="Importance:"
-                value={currentFilters.importance}
-                active
-                onRemove={() => router.push(buildFilterUrl({ importance: "ALL" }))}
-              />
-            )}
-            {currentFilters.tag && (
-              <FilterChip
-                label="Tag:"
-                value={`#${currentFilters.tag}`}
-                active
-                onRemove={() => router.push(buildFilterUrl({ tag: "" }))}
-              />
-            )}
+        {/* Active filters */}
+        <FilterChipGroup>
+          {currentFilters.status !== "ALL" && (
+            <FilterChip
+              label="Status:"
+              value={currentFilters.status.replace("_", " ")}
+              active
+              onRemove={() => router.push(buildFilterUrl({ status: "ALL" }))}
+            />
+          )}
+          {currentFilters.importance !== "ALL" && (
+            <FilterChip
+              label="Importance:"
+              value={currentFilters.importance}
+              active
+              onRemove={() => router.push(buildFilterUrl({ importance: "ALL" }))}
+            />
+          )}
+          {currentFilters.tag && (
+            <FilterChip
+              label="Tag:"
+              value={`#${currentFilters.tag}`}
+              active
+              onRemove={() => router.push(buildFilterUrl({ tag: "" }))}
+            />
+          )}
+          {hasActiveFilters && (
             <button
               onClick={() =>
                 router.push(
@@ -275,29 +256,19 @@ export function ListViewContent({
             >
               Clear all
             </button>
-            <FilterDropdown
-              currentFilters={currentFilters}
-              onApply={(overrides) => router.push(buildFilterUrl(overrides))}
-            />
-          </FilterChipGroup>
-        )}
+          )}
+          <FilterDropdown
+            currentFilters={currentFilters}
+            onApply={(overrides) => router.push(buildFilterUrl(overrides))}
+          />
+        </FilterChipGroup>
 
-        {/* "+ Add Filter" when no active filters */}
-        {!hasActiveFilters && (
-          <FilterChipGroup>
-            <FilterDropdown
-              currentFilters={currentFilters}
-              onApply={(overrides) => router.push(buildFilterUrl(overrides))}
-            />
-          </FilterChipGroup>
-        )}
-
-        {/* ── Task content area ── */}
-        <Tabs defaultValue="list">
+        {/* ── Content tabs ── */}
+        <Tabs defaultValue="table">
           <TabsList className="mb-3">
-            <TabsTrigger value="list">
+            <TabsTrigger value="table">
               <List className="size-3.5" />
-              List
+              Table
             </TabsTrigger>
             <TabsTrigger value="board">
               <LayoutGrid className="size-3.5" />
@@ -305,8 +276,8 @@ export function ListViewContent({
             </TabsTrigger>
           </TabsList>
 
-          {/* List View */}
-          <TabsContent value="list">
+          {/* Table View */}
+          <TabsContent value="table">
             {tasks.length === 0 ? (
               <EmptyState
                 icon={hasActiveFilters ? Search : ClipboardList}
@@ -334,65 +305,86 @@ export function ListViewContent({
                       Clear Filters
                     </Button>
                   ) : canWrite ? (
-                    <PillButton onClick={() => setQuickAddOpen(true)}>
+                    <PillButton onClick={() => setAddOpen(true)}>
                       <Plus className="size-3.5" /> Add Task
                     </PillButton>
                   ) : null
                 }
               />
             ) : (
-              <div className="space-y-2">
-                {tasks.map((task) => {
-                  const overdue = isOverdue(task.deadlineAt, task.status);
-                  const deadline = task.deadlineAt
-                    ? new Date(task.deadlineAt)
-                    : null;
-
-                  return (
-                    <div
-                      key={task.id}
-                      onClick={() => {
-                        setEditingTask(task);
-                        setSheetOpen(true);
-                      }}
-                      className={`group rounded-xl border bg-card px-4 py-3 cursor-pointer transition-colors hover:bg-muted/40 ${
-                        overdue
-                          ? "border-l-[3px] border-l-destructive border-t-border border-r-border border-b-border"
-                          : task.status === "COMPLETED"
-                            ? "border-border opacity-60"
-                            : "border-border"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Date circle (desktop) */}
-                        {deadline && (
-                          <CircularDate
-                            date={deadline}
-                            overdue={overdue}
-                            className="hidden sm:flex shrink-0 mt-0.5"
-                          />
-                        )}
-
-                        {/* Main content */}
-                        <div className="flex-1 min-w-0">
-                          {/* Row 1: title + badges */}
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4
-                              className={`font-medium text-sm leading-snug ${
-                                task.status === "COMPLETED"
-                                  ? "line-through text-muted-foreground"
-                                  : ""
-                              }`}
-                            >
-                              {task.descriptionSnapshot}
-                            </h4>
-                            <ImportanceBadge importance={task.importanceSnapshot} />
-                            <StatusBadge status={task.status} className="ml-auto" />
-                          </div>
-
-                          {/* Row 2: due + tags */}
-                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                            {deadline && (
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                          Task
+                        </th>
+                        <th className="text-left px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden sm:table-cell">
+                          Status
+                        </th>
+                        <th className="text-left px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                          Importance
+                        </th>
+                        <th className="text-left px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden sm:table-cell">
+                          Due
+                        </th>
+                        <th className="text-left px-3 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground hidden lg:table-cell">
+                          Tags
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map((task) => {
+                        const overdue = isOverdue(task.deadlineAt, task.status);
+                        return (
+                          <tr
+                            key={task.id}
+                            onClick={() => {
+                              setEditingTask(task);
+                              setSheetOpen(true);
+                            }}
+                            className={`border-b border-border last:border-0 cursor-pointer transition-colors hover:bg-muted/40 ${
+                              task.status === "COMPLETED" ? "opacity-60" : ""
+                            } ${overdue ? "bg-destructive/[0.03]" : ""}`}
+                          >
+                            {/* Task name */}
+                            <td className="px-4 py-3 max-w-[300px]">
+                              <p
+                                className={`font-medium text-sm leading-snug truncate ${
+                                  task.status === "COMPLETED"
+                                    ? "line-through text-muted-foreground"
+                                    : ""
+                                }`}
+                              >
+                                {task.descriptionSnapshot}
+                              </p>
+                              {/* Mobile: show status + due inline */}
+                              <div className="flex items-center gap-2 mt-1 sm:hidden">
+                                <StatusBadge status={task.status} />
+                                {task.deadlineAt && (
+                                  <span
+                                    className={`text-xs ${
+                                      overdue
+                                        ? "text-destructive font-medium"
+                                        : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    {formatDue(task.deadlineAt)}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            {/* Status */}
+                            <td className="px-3 py-3 hidden sm:table-cell">
+                              <StatusBadge status={task.status} />
+                            </td>
+                            {/* Importance */}
+                            <td className="px-3 py-3 hidden md:table-cell">
+                              <ImportanceBadge importance={task.importanceSnapshot} />
+                            </td>
+                            {/* Due */}
+                            <td className="px-3 py-3 hidden sm:table-cell whitespace-nowrap">
                               <span
                                 className={`inline-flex items-center gap-1 text-xs ${
                                   overdue
@@ -400,30 +392,40 @@ export function ListViewContent({
                                     : "text-muted-foreground"
                                 }`}
                               >
-                                <Clock className="size-3" />
+                                {overdue && <Clock className="size-3" />}
                                 {formatDue(task.deadlineAt)}
                               </span>
-                            )}
-                            {task.tagsSnapshot.map((tag) => (
-                              <button
-                                key={tag}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(buildFilterUrl({ tag }));
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Badge variant="secondary" className="text-[0.65rem]">
-                                  #{tag}
-                                </Badge>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                            </td>
+                            {/* Tags */}
+                            <td className="px-3 py-3 hidden lg:table-cell">
+                              <div className="flex gap-1 flex-wrap">
+                                {task.tagsSnapshot.slice(0, 3).map((tag) => (
+                                  <button
+                                    key={tag}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(buildFilterUrl({ tag }));
+                                    }}
+                                    className="cursor-pointer"
+                                  >
+                                    <Badge variant="secondary" className="text-[0.65rem]">
+                                      #{tag}
+                                    </Badge>
+                                  </button>
+                                ))}
+                                {task.tagsSnapshot.length > 3 && (
+                                  <span className="text-[0.65rem] text-muted-foreground">
+                                    +{task.tagsSnapshot.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -437,7 +439,7 @@ export function ListViewContent({
                 description="Add a task to see it on the board."
                 action={
                   canWrite ? (
-                    <PillButton onClick={() => setQuickAddOpen(true)}>
+                    <PillButton onClick={() => setAddOpen(true)}>
                       <Plus className="size-3.5" /> Add Task
                     </PillButton>
                   ) : null
@@ -457,10 +459,10 @@ export function ListViewContent({
         </Tabs>
       </div>
 
-      {/* Quick Add Dialog */}
+      {/* Add Task Dialog */}
       <QuickAddDialog
-        open={quickAddOpen}
-        onOpenChange={setQuickAddOpen}
+        open={addOpen}
+        onOpenChange={setAddOpen}
         listId={list.id}
         createTaskAction={quickCreateTaskAction}
       />
