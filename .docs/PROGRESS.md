@@ -367,30 +367,100 @@
 
 ---
 
+### Phase 6: AI Features — Chat Sidebar, Agent Tools, Today's Focus
+**Description:** Add AI-powered chat sidebar with conversational agent using Vercel AI SDK and OpenAI, with generative UI tool results and a dedicated Today's Focus page.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Install AI SDK packages (ai@6.0.97, @ai-sdk/react@3.0.99, @ai-sdk/openai@3.0.30, zod@4.3.6)
+- [x] Add DailyFocus model to Prisma schema with migration
+- [x] Create AI system prompt (lib/ai/system-prompt.ts) — date-aware productivity assistant
+- [x] Implement 9 AI agent tools with Prisma queries and access control (lib/ai/tools.ts):
+  - getTaskLists — Get all lists with completion stats
+  - getTasksInList — Get tasks with optional status filter
+  - createTaskList — Create new task list
+  - createTask — Create template + instance
+  - updateTaskStatus — Status transitions with state machine validation
+  - getPendingTasks — All pending/overdue tasks across lists
+  - planMyDay — Client-side interactive tool (no server execute, uses addToolOutput)
+  - addToTodayFocus — Add tasks to daily focus with position ordering
+  - getTodayTasks — Get today's focus tasks with status
+- [x] Create /api/chat streaming endpoint (app/api/chat/route.ts) — streamText with tool loop (stepCountIs(5))
+- [x] Build ChatSidebar component (components/ai/chat-sidebar.tsx):
+  - Right-side Sheet with full-screen mobile
+  - useChat from @ai-sdk/react with sendMessage
+  - Message rendering with parts array (text, tool invocations)
+  - Empty state with suggestion buttons ("Plan my day", "Show my lists", "What's overdue?")
+  - Auto-scroll to bottom, input focus on open
+- [x] Implement generative UI components (components/ai/tool-ui/):
+  - TaskListsResult — List cards with ProgressRing and completion stats
+  - TasksInListResult — Task rows with status dots, importance, deadlines
+  - PlanPreview — Daily focus plan with Accept/Reject buttons (client-side addToolOutput)
+  - CreatedTaskCard — Green confirmation card for new tasks
+  - CreatedListCard — Green confirmation card for new lists
+  - StatusUpdateCard — Blue card with previous->new status arrow
+  - TodayFocusCard — Amber card listing added focus tasks
+  - TodayTasksCard — Focus task list with completion status
+  - ErrorCard — Red error display
+- [x] Build /today page (app/today/page.tsx + components/today/today-content.tsx):
+  - Server component with DailyFocus queries and 3 server actions (toggleFocusComplete, updateTaskStatus, removeFocus)
+  - Client content with checkbox toggle, status badges, remove button
+  - Progress ring showing today's completion
+  - Empty state prompting AI assistant usage
+- [x] Add AI sparkles trigger button to TopBar (next to avatar)
+- [x] Add "Today" nav link to TopBar navigation (desktop + mobile)
+- [x] Integrate ChatSidebar into AppShell layout (state managed by AppShell)
+- [x] Lint + build pass clean (16 routes total)
+
+**Summary of what has been done:**
+- Full AI chat sidebar with streaming responses and generative UI
+- 9 agent tools covering all CRUD operations + daily planning
+- Interactive "Plan My Day" flow with Accept/Reject buttons (client-side tool output)
+- Dedicated /today page for daily focus task management
+- AI button in TopBar sparkles icon, Today in nav links
+- All tool results render as custom React components in the chat
+
+**What is left to do:**
+- Set real OPENAI_API_KEY in .env to enable AI features
+- Test end-to-end with live OpenAI API
+- Consider adding auto-submit for tool call chains (sendAutomaticallyWhen)
+- Consider adding message persistence (currently in-memory)
+
+**Notes:**
+- AI SDK 6.x uses `inputSchema` (not `parameters`) and `sendMessage` (not `append`)
+- Tool parts are typed as `tool-{toolName}` in message parts array
+- planMyDay is a client-side interactive tool — no `execute` on server, UI renders Accept/Reject, uses `addToolOutput`
+- DailyFocus model has unique constraint on [userId, taskInstanceId, date] to prevent duplicates
+- 10 commits on `ui-redesign` branch total (9 prior + 1 Phase 6)
+
+---
+
 ## Future Plans
 
 ### Description
-After redesign is merged, the following features could be considered:
+After Phase 6 is tested and merged, the following features could be considered:
 
 1. **Shared Lists** - Allow users to share lists with others (editors, viewers)
-2. **AI Features** (Vercel AI SDK):
+2. **Advanced AI Features:**
+   - Auto-submit for multi-step tool chains
+   - Message persistence (database-backed chat history)
    - Smart task breakdown from long descriptions
    - Auto tagging suggestions
-   - Due date suggestions from natural language
    - Weekly review summaries
-   - Prioritization assistance
-   - Recurrence pattern suggestions
    - Natural language task entry
+3. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
 
 ### Timeline
-- UI/UX Redesign: Completed (Phase 5 through 5e), pending merge
+- Phase 6 (AI Features): Completed, pending testing with live API key
 - Shared lists: Post-merge
-- AI features: Future roadmap
+- Advanced AI: Future roadmap
 
 ### Dependencies and Requirements
 - TaskListMember model and permission system must be in place (done)
 - Clean service layer around tasks for AI context feeding (done)
 - Authorization checks reusable by AI endpoints (done)
+- OpenAI API key required for AI features
 
 ---
 
@@ -401,13 +471,14 @@ After redesign is merged, the following features could be considered:
 - **UI:** React 19.2.3, Tailwind CSS 4, Base UI + Radix UI, shadcn/ui (radix-nova style)
 - **Package Manager:** Bun
 - **Drag & Drop:** @dnd-kit/core 6.3.1, @dnd-kit/sortable 10.0.0, @dnd-kit/utilities 3.2.2
+- **AI:** ai 6.0.97, @ai-sdk/react 3.0.99, @ai-sdk/openai 3.0.30, zod 4.3.6
 - **Components Available:** alert-dialog, avatar, badge, breadcrumb, button, card, checkbox, collapsible, combobox, dialog, drawer, dropdown-menu, field, hover-card, input, input-group, label, popover, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, table, tabs, textarea, toggle, toggle-group, tooltip (32 total)
 
 ### Custom Layout Components
-- `components/layout/app-shell.tsx` - Main authenticated shell with TopBar + main content + Footer (no sidebar)
-- `components/layout/top-bar.tsx` - Horizontal nav (desktop) + hamburger/Sheet (mobile) + centered search + avatar dropdown
+- `components/layout/app-shell.tsx` - Main authenticated shell with TopBar + ChatSidebar + main content + Footer
+- `components/layout/top-bar.tsx` - Horizontal nav (Dashboard|Lists|Today|Admin) + AI trigger + hamburger/Sheet (mobile) + centered search + avatar dropdown
 - `components/layout/footer.tsx` - Copyright left, version right footer
-- `components/layout/breadcrumbs.tsx` - Route-aware breadcrumb trail (currently unused)
+- `components/layout/breadcrumbs.tsx` - Route-aware breadcrumb trail with overrides
 - `components/layout/app-sidebar.tsx` - (Legacy) Collapsible sidebar, no longer imported
 
 ### Custom UI Primitives
@@ -432,3 +503,18 @@ After redesign is merged, the following features could be considered:
 - `components/lists/new-task-content.tsx` - Full task form with recurrence
 - `components/lists/new-list-content.tsx` - New list form
 - `components/admin/recurrence-content.tsx` - Recurrence logs with stats + table
+
+### AI Components
+- `components/ai/chat-sidebar.tsx` - Right-side Sheet chat panel with useChat, message rendering, tool UI
+- `components/ai/tool-ui/task-list-card.tsx` - TaskListsResult, TasksInListResult generative UI
+- `components/ai/tool-ui/plan-preview.tsx` - PlanPreview with Accept/Reject interactive buttons
+- `components/ai/tool-ui/mutation-result.tsx` - CreatedTaskCard, CreatedListCard, StatusUpdateCard, TodayFocusCard, TodayTasksCard, ErrorCard
+
+### Today Page Components
+- `components/today/today-content.tsx` - Today's Focus page with checkbox, status, remove actions
+
+### AI Backend
+- `lib/ai/system-prompt.ts` - Date-aware productivity assistant system prompt
+- `lib/ai/tools.ts` - 9 AI agent tools with Prisma queries and access control
+- `lib/ai/task-context.ts` - Task context snapshot builder for AI (from Phase 4)
+- `app/api/chat/route.ts` - Streaming chat endpoint with streamText + tool loop
