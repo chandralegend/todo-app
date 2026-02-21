@@ -153,9 +153,18 @@ export function AddToTodayDialog({
               </div>
             ) : (
               filtered.map((task) => (
-                <button
+                <div
                   key={task.id}
+                  role="option"
+                  aria-selected={selected.has(task.id)}
                   onClick={() => toggleTask(task.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      toggleTask(task.id);
+                    }
+                  }}
+                  tabIndex={0}
                   className={`w-full flex items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors cursor-pointer ${
                     selected.has(task.id)
                       ? "bg-primary/5 border border-primary/20"
@@ -191,7 +200,7 @@ export function AddToTodayDialog({
                       )}
                     </div>
                   </div>
-                </button>
+                </div>
               ))
             )}
           </div>
