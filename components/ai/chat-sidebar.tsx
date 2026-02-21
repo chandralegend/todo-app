@@ -18,9 +18,16 @@ import {
   CreatedListCard,
   StatusUpdateCard,
   TodayFocusCard,
-  TodayTasksCard,
 } from "./tool-ui/mutation-result";
 import { PlanPreview } from "./tool-ui/plan-preview";
+
+// Data tools are silent — no UI rendered for these
+const SILENT_TOOLS = new Set([
+  "tool-getTaskLists",
+  "tool-getTasksInList",
+  "tool-getPendingTasks",
+  "tool-getTodayTasks",
+]);
 
 interface ChatSidebarProps {
   open: boolean;
@@ -76,7 +83,12 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
   function renderToolPart(part: any) {
     const { type, state } = part;
 
-    // While tool is streaming input, show a loading indicator
+    // Silent data tools — render nothing
+    if (SILENT_TOOLS.has(type)) {
+      return null;
+    }
+
+    // While tool is streaming input, show a brief indicator for visible tools
     if (state === "input-streaming") {
       return (
         <div className="flex items-center gap-1.5 text-muted-foreground py-1">
@@ -88,18 +100,27 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
 
     // Render based on tool name
     switch (type) {
-      case "tool-getTaskLists":
+      // ─── Display tools (generative UI) ───
+      case "tool-showTasks":
         if (state === "output-available") {
-          return <TaskListsResult data={part.output} />;
+          return (
+            <TasksInListResult
+              data={{
+                list: part.output.title ?? "Tasks",
+                tasks: part.output.tasks,
+              }}
+            />
+          );
         }
         break;
 
-      case "tool-getTasksInList":
+      case "tool-showTaskLists":
         if (state === "output-available") {
-          return <TasksInListResult data={part.output} />;
+          return <TaskListsResult data={part.output.lists} />;
         }
         break;
 
+      // ─── Mutation tools (confirmation cards) ───
       case "tool-createTaskList":
         if (state === "output-available") {
           return <CreatedListCard data={part.output} />;
@@ -118,19 +139,13 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
         }
         break;
 
-      case "tool-getPendingTasks":
+      case "tool-addToTodayFocus":
         if (state === "output-available") {
-          return (
-            <TasksInListResult
-              data={{
-                list: "Pending Tasks",
-                tasks: part.output,
-              }}
-            />
-          );
+          return <TodayFocusCard data={part.output} />;
         }
         break;
 
+      // ─── Interactive tools ───
       case "tool-planMyDay":
         return (
           <PlanPreview
@@ -152,21 +167,9 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
             }}
           />
         );
-
-      case "tool-addToTodayFocus":
-        if (state === "output-available") {
-          return <TodayFocusCard data={part.output} />;
-        }
-        break;
-
-      case "tool-getTodayTasks":
-        if (state === "output-available") {
-          return <TodayTasksCard data={part.output} />;
-        }
-        break;
     }
 
-    // For input-available state (executing), show loading
+    // For input-available state on visible tools, show executing
     if (state === "input-available") {
       return (
         <div className="flex items-center gap-1.5 text-muted-foreground py-1">

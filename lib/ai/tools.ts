@@ -9,9 +9,11 @@ import { canTransitionStatus } from "@/lib/task-status";
  * Each tool validates access and performs Prisma queries.
  */
 export function buildTools(userId: string) {
+  // ─── DATA TOOLS (silent, no UI — for agent reasoning) ───
+
   const getTaskLists = tool({
     description:
-      "Get all task lists the user has access to, with task count and completion stats.",
+      "Fetch all task lists the user has access to with stats. Returns data to you silently — the user does NOT see this output. Use showTaskLists to display lists to the user.",
     inputSchema: z.object({}),
     execute: async () => {
       const lists = await prisma.taskList.findMany({
@@ -41,7 +43,7 @@ export function buildTools(userId: string) {
 
   const getTasksInList = tool({
     description:
-      "Get tasks in a specific list. Optionally filter by status. Returns up to 50 tasks.",
+      "Fetch tasks in a specific list. Optionally filter by status. Returns data to you silently — the user does NOT see this output. Use showTasks to display tasks to the user.",
     inputSchema: z.object({
       listId: z.string().describe("The ID of the task list"),
       status: z
@@ -91,6 +93,8 @@ export function buildTools(userId: string) {
       };
     },
   });
+
+  // ─── MUTATION TOOLS (shown as confirmation cards) ───
 
   const createTaskList = tool({
     description: "Create a new task list for the user.",
@@ -264,7 +268,7 @@ export function buildTools(userId: string) {
 
   const getPendingTasks = tool({
     description:
-      "Get all pending (TODO/IN_PROGRESS) and overdue tasks across all lists the user has access to. Useful for planning the day.",
+      "Fetch all pending (TODO/IN_PROGRESS) and overdue tasks across all lists. Returns data to you silently — the user does NOT see this output. Use showTasks to display tasks to the user.",
     inputSchema: z.object({}),
     execute: async () => {
       const now = new Date();
@@ -301,9 +305,57 @@ export function buildTools(userId: string) {
     },
   });
 
+  // ─── DISPLAY TOOLS (generative UI — user sees these) ───
+
+  const showTasks = tool({
+    description:
+      "Display tasks to the user as visual cards in the chat. Call this when you want the user to SEE tasks. Pass the task data you want to show. After calling this, write a brief follow-up question or statement WITHOUT repeating the task details — the user already sees them in the cards.",
+    inputSchema: z.object({
+      title: z
+        .string()
+        .optional()
+        .describe("Optional heading above the task list, e.g. 'Overdue Tasks'"),
+      tasks: z
+        .array(
+          z.object({
+            id: z.string(),
+            description: z.string(),
+            status: z.enum(["DRAFT", "TODO", "IN_PROGRESS", "COMPLETED", "FAILED"]),
+            importance: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+            deadline: z.string().nullable().optional(),
+            tags: z.array(z.string()).optional(),
+            listName: z.string().optional(),
+          })
+        )
+        .describe("Array of tasks to display"),
+    }),
+    execute: async ({ title, tasks }) => ({ title, tasks }),
+  });
+
+  const showTaskLists = tool({
+    description:
+      "Display task lists to the user as visual cards with progress in the chat. Call this when you want the user to SEE their lists. Pass the list data you want to show. After calling this, write a brief follow-up question or statement WITHOUT repeating the list details — the user already sees them in the cards.",
+    inputSchema: z.object({
+      lists: z
+        .array(
+          z.object({
+            id: z.string(),
+            name: z.string(),
+            description: z.string().nullable().optional(),
+            totalTasks: z.number(),
+            completedTasks: z.number(),
+          })
+        )
+        .describe("Array of task lists to display"),
+    }),
+    execute: async ({ lists }) => ({ lists }),
+  });
+
+  // ─── INTERACTIVE TOOLS (generative UI with user action) ───
+
   const planMyDay = tool({
     description:
-      "Analyze pending/overdue tasks and suggest a daily focus plan. Returns a proposed list of tasks for today. This is a client-side interactive tool — the user will see the plan and can accept or reject it.",
+      "Suggest a daily focus plan. The user will see the plan and can accept or reject it. You MUST call getPendingTasks first to get the data, then call this with your recommended task IDs.",
     inputSchema: z.object({
       selectedTaskIds: z
         .array(z.string())
@@ -378,7 +430,8 @@ export function buildTools(userId: string) {
   });
 
   const getTodayTasks = tool({
-    description: "Get the user's today focus tasks with their status.",
+    description:
+      "Fetch the user's today focus tasks with their status. Returns data to you silently — the user does NOT see this output. Use showTasks to display tasks to the user.",
     inputSchema: z.object({}),
     execute: async () => {
       const today = new Date();
@@ -420,14 +473,20 @@ export function buildTools(userId: string) {
   });
 
   return {
+    // Data tools (silent)
     getTaskLists,
     getTasksInList,
+    getPendingTasks,
+    getTodayTasks,
+    // Display tools (generative UI)
+    showTasks,
+    showTaskLists,
+    // Mutation tools (confirmation UI)
     createTaskList,
     createTask,
     updateTaskStatus,
-    getPendingTasks,
-    planMyDay,
     addToTodayFocus,
-    getTodayTasks,
+    // Interactive tools (user action UI)
+    planMyDay,
   };
 }
