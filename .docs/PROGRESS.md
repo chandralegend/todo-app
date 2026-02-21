@@ -209,14 +209,52 @@
 - **3 new server actions:** `editTask` (update task fields + status), `deleteTask` (delete with permission check), `quickCreateTask` (create template + instance from dialog)
 
 **What is left to do:**
-- Merge `ui-redesign` branch to `main` (pending user approval)
+- Nothing — completed
 
 **Notes:**
-- 9 commits on `ui-redesign` branch total
 - @dnd-kit v6.3.1 (core), v10.0.0 (sortable) — compatible with React 19
 - Kanban drag-and-drop respects status transition rules (DRAFT can only go to TODO, etc.)
 - Quick add creates both TaskTemplate and TaskInstance in one action
 - All 32 shadcn components now actively used in real application pages
+- Build passes clean with no lint errors
+
+---
+
+### Phase 5c: Layout Alignment to /design Spec
+**Description:** Align the entire app layout, navigation, card structures, and spacing to exactly match the `/design` showcase page.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Rewrite TopBar: circle IconBtn hamburger, round `bg-foreground` logo, avatar with coral fallback + name/title visible, search icon, centered `max-w-5xl` layout
+- [x] Rewrite AppShell: remove breadcrumbs bar, `max-w-5xl mx-auto` centering, sidebar defaults collapsed, compact `py-6` content area
+- [x] Add hero row to dashboard: CircularDate lg + weekday/month text + PillButton "Show my Tasks" + greeting card (matches /design hero row)
+- [x] Rewrite dashboard list cards: header + ProgressRing in same row, subtitle "N tasks · N overdue", Progress bar, percentage text, Badge tags, PillButton "Open" (exact match to /design "List Cards" section)
+- [x] Rewrite dashboard "New List" card: circle Plus icon, text-sm heading, text-[0.6rem] subtitle, PillButton outline (exact match to /design)
+- [x] Rewrite task cards: CircularDate + title/ImportanceBadge row + due text + tags inline with StatusBadge ml-auto (exact match to /design "Task Cards" section)
+- [x] Remove bulky status select/Update form from task cards (edit via Sheet slide-over instead)
+- [x] Completed tasks get `opacity-70` + `accent="success"` (matching /design completed card)
+- [x] Update sidebar logo to round `bg-foreground` circle matching TopBar
+- [x] Update footer: single-line centered `text-[0.6rem]` matching /design
+- [x] Update DashboardSkeleton to match new hero + list card layout
+- [x] Update ListViewSkeleton to match new task card layout
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **TopBar:** Complete rewrite from flat SidebarTrigger + inline search to the `/design` page pattern: circle icon buttons (IconBtn component), round logo `bg-foreground`, avatar with coral fallback and user name/title visible, search icon + hidden input on lg screens, all centered at `max-w-5xl`
+- **AppShell:** Removed breadcrumb bar (not in /design), content area now uses `mx-auto max-w-5xl w-full px-5 py-6` for centered compact layout, sidebar defaults to collapsed
+- **Dashboard:** Added hero row with large CircularDate, weekday/month text, separator, PillButton, and greeting card. List cards completely restructured to match /design exactly.
+- **Task cards:** Simplified to match /design pattern — removed checkbox, select dropdown, and Update button from the card surface. Task cards now show CircularDate + description/importance + due text + tags inline with StatusBadge. Clicking a card opens the edit Sheet for full interaction.
+- **Footer:** Simplified to single-line centered text matching /design
+- All loading skeletons updated to match new layouts
+
+**What is left to do:**
+- Merge `ui-redesign` branch to `main` (pending user approval)
+
+**Notes:**
+- 12 commits on `ui-redesign` branch total
+- The app pages now visually match the `/design` showcase page
+- Navigation available via sidebar (hamburger toggle) and avatar dropdown menu
 - Build passes clean with no lint errors
 
 ---
