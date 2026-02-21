@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateRecurringInstances } from "@/lib/recurrence";
+import { canWriteList, getListAccess } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,10 +27,14 @@ export default async function NewTaskPage({ params }: PageProps) {
 
   const { id } = await params;
 
+  const access = await getListAccess(session.user.id, id);
+  if (!access || !canWriteList(access.role)) {
+    notFound();
+  }
+
   const list = await prisma.taskList.findFirst({
     where: {
       id,
-      ownerUserId: session.user.id,
       isArchived: false,
     },
     select: {
@@ -68,17 +73,9 @@ export default async function NewTaskPage({ params }: PageProps) {
       return;
     }
 
-    const listForUser = await prisma.taskList.findFirst({
-      where: {
-        id: listId,
-        ownerUserId: currentSession.user.id,
-        isArchived: false,
-      },
-      select: { id: true },
-    });
-
-    if (!listForUser) {
-      notFound();
+    const listAccess = await getListAccess(currentSession.user.id, listId);
+    if (!listAccess || !canWriteList(listAccess.role)) {
+      return;
     }
 
     const tags = tagsRaw

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
 import { signOut } from "@/lib/auth";
+import { listAccessibleWhere } from "@/lib/permissions";
 
 export default async function HomePage() {
   const session = await auth();
@@ -15,13 +16,15 @@ export default async function HomePage() {
   }
 
   const taskLists = await prisma.taskList.findMany({
-    where: {
-      ownerUserId: session.user.id,
-      isArchived: false,
-    },
+    where: listAccessibleWhere(session.user.id),
     include: {
       _count: {
         select: { templates: true, instances: true },
+      },
+      members: {
+        where: { userId: session.user.id },
+        select: { role: true },
+        take: 1,
       },
     },
     orderBy: { createdAt: "desc" },
@@ -83,6 +86,11 @@ export default async function HomePage() {
                     <Badge variant="secondary">
                       {list._count.templates + list._count.instances} tasks
                     </Badge>
+                    {list.ownerUserId === session.user.id ? (
+                      <Badge variant="outline">OWNER</Badge>
+                    ) : list.members[0] ? (
+                      <Badge variant="outline">{list.members[0].role}</Badge>
+                    ) : null}
                   </div>
                   {list.description && (
                     <p className="text-sm text-gray-500">{list.description}</p>

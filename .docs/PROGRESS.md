@@ -119,12 +119,18 @@
 ### Phase 4: Future Ready Hooks
 **Description:** Groundwork for shared lists and AI extension points.
 
-**Status:** Not Started
+**Status:** Completed
 
 **Sub Tasks:**
-- [ ] Wire TaskListMember model into permission abstraction
-- [ ] Add hidden/minimal shared list support groundwork
-- [ ] Plan and document AI extension points
+- [x] Wire TaskListMember model into permission abstraction
+- [x] Add hidden/minimal shared list support groundwork
+- [x] Plan and document AI extension points
+
+**Notes:**
+- Added centralized list permission abstraction in `lib/permissions.ts` (read/write/manage + shared access query)
+- Updated list dashboard and task routes to use permission checks for owner/member access
+- Added hidden shared-list API groundwork at `app/api/lists/[id]/members/route.ts` (GET members, POST add/update member role)
+- Added AI extension point helper at `lib/ai/task-context.ts` to build permission-safe task context snapshots
 
 ---
 

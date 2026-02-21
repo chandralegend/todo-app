@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canTransitionStatus, getAllowedTaskStatuses } from "@/lib/task-status";
+import { canWriteList, getListAccess } from "@/lib/permissions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,10 +48,14 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     : "created_desc";
   const tagFilter = (filters.tag ?? "").trim().toLowerCase();
 
+  const access = await getListAccess(session.user.id, id);
+  if (!access) {
+    notFound();
+  }
+
   const list = await prisma.taskList.findFirst({
     where: {
       id,
-      ownerUserId: session.user.id,
       isArchived: false,
     },
     select: {
@@ -134,13 +139,15 @@ export default async function ListPage({ params, searchParams }: PageProps) {
       return;
     }
 
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) {
+      return;
+    }
+
     const task = await prisma.taskInstance.findFirst({
       where: {
         id: taskId,
-        taskList: {
-          ownerUserId: currentSession.user.id,
-          isArchived: false,
-        },
+        taskListId: id,
       },
       select: {
         id: true,
@@ -217,9 +224,11 @@ export default async function ListPage({ params, searchParams }: PageProps) {
         </div>
 
         <div className="mb-6">
-          <Button asChild>
-            <Link href={`/lists/${list.id}/tasks/new`}>+ Add Task</Link>
-          </Button>
+          {canWriteList(access.role) ? (
+            <Button asChild>
+              <Link href={`/lists/${list.id}/tasks/new`}>+ Add Task</Link>
+            </Button>
+          ) : null}
         </div>
 
         <Card className="mb-6">
@@ -272,9 +281,11 @@ export default async function ListPage({ params, searchParams }: PageProps) {
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-500 mb-4">No tasks found for this filter.</p>
-              <Button asChild>
-                <Link href={`/lists/${list.id}/tasks/new`}>Add your first task</Link>
-              </Button>
+              {canWriteList(access.role) ? (
+                <Button asChild>
+                  <Link href={`/lists/${list.id}/tasks/new`}>Add your first task</Link>
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
         ) : (
@@ -303,15 +314,17 @@ export default async function ListPage({ params, searchParams }: PageProps) {
                       ))}
                     </div>
                   ) : null}
-                  <form action={updateTaskStatus} className="flex items-center gap-2 pt-2">
-                    <input type="hidden" name="taskId" value={task.id} />
-                    <select name="status" defaultValue={task.status} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                      {getAllowedTaskStatuses(task.status).map((option) => (
-                        <option key={option} value={option}>{option.replace("_", " ")}</option>
-                      ))}
-                    </select>
-                    <Button type="submit" size="sm" variant="outline">Update</Button>
-                  </form>
+                  {canWriteList(access.role) ? (
+                    <form action={updateTaskStatus} className="flex items-center gap-2 pt-2">
+                      <input type="hidden" name="taskId" value={task.id} />
+                      <select name="status" defaultValue={task.status} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
+                        {getAllowedTaskStatuses(task.status).map((option) => (
+                          <option key={option} value={option}>{option.replace("_", " ")}</option>
+                        ))}
+                      </select>
+                      <Button type="submit" size="sm" variant="outline">Update</Button>
+                    </form>
+                  ) : null}
                 </CardHeader>
               </Card>
             ))}
