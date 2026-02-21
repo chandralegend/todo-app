@@ -9,13 +9,10 @@ export function CursorEffect() {
 
     let effect: { destroy: () => void } | null = null;
 
-    import("cursor-effects").then(({ clockCursor }) => {
-      effect = clockCursor({
-        dateColor: "#E07A5F",
-        faceColor: "#78716c",
-        secondsColor: "#E07A5F",
-        minutesColor: "#57534e",
-        hoursColor: "#292524",
+    import("cursor-effects").then(({ trailingCursor }) => {
+      effect = trailingCursor({
+        particles: 15,
+        rate: 0.4,
       });
     });
 
