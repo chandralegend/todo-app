@@ -343,6 +343,68 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     revalidatePath(`/lists/${id}`);
   }
 
+  async function quickCreateTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const description = String(formData.get("description") ?? "").trim();
+    if (!description) return;
+
+    const deadlineAtStr = String(formData.get("deadlineAt") ?? "").trim();
+    const importance = String(formData.get("importance") ?? "MEDIUM") as
+      | "LOW"
+      | "MEDIUM"
+      | "HIGH"
+      | "CRITICAL";
+    const status = String(formData.get("status") ?? "TODO") as
+      | "DRAFT"
+      | "TODO"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "FAILED";
+    const tagsStr = String(formData.get("tags") ?? "").trim();
+    const tags = tagsStr
+      ? tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    const nowDate = new Date();
+
+    // Create template
+    const template = await prisma.taskTemplate.create({
+      data: {
+        taskListId: id,
+        createdByUserId: currentSession.user.id,
+        description,
+        importance,
+        templateStatus: status,
+        tags,
+      },
+    });
+
+    // Create instance
+    await prisma.taskInstance.create({
+      data: {
+        taskTemplateId: template.id,
+        taskListId: id,
+        occurrenceDate: nowDate,
+        deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
+        descriptionSnapshot: description,
+        importanceSnapshot: importance,
+        tagsSnapshot: tags,
+        status,
+      },
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
   return (
     <ListViewContent
       list={{
@@ -368,6 +430,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
       updateTaskStatusAction={updateTaskStatus}
       editTaskAction={editTask}
       deleteTaskAction={deleteTask}
+      quickCreateTaskAction={quickCreateTask}
     />
   );
 }

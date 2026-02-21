@@ -18,8 +18,10 @@ import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TaskEditSheet } from "@/components/lists/task-edit-sheet";
 import { KanbanBoard } from "@/components/lists/kanban-board";
+import { QuickAddDialog } from "@/components/lists/quick-add-dialog";
 
 type TaskStatus = "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
 type Importance = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
@@ -66,6 +68,7 @@ interface ListViewContentProps {
   updateTaskStatusAction: (formData: FormData) => Promise<void>;
   editTaskAction: (formData: FormData) => Promise<void>;
   deleteTaskAction: (formData: FormData) => Promise<void>;
+  quickCreateTaskAction: (formData: FormData) => Promise<void>;
 }
 
 const duePills = [
@@ -106,11 +109,13 @@ export function ListViewContent({
   updateTaskStatusAction,
   editTaskAction,
   deleteTaskAction,
+  quickCreateTaskAction,
 }: ListViewContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [editingTask, setEditingTask] = useState<SerializedTask | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
 
   function buildFilterUrl(overrides: Partial<typeof currentFilters>) {
     const merged = { ...currentFilters, ...overrides };
@@ -147,11 +152,16 @@ export function ListViewContent({
             )}
           </div>
           {canWrite && (
-            <Link href={`/lists/${list.id}/tasks/new`}>
-              <PillButton size="sm">
-                <Plus className="size-3.5" /> New Task
+            <div className="flex items-center gap-2">
+              <PillButton size="sm" onClick={() => setQuickAddOpen(true)}>
+                <Plus className="size-3.5" /> Quick Add
               </PillButton>
-            </Link>
+              <Link href={`/lists/${list.id}/tasks/new`}>
+                <PillButton size="sm" variant="outline" showArrow={false}>
+                  Full Form
+                </PillButton>
+              </Link>
+            </div>
           )}
         </div>
 
@@ -325,7 +335,44 @@ export function ListViewContent({
                       setSheetOpen(true);
                     }}
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3">
+                      {/* Quick complete checkbox */}
+                      {canWrite && (
+                        <div
+                          className="pt-0.5 shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <Checkbox
+                                  checked={task.status === "COMPLETED"}
+                                  onCheckedChange={(checked) => {
+                                    const formData = new FormData();
+                                    formData.set("taskId", task.id);
+                                    formData.set(
+                                      "status",
+                                      checked ? "COMPLETED" : "TODO"
+                                    );
+                                    updateTaskStatusAction(formData);
+                                  }}
+                                  disabled={
+                                    task.status !== "COMPLETED" &&
+                                    task.status !== "TODO" &&
+                                    task.status !== "IN_PROGRESS"
+                                  }
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {task.status === "COMPLETED"
+                                ? "Mark as To Do"
+                                : "Mark as Complete"}
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      )}
+
                       {/* Circular date */}
                       {deadline && (
                         <CircularDate
@@ -468,6 +515,14 @@ export function ListViewContent({
           )}
         </TabsContent>
       </Tabs>
+      {/* Quick Add Dialog */}
+      <QuickAddDialog
+        open={quickAddOpen}
+        onOpenChange={setQuickAddOpen}
+        listId={list.id}
+        createTaskAction={quickCreateTaskAction}
+      />
+
       {/* Task Edit Sheet */}
       <TaskEditSheet
         task={editingTask}
