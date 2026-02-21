@@ -104,12 +104,14 @@
 - [x] Polish filter and sort controls
 - [x] Add validation and error messaging
 - [ ] Performance review on main task queries
-- [ ] Production readiness checklist
+- [x] Production readiness checklist
 
 **Notes:**
 - Enforced status transition rules in `lib/task-status.ts` and list update actions
 - Added recurrence run admin visibility page at `/admin/recurrence`
 - Added recurrence run logging persistence via `RecurrenceRunLog`
+- Added health endpoint at `/api/health` for deployment monitoring
+- Added `vercel.json` cron schedule for recurrence endpoint
 
 ---
 
