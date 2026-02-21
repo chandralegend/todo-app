@@ -150,28 +150,8 @@
 - 32 shadcn components installed total
 - 5 layout components: AppShell, AppSidebar, TopBar, Footer, AppBreadcrumbs
 - 9+ custom UI primitives: BentoCard, BentoGrid, PillButton, FilterChip, CircularDate, ProgressRing, StatusBadge, ImportanceBadge, StatCard, EmptyState
-- All 7 app pages fully rewritten with new design system:
-  - **Dashboard** (`app/page.tsx`): Greeting, 4 stat cards (today/overdue/in-progress/completed), bento grid of list cards with progress rings and tags, "New List" card
-  - **Login** (`app/login/page.tsx`): Centered card with brand header, coral pill submit button, Suspense boundary for searchParams
-  - **Register** (`app/register/page.tsx`): Matching centered card style with all form fields
-  - **Task List View** (`app/lists/[id]/page.tsx`): Header with progress ring, due-filter pills, active filter chips with dismiss, inline "Add Filter" dropdown, sort control, task cards with circular dates, status badges, importance badges, clickable tags
-  - **New Task** (`app/lists/[id]/tasks/new/page.tsx`): Clean form in BentoCard, importance/status selects, tags, recurrence section with all fields
-  - **New List** (`app/lists/new/page.tsx`): Circle icon header, simple name/description form
-  - **Admin Recurrence** (`app/admin/recurrence/page.tsx`): 3 stat cards + data table with status indicators, React.Fragment for error rows
+- All 7 app pages fully rewritten with new design system
 - Extracted client components: DashboardContent, ListViewContent, NewTaskContent, NewListContent, RecurrenceContent
-- Mobile responsive fixes:
-  - Responsive padding (px-4 mobile, px-6 desktop) in AppShell, cards
-  - Stat grid collapses to 1 column on mobile
-  - Filter pills and controls have adequate touch targets (min 36-44px)
-  - Filter chip dismiss buttons use X icon with proper padding
-  - Tags have increased tap area
-  - Sort/status selects scale up on mobile
-  - Dropdown max-width prevents viewport overflow
-  - Stats row wraps on narrow viewports
-
-**What is left to do:**
-- Merge `ui-redesign` branch to `main` (pending user approval)
-- Optional: Additional polish (animations, loading skeletons, empty state illustrations)
 
 **Notes:**
 - All pages pass lint and build clean
@@ -179,7 +159,65 @@
 - oklch colors don't work in this Tailwind v4 + shadcn setup -- all colors converted to hex
 - Sidebar uses shadcn SidebarProvider with cookie-persisted state
 - Mobile sidebar renders as Sheet overlay
-- 6 commits on ui-redesign branch
+
+---
+
+### Phase 5b: Component Integration & Interactive Features
+**Description:** Fix card compactness, use all design system components in real pages, add task edit/delete, kanban board drag-and-drop, and loading skeletons.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Fix card compactness to match `/design` page (p-4, gap-3, text-2xl stats, text-sm headings)
+- [x] Replace inline filter chip HTML with actual `FilterChip`/`FilterChipGroup` components
+- [x] Replace inline tag buttons with `Badge variant="secondary"` components
+- [x] Add `Progress` (linear) bar in dashboard list cards alongside `ProgressRing`
+- [x] Use `Tooltip` component on action buttons (status update, checkbox)
+- [x] Add `TaskEditSheet` — Sheet slide-over for editing task details (description, deadline, importance, status, tags)
+- [x] Add task delete with `AlertDialog` confirmation (new server action)
+- [x] Install `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` for drag-and-drop
+- [x] Add `Tabs` component for List/Board view toggle on task list page
+- [x] Build `KanbanBoard` component with drag-and-drop across status columns
+- [x] Add `CircularDate` xs size for compact kanban cards
+- [x] Add `Checkbox` for one-click task completion in list view cards
+- [x] Add `QuickAddDialog` using `Dialog` component for rapid task creation
+- [x] Split "New Task" button into "Quick Add" (dialog) + "Full Form" (page link)
+- [x] Add `DashboardSkeleton` and `ListViewSkeleton` loading components
+- [x] Add `loading.tsx` files for dashboard and list pages
+- [x] Add `quickCreateTask` server action for dialog-based task creation
+- [x] Add `editTask` and `deleteTask` server actions in list page
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **Card compactness:** BentoCard default padding reduced from `p-4 sm:p-6` to `p-4`, BentoGrid gap from `gap-5` to `gap-3`, StatCard value from `text-3xl` to `text-2xl`, AppShell main content padding compacted
+- **Component usage:** All 32 shadcn components are now actively used in real pages:
+  - `FilterChip`/`FilterChipGroup` replaces inline filter chip spans
+  - `Badge variant="secondary"` replaces inline tag buttons
+  - `Progress` linear bar added to dashboard list cards
+  - `Tooltip` on status update buttons and checkboxes
+  - `Sheet` for task edit slide-over panel
+  - `AlertDialog` for delete task confirmation
+  - `Dialog` for quick task creation
+  - `Tabs` for List/Board view toggle
+  - `Checkbox` for one-click task completion
+  - `Skeleton` for loading states (dashboard + list pages)
+- **Task edit:** Click any task card to open a Sheet slide-over with full edit form (description, deadline, importance, status, tags), save/cancel buttons, and delete with AlertDialog confirmation
+- **Task delete:** AlertDialog confirmation dialog, server action deletes TaskInstance
+- **Kanban board:** 5 status columns (DRAFT, TODO, IN_PROGRESS, COMPLETED, FAILED), drag-and-drop using @dnd-kit, respects status transition rules, compact task cards with drag handles, click to edit
+- **Quick add:** Dialog-based task creation with description, deadline, importance, and tags fields. Creates both TaskTemplate and TaskInstance.
+- **Loading states:** Skeleton components for dashboard (stat cards + list cards) and list view (header + filters + task cards), integrated via Next.js `loading.tsx` convention
+- **3 new server actions:** `editTask` (update task fields + status), `deleteTask` (delete with permission check), `quickCreateTask` (create template + instance from dialog)
+
+**What is left to do:**
+- Merge `ui-redesign` branch to `main` (pending user approval)
+
+**Notes:**
+- 9 commits on `ui-redesign` branch total
+- @dnd-kit v6.3.1 (core), v10.0.0 (sortable) — compatible with React 19
+- Kanban drag-and-drop respects status transition rules (DRAFT can only go to TODO, etc.)
+- Quick add creates both TaskTemplate and TaskInstance in one action
+- All 32 shadcn components now actively used in real application pages
+- Build passes clean with no lint errors
 
 ---
 
@@ -199,7 +237,7 @@ After redesign is merged, the following features could be considered:
    - Natural language task entry
 
 ### Timeline
-- UI/UX Redesign: Completed (Phase 5), pending merge
+- UI/UX Redesign: Completed (Phase 5 + 5b), pending merge
 - Shared lists: Post-merge
 - AI features: Future roadmap
 
@@ -216,6 +254,7 @@ After redesign is merged, the following features could be considered:
 - **Framework:** Next.js 16.1.6 (App Router)
 - **UI:** React 19.2.3, Tailwind CSS 4, Base UI + Radix UI, shadcn/ui (radix-nova style)
 - **Package Manager:** Bun
+- **Drag & Drop:** @dnd-kit/core 6.3.1, @dnd-kit/sortable 10.0.0, @dnd-kit/utilities 3.2.2
 - **Components Available:** alert-dialog, avatar, badge, breadcrumb, button, card, checkbox, collapsible, combobox, dialog, drawer, dropdown-menu, field, hover-card, input, input-group, label, popover, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, table, tabs, textarea, toggle, toggle-group, tooltip (32 total)
 
 ### Custom Layout Components
@@ -228,8 +267,8 @@ After redesign is merged, the following features could be considered:
 ### Custom UI Primitives
 - `components/ui/bento-card.tsx` - Ring-bordered card with hover effect for bento grids
 - `components/ui/pill-button.tsx` - Rounded-full button with arrow icon
-- `components/ui/filter-chip.tsx` - Dismissible filter tag
-- `components/ui/circular-date.tsx` - Round date display (day + month)
+- `components/ui/filter-chip.tsx` - Dismissible filter tag (FilterChip + FilterChipGroup)
+- `components/ui/circular-date.tsx` - Round date display (day + month) — xs/sm/md/lg sizes
 - `components/ui/progress-ring.tsx` - Circular SVG progress indicator
 - `components/ui/status-badge.tsx` - Color-coded task status badge
 - `components/ui/importance-badge.tsx` - Color-coded importance indicator
@@ -238,7 +277,12 @@ After redesign is merged, the following features could be considered:
 
 ### Page Components (extracted client components)
 - `components/dashboard/dashboard-content.tsx` - Dashboard bento grid with stats and list cards
-- `components/lists/list-view-content.tsx` - Task list view with filters, pills, task cards
-- `components/lists/new-task-content.tsx` - New task form with recurrence
+- `components/dashboard/dashboard-skeleton.tsx` - Loading skeleton for dashboard
+- `components/lists/list-view-content.tsx` - Task list view with filters, tabs (list/board), task cards, checkbox toggle
+- `components/lists/list-view-skeleton.tsx` - Loading skeleton for list view
+- `components/lists/task-edit-sheet.tsx` - Sheet slide-over for task editing with delete confirmation
+- `components/lists/kanban-board.tsx` - Drag-and-drop kanban board with status columns
+- `components/lists/quick-add-dialog.tsx` - Dialog for rapid task creation
+- `components/lists/new-task-content.tsx` - Full task form with recurrence
 - `components/lists/new-list-content.tsx` - New list form
 - `components/admin/recurrence-content.tsx` - Recurrence logs with stats + table
