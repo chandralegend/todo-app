@@ -11,6 +11,8 @@ import { Field, FieldLabel } from "@/components/ui/field";
 
 export default function LoginPage() {
   const router = useRouter();
+  const callbackUrl = "/";
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,10 +28,14 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl,
       });
 
       if (result?.error) {
         setError("Invalid email or password");
+      } else if (result?.url) {
+        router.push(result.url);
+        router.refresh();
       } else {
         router.push("/");
         router.refresh();
