@@ -70,16 +70,22 @@
 ### Phase 2: Recurrence
 **Description:** Implement recurring tasks with idempotent instance generation.
 
-**Status:** Not Started
+**Status:** In Progress
 
 **Sub Tasks:**
-- [ ] Create RecurrenceRule Prisma model
+- [x] Create RecurrenceRule Prisma model
 - [ ] Implement recurrence settings in task create/edit form
-- [ ] Build occurrence computation logic
-- [ ] Create cron-triggered generation endpoint
-- [ ] Implement idempotent instance generation
+- [x] Build occurrence computation logic
+- [x] Create cron-triggered generation endpoint
+- [x] Implement idempotent instance generation
 - [ ] Add unique constraint to prevent duplicates
-- [ ] Add logs for admin visibility
+- [x] Add logs for admin visibility
+
+**Notes:**
+- Added recurrence engine at `lib/recurrence.ts` with daily/weekly/monthly/custom matching
+- Added cron endpoint `GET/POST /api/cron/recurrence` with secret-token auth support
+- Generation window defaults to backfill 2 days and forward 14 days
+- Duplicate prevention uses `createMany({ skipDuplicates: true })` on top of unique constraint
 
 **Notes:**
 - Use Vercel Cron for scheduling

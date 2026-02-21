@@ -61,7 +61,20 @@ AUTH_SECRET="your-secret-key-change-in-production"
 # NextAuth
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-nextauth-secret-change-in-production"
+
+# Cron protection (recommended)
+CRON_SECRET="your-local-cron-secret"
 ```
+
+## Recurrence Job (Manual Trigger)
+
+The recurrence generator can be triggered locally:
+
+```bash
+curl -H "x-cron-secret: your-local-cron-secret" http://localhost:3000/api/cron/recurrence
+```
+
+If `CRON_SECRET` is not set, the endpoint is allowed only in development mode.
 
 ## Docker Commands
 
