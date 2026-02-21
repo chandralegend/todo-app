@@ -205,7 +205,7 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
         className="w-full sm:max-w-md p-0 flex flex-col"
         showCloseButton={true}
       >
-        <SheetHeader className="border-b border-border px-4 py-3 shrink-0">
+        <SheetHeader className="border-b border-border px-4 pr-12 py-3 shrink-0">
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-sm">
               <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
