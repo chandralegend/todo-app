@@ -1,18 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
-  const callbackUrl = "/";
-  
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered") === "true";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +36,7 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
-        callbackUrl,
+        callbackUrl: "/",
       });
 
       if (result?.error) {
@@ -48,19 +56,41 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Todo App</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm">
+        {/* Brand */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+            T
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">TodoApp</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your tasks, simplified
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold">Welcome back</h2>
+            <p className="text-sm text-muted-foreground">
+              Sign in to your account
+            </p>
+          </div>
+
+          {registered && (
+            <div className="mb-4 rounded-xl bg-status-completed/10 px-4 py-3 text-sm text-status-completed">
+              Account created successfully. Please sign in.
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
-                {error}
-              </div>
-            )}
             <Field>
               <FieldLabel>Email</FieldLabel>
               <Input
@@ -69,6 +99,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
+                className="h-10"
               />
             </Field>
             <Field>
@@ -77,22 +108,42 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 required
+                className="h-10"
               />
             </Field>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
-            </Button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="size-4" />
+                </>
+              )}
+            </button>
           </form>
-          <div className="mt-4 text-center text-sm">
+
+          <div className="mt-5 text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link
+              href="/register"
+              className="text-primary font-medium hover:underline"
+            >
               Create one
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

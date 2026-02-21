@@ -1,13 +1,10 @@
-import Link from "next/link";
-import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canTransitionStatus, getAllowedTaskStatuses } from "@/lib/task-status";
 import { canWriteList, getListAccess } from "@/lib/permissions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListViewContent } from "@/components/lists/list-view-content";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -20,10 +17,16 @@ type PageProps = {
   }>;
 };
 
-const statusOptions = ["ALL", "DRAFT", "TODO", "IN_PROGRESS", "COMPLETED", "FAILED"] as const;
-const importanceOptions = ["ALL", "LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
+const statusOptions = [
+  "ALL", "DRAFT", "TODO", "IN_PROGRESS", "COMPLETED", "FAILED",
+] as const;
+const importanceOptions = [
+  "ALL", "LOW", "MEDIUM", "HIGH", "CRITICAL",
+] as const;
 const dueOptions = ["all", "today", "overdue", "upcoming"] as const;
-const sortOptions = ["created_desc", "deadline_asc", "importance_desc"] as const;
+const sortOptions = [
+  "created_desc", "deadline_asc", "importance_desc",
+] as const;
 
 export default async function ListPage({ params, searchParams }: PageProps) {
   const session = await auth();
@@ -34,16 +37,24 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const filters = await searchParams;
 
-  const statusFilter = statusOptions.includes((filters.status ?? "ALL") as (typeof statusOptions)[number])
+  const statusFilter = statusOptions.includes(
+    (filters.status ?? "ALL") as (typeof statusOptions)[number]
+  )
     ? (filters.status ?? "ALL")
     : "ALL";
-  const importanceFilter = importanceOptions.includes((filters.importance ?? "ALL") as (typeof importanceOptions)[number])
+  const importanceFilter = importanceOptions.includes(
+    (filters.importance ?? "ALL") as (typeof importanceOptions)[number]
+  )
     ? (filters.importance ?? "ALL")
     : "ALL";
-  const dueFilter = dueOptions.includes((filters.due ?? "all") as (typeof dueOptions)[number])
+  const dueFilter = dueOptions.includes(
+    (filters.due ?? "all") as (typeof dueOptions)[number]
+  )
     ? (filters.due ?? "all")
     : "all";
-  const sortFilter = sortOptions.includes((filters.sort ?? "created_desc") as (typeof sortOptions)[number])
+  const sortFilter = sortOptions.includes(
+    (filters.sort ?? "created_desc") as (typeof sortOptions)[number]
+  )
     ? (filters.sort ?? "created_desc")
     : "created_desc";
   const tagFilter = (filters.tag ?? "").trim().toLowerCase();
@@ -54,59 +65,41 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   }
 
   const list = await prisma.taskList.findFirst({
-    where: {
-      id,
-      isArchived: false,
-    },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      _count: {
-        select: { templates: true, instances: true },
-      },
-    },
+    where: { id, isArchived: false },
+    select: { id: true, name: true, description: true },
   });
 
   if (!list) {
     notFound();
   }
 
+  // Date filters
   const now = new Date();
   const startOfToday = new Date(now);
   startOfToday.setHours(0, 0, 0, 0);
   const endOfToday = new Date(startOfToday);
   endOfToday.setDate(endOfToday.getDate() + 1);
 
-  const whereClause: {
-    taskListId: string;
-    status?: "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
-    importanceSnapshot?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
-    tagsSnapshot?: { has: string };
-    deadlineAt?:
-      | { gte: Date; lt: Date }
-      | { lt: Date }
-      | { gte: Date };
-  } = {
-    taskListId: id,
-  };
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const whereClause: any = { taskListId: id };
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   if (statusFilter !== "ALL") {
-    whereClause.status = statusFilter as "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+    whereClause.status = statusFilter;
   }
-
   if (importanceFilter !== "ALL") {
-    whereClause.importanceSnapshot = importanceFilter as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+    whereClause.importanceSnapshot = importanceFilter;
   }
-
   if (tagFilter) {
     whereClause.tagsSnapshot = { has: tagFilter };
   }
-
   if (dueFilter === "today") {
     whereClause.deadlineAt = { gte: startOfToday, lt: endOfToday };
   } else if (dueFilter === "overdue") {
     whereClause.deadlineAt = { lt: now };
+    if (!whereClause.status) {
+      whereClause.status = { notIn: ["COMPLETED", "FAILED"] };
+    }
   } else if (dueFilter === "upcoming") {
     whereClause.deadlineAt = { gte: endOfToday };
   }
@@ -115,7 +108,10 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     sortFilter === "deadline_asc"
       ? [{ deadlineAt: "asc" as const }, { createdAt: "desc" as const }]
       : sortFilter === "importance_desc"
-        ? [{ importanceSnapshot: "desc" as const }, { createdAt: "desc" as const }]
+        ? [
+            { importanceSnapshot: "desc" as const },
+            { createdAt: "desc" as const },
+          ]
         : [{ createdAt: "desc" as const }];
 
   const tasks = await prisma.taskInstance.findMany({
@@ -123,6 +119,51 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     take: 50,
     orderBy: orderByClause,
   });
+
+  // List-wide stats (unfiltered)
+  const allTasks = await prisma.taskInstance.findMany({
+    where: { taskListId: id },
+    select: { status: true, deadlineAt: true, tagsSnapshot: true },
+  });
+
+  const totalTasks = allTasks.length;
+  const overdueCount = allTasks.filter(
+    (t) =>
+      t.deadlineAt &&
+      new Date(t.deadlineAt) < now &&
+      t.status !== "COMPLETED" &&
+      t.status !== "FAILED"
+  ).length;
+  const completedCount = allTasks.filter((t) => t.status === "COMPLETED").length;
+  const progress =
+    totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+
+  // Collect unique tags (max 8)
+  const tagSet = new Set<string>();
+  for (const t of allTasks) {
+    for (const tag of t.tagsSnapshot) {
+      tagSet.add(tag);
+      if (tagSet.size >= 8) break;
+    }
+    if (tagSet.size >= 8) break;
+  }
+  const allTags = Array.from(tagSet);
+
+  const canWrite = canWriteList(access.role);
+  const allowedStatuses: Record<string, string[]> = {};
+  for (const t of tasks) {
+    allowedStatuses[t.id] = getAllowedTaskStatuses(t.status);
+  }
+
+  const serializedTasks = tasks.map((t) => ({
+    id: t.id,
+    descriptionSnapshot: t.descriptionSnapshot,
+    status: t.status,
+    importanceSnapshot: t.importanceSnapshot,
+    deadlineAt: t.deadlineAt ? t.deadlineAt.toISOString() : null,
+    tagsSnapshot: t.tagsSnapshot,
+    occurrenceDate: t.occurrenceDate.toISOString(),
+  }));
 
   async function updateTaskStatus(formData: FormData) {
     "use server";
@@ -135,45 +176,33 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     const taskId = String(formData.get("taskId") ?? "");
     const nextStatus = String(formData.get("status") ?? "TODO");
 
-    if (!taskId) {
-      return;
-    }
+    if (!taskId) return;
 
     const listAccess = await getListAccess(currentSession.user.id, id);
-    if (!listAccess || !canWriteList(listAccess.role)) {
-      return;
-    }
+    if (!listAccess || !canWriteList(listAccess.role)) return;
 
     const task = await prisma.taskInstance.findFirst({
-      where: {
-        id: taskId,
-        taskListId: id,
-      },
-      select: {
-        id: true,
-        status: true,
-      },
+      where: { id: taskId, taskListId: id },
+      select: { id: true, status: true },
     });
 
-    if (!task) {
-      notFound();
-    }
+    if (!task) return;
+
+    const status = nextStatus as
+      | "DRAFT"
+      | "TODO"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "FAILED";
+
+    if (!canTransitionStatus(task.status, status)) return;
 
     const nowDate = new Date();
-    const status = nextStatus as "DRAFT" | "TODO" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
-
-    if (!canTransitionStatus(task.status, status)) {
-      return;
-    }
-
     await prisma.taskInstance.update({
       where: { id: task.id },
       data:
         status === "IN_PROGRESS"
-          ? {
-              status,
-              startedAt: nowDate,
-            }
+          ? { status, startedAt: nowDate }
           : status === "COMPLETED"
             ? {
                 status,
@@ -202,135 +231,200 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     revalidatePath(`/lists/${id}`);
   }
 
+  async function editTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const taskId = String(formData.get("taskId") ?? "");
+    if (!taskId) return;
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const task = await prisma.taskInstance.findFirst({
+      where: { id: taskId, taskListId: id },
+      select: { id: true, status: true },
+    });
+    if (!task) return;
+
+    const description = String(formData.get("description") ?? "").trim();
+    const deadlineAtStr = String(formData.get("deadlineAt") ?? "").trim();
+    const importance = String(formData.get("importance") ?? "MEDIUM") as
+      | "LOW"
+      | "MEDIUM"
+      | "HIGH"
+      | "CRITICAL";
+    const newStatus = String(formData.get("status") ?? task.status) as
+      | "DRAFT"
+      | "TODO"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "FAILED";
+    const tagsStr = String(formData.get("tags") ?? "").trim();
+    const tags = tagsStr
+      ? tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const updateData: any = {
+      descriptionSnapshot: description || undefined,
+      importanceSnapshot: importance,
+      tagsSnapshot: tags,
+      deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
+    };
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
+    // Handle status change if different
+    if (newStatus !== task.status && canTransitionStatus(task.status, newStatus)) {
+      const nowDate = new Date();
+      updateData.status = newStatus;
+      if (newStatus === "IN_PROGRESS") {
+        updateData.startedAt = nowDate;
+      } else if (newStatus === "COMPLETED") {
+        updateData.completedAt = nowDate;
+        updateData.completedByUserId = currentSession.user.id;
+        updateData.failedAt = null;
+        updateData.failedByUserId = null;
+      } else if (newStatus === "FAILED") {
+        updateData.failedAt = nowDate;
+        updateData.failedByUserId = currentSession.user.id;
+        updateData.completedAt = null;
+        updateData.completedByUserId = null;
+      } else {
+        updateData.completedAt = null;
+        updateData.completedByUserId = null;
+        updateData.failedAt = null;
+        updateData.failedByUserId = null;
+      }
+    }
+
+    await prisma.taskInstance.update({
+      where: { id: task.id },
+      data: updateData,
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
+  async function deleteTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const taskId = String(formData.get("taskId") ?? "");
+    if (!taskId) return;
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const task = await prisma.taskInstance.findFirst({
+      where: { id: taskId, taskListId: id },
+      select: { id: true },
+    });
+    if (!task) return;
+
+    await prisma.taskInstance.delete({
+      where: { id: task.id },
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
+  async function quickCreateTask(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const listAccess = await getListAccess(currentSession.user.id, id);
+    if (!listAccess || !canWriteList(listAccess.role)) return;
+
+    const description = String(formData.get("description") ?? "").trim();
+    if (!description) return;
+
+    const deadlineAtStr = String(formData.get("deadlineAt") ?? "").trim();
+    const importance = String(formData.get("importance") ?? "MEDIUM") as
+      | "LOW"
+      | "MEDIUM"
+      | "HIGH"
+      | "CRITICAL";
+    const status = String(formData.get("status") ?? "TODO") as
+      | "DRAFT"
+      | "TODO"
+      | "IN_PROGRESS"
+      | "COMPLETED"
+      | "FAILED";
+    const tagsStr = String(formData.get("tags") ?? "").trim();
+    const tags = tagsStr
+      ? tagsStr.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)
+      : [];
+
+    const nowDate = new Date();
+
+    // Create template
+    const template = await prisma.taskTemplate.create({
+      data: {
+        taskListId: id,
+        createdByUserId: currentSession.user.id,
+        description,
+        importance,
+        templateStatus: status,
+        tags,
+      },
+    });
+
+    // Create instance
+    await prisma.taskInstance.create({
+      data: {
+        taskTemplateId: template.id,
+        taskListId: id,
+        occurrenceDate: nowDate,
+        deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
+        descriptionSnapshot: description,
+        importanceSnapshot: importance,
+        tagsSnapshot: tags,
+        status,
+      },
+    });
+
+    revalidatePath(`/lists/${id}`);
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <main className="max-w-4xl mx-auto py-8">
-        <div className="mb-6">
-          <Link href="/" className="text-sm text-gray-600 hover:underline">
-            ← Back to lists
-          </Link>
-        </div>
-
-        <div className="flex items-center justify-between mb-6 gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">{list.name}</h1>
-            {list.description ? (
-              <p className="text-gray-600 mt-1">{list.description}</p>
-            ) : null}
-          </div>
-          <Badge variant="secondary">
-            {list._count.templates + list._count.instances} tasks
-          </Badge>
-        </div>
-
-        <div className="mb-6">
-          {canWriteList(access.role) ? (
-            <Button asChild>
-              <Link href={`/lists/${list.id}/tasks/new`}>+ Add Task</Link>
-            </Button>
-          ) : null}
-        </div>
-
-        <Card className="mb-6">
-          <CardContent className="pt-4">
-            <form className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-              <div className="flex flex-col gap-1">
-                <label htmlFor="status" className="text-xs text-gray-600">Status</label>
-                <select id="status" name="status" defaultValue={statusFilter} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                  {statusOptions.map((option) => (
-                    <option key={option} value={option}>{option.replace("_", " ")}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="importance" className="text-xs text-gray-600">Importance</label>
-                <select id="importance" name="importance" defaultValue={importanceFilter} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                  {importanceOptions.map((option) => (
-                    <option key={option} value={option}>{option.replace("_", " ")}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="due" className="text-xs text-gray-600">Due</label>
-                <select id="due" name="due" defaultValue={dueFilter} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                  {dueOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <label htmlFor="sort" className="text-xs text-gray-600">Sort</label>
-                <select id="sort" name="sort" defaultValue={sortFilter} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                  <option value="created_desc">Created (newest)</option>
-                  <option value="deadline_asc">Deadline (soonest)</option>
-                  <option value="importance_desc">Importance (highest)</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button type="submit" className="w-full">Apply</Button>
-              </div>
-              <div className="md:col-span-5 flex flex-col gap-1">
-                <label htmlFor="tag" className="text-xs text-gray-600">Tag</label>
-                <input id="tag" name="tag" defaultValue={tagFilter} placeholder="urgent" className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm" />
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        {tasks.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-500 mb-4">No tasks found for this filter.</p>
-              {canWriteList(access.role) ? (
-                <Button asChild>
-                  <Link href={`/lists/${list.id}/tasks/new`}>Add your first task</Link>
-                </Button>
-              ) : null}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <Card key={task.id}>
-                <CardHeader className="py-4">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <CardTitle className="text-base">{task.descriptionSnapshot}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{task.importanceSnapshot}</Badge>
-                      <Badge variant="outline">{task.status.replace("_", " ")}</Badge>
-                    </div>
-                  </div>
-                  {task.deadlineAt ? (
-                    <p className="text-xs text-gray-500">
-                      Due {new Date(task.deadlineAt).toLocaleString()}
-                    </p>
-                  ) : null}
-                  {task.tagsSnapshot.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {task.tagsSnapshot.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          #{tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : null}
-                  {canWriteList(access.role) ? (
-                    <form action={updateTaskStatus} className="flex items-center gap-2 pt-2">
-                      <input type="hidden" name="taskId" value={task.id} />
-                      <select name="status" defaultValue={task.status} className="h-8 rounded-lg border bg-transparent px-2.5 py-1 text-sm">
-                        {getAllowedTaskStatuses(task.status).map((option) => (
-                          <option key={option} value={option}>{option.replace("_", " ")}</option>
-                        ))}
-                      </select>
-                      <Button type="submit" size="sm" variant="outline">Update</Button>
-                    </form>
-                  ) : null}
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+    <ListViewContent
+      list={{
+        id: list.id,
+        name: list.name,
+        description: list.description,
+        totalTasks,
+        overdueCount,
+        completedCount,
+        progress,
+        tags: allTags,
+      }}
+      tasks={serializedTasks}
+      allowedStatuses={allowedStatuses}
+      canWrite={canWrite}
+      currentFilters={{
+        status: statusFilter,
+        importance: importanceFilter,
+        due: dueFilter,
+        sort: sortFilter,
+        tag: tagFilter,
+      }}
+      updateTaskStatusAction={updateTaskStatus}
+      editTaskAction={editTask}
+      deleteTaskAction={deleteTask}
+      quickCreateTaskAction={quickCreateTask}
+    />
   );
 }

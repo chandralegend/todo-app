@@ -55,6 +55,7 @@ model User {
   taskTemplates      TaskTemplate[]
   completedInstances TaskInstance[] @relation("CompletedByUser")
   failedInstances    TaskInstance[] @relation("FailedByUser")
+  dailyFocus         DailyFocus[]
 
   @@map("users")
 }
@@ -163,6 +164,7 @@ model TaskInstance {
   taskList              TaskList      @relation(fields: [taskListId], references: [id], onDelete: Cascade)
   completedBy           User?         @relation("CompletedByUser", fields: [completedByUserId], references: [id])
   failedBy             User?         @relation("FailedByUser", fields: [failedByUserId], references: [id])
+  dailyFocus            DailyFocus[]
 
   @@unique([taskTemplateId, occurrenceDate])
   @@index([taskListId])
@@ -173,6 +175,24 @@ model TaskInstance {
   @@index([taskListId, status])
   @@index([taskListId, importanceSnapshot])
   @@map("task_instances")
+}
+
+model DailyFocus {
+  id             String       @id @default(cuid())
+  userId         String       @map("user_id")
+  taskInstanceId String       @map("task_instance_id")
+  date           DateTime     @db.Date
+  position       Int          @default(0)
+  completed      Boolean      @default(false)
+  completedAt    DateTime?    @map("completed_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskInstance   TaskInstance  @relation(fields: [taskInstanceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskInstanceId, date])
+  @@index([userId, date])
+  @@map("daily_focus")
 }
 
 model RecurrenceRunLog {
