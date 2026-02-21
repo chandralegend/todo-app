@@ -97,13 +97,13 @@
 ### Phase 3: Polishing and Hardening
 **Description:** Mobile UX improvements, filter/sort polish, validation, production readiness.
 
-**Status:** In Progress
+**Status:** Completed
 
 **Sub Tasks:**
 - [x] Improve mobile UX (filter drawer, task cards)
 - [x] Polish filter and sort controls
 - [x] Add validation and error messaging
-- [ ] Performance review on main task queries
+- [x] Performance review on main task queries
 - [x] Production readiness checklist
 
 **Notes:**
@@ -112,6 +112,7 @@
 - Added recurrence run logging persistence via `RecurrenceRunLog`
 - Added health endpoint at `/api/health` for deployment monitoring
 - Added `vercel.json` cron schedule for recurrence endpoint
+- Added composite indexes for list/status/importance/created task queries
 
 ---
 

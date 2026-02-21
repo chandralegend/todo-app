@@ -169,6 +169,9 @@ model TaskInstance {
   @@index([status])
   @@index([deadlineAt])
   @@index([occurrenceDate])
+  @@index([taskListId, createdAt])
+  @@index([taskListId, status])
+  @@index([taskListId, importanceSnapshot])
   @@map("task_instances")
 }
 
