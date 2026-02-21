@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Menu, LayoutDashboard, Activity, ListTodo } from "lucide-react";
+import { Search, Menu, LayoutDashboard, Activity, ListTodo, Sun, Sparkles } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -42,10 +42,15 @@ function IconBtn({
 const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/lists", label: "Lists", icon: ListTodo },
+  { href: "/today", label: "Today", icon: Sun },
   { href: "/admin/recurrence", label: "Admin", icon: Activity },
 ];
 
-export function TopBar() {
+interface TopBarProps {
+  onAiClick?: () => void;
+}
+
+export function TopBar({ onAiClick }: TopBarProps = {}) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -145,8 +150,13 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Right: avatar */}
+        {/* Right: AI + avatar */}
         <div className="flex items-center gap-2 shrink-0">
+          {onAiClick && (
+            <IconBtn aria-label="AI Assistant" onClick={onAiClick}>
+              <Sparkles className="size-4" />
+            </IconBtn>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full hover:bg-muted transition-colors cursor-pointer p-1">
