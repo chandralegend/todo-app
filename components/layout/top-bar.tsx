@@ -48,9 +48,10 @@ const navLinks = [
 
 interface TopBarProps {
   onAiClick?: () => void;
+  chatOpen?: boolean;
 }
 
-export function TopBar({ onAiClick }: TopBarProps = {}) {
+export function TopBar({ onAiClick, chatOpen }: TopBarProps = {}) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -153,7 +154,11 @@ export function TopBar({ onAiClick }: TopBarProps = {}) {
         {/* Right: AI + avatar */}
         <div className="flex items-center gap-2 shrink-0">
           {onAiClick && (
-            <IconBtn aria-label="AI Assistant" onClick={onAiClick}>
+            <IconBtn
+              aria-label="AI Assistant"
+              onClick={onAiClick}
+              className={chatOpen ? "bg-coral/10 border-coral/30 text-coral" : ""}
+            >
               <Sparkles className="size-4" />
             </IconBtn>
           )}

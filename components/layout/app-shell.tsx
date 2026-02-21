@@ -6,7 +6,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { Footer } from "@/components/layout/footer";
 import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { Toaster } from "@/components/ui/sonner";
-import { ChatSidebar } from "@/components/ai/chat-sidebar";
+import { ChatPanel } from "@/components/ai/chat-sidebar";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -21,22 +21,43 @@ export function AppShell({ children, breadcrumbOverrides, action }: AppShellProp
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex min-h-svh flex-col">
-        <TopBar onAiClick={() => setChatOpen(true)} />
-        <div className="flex flex-1 flex-col">
-          <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
-            {/* Breadcrumbs + action */}
-            <div className="mb-4 flex items-center justify-between gap-4">
-              <AppBreadcrumbs overrides={breadcrumbOverrides} />
-              {action}
-            </div>
-            {children}
-          </main>
+        <TopBar
+          onAiClick={() => setChatOpen((o) => !o)}
+          chatOpen={chatOpen}
+        />
 
-          <Footer />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Main content — hidden on mobile when chat is open, shrinks on sm+ */}
+          <div
+            className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
+              chatOpen ? "hidden sm:flex" : "flex"
+            }`}
+          >
+            <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <AppBreadcrumbs overrides={breadcrumbOverrides} />
+                {action}
+              </div>
+              {children}
+            </main>
+            <Footer />
+          </div>
+
+          {/* Chat panel — full width on mobile, fixed width on sm+ */}
+          <div
+            className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
+              chatOpen
+                ? "w-full sm:w-[380px] lg:w-[420px]"
+                : "w-0 border-l-0"
+            }`}
+          >
+            {chatOpen && (
+              <ChatPanel onClose={() => setChatOpen(false)} />
+            )}
+          </div>
         </div>
       </div>
 
-      <ChatSidebar open={chatOpen} onOpenChange={setChatOpen} />
       <Toaster position="bottom-right" />
     </TooltipProvider>
   );
