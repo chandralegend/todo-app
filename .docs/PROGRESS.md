@@ -50,12 +50,13 @@
 - [ ] Add filtering controls (status, importance, tag, due state)
 - [ ] Add sorting controls (deadline, importance, created date)
 - [ ] Implement quick status change from task list
-- [ ] Build task create/edit form
+- [x] Build task create/edit form
 - [ ] Ensure responsive UI for mobile
 
 **Notes:**
 - Implemented list creation flow (`/lists/new`) and list detail view (`/lists/[id]`)
 - Dashboard now lists user task lists with direct navigation
+- Added one-off task creation flow (`/lists/[id]/tasks/new`) using TaskTemplate + TaskInstance write path
 - Will need tRPC for API layer
 - UI should support quick capture and quick status updates per PLAN.md
 

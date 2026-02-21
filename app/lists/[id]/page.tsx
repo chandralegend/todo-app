@@ -31,7 +31,7 @@ export default async function ListPage({ params }: PageProps) {
           instances: true,
         },
       },
-      templates: {
+      instances: {
         take: 20,
         orderBy: {
           createdAt: "desc",
@@ -65,19 +65,35 @@ export default async function ListPage({ params }: PageProps) {
           </Badge>
         </div>
 
-        {list.templates.length === 0 ? (
+        <div className="mb-6">
+          <Button asChild>
+            <Link href={`/lists/${list.id}/tasks/new`}>+ Add Task</Link>
+          </Button>
+        </div>
+
+        {list.instances.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <p className="text-gray-500 mb-4">No tasks in this list yet.</p>
-              <Button disabled>Add Task (next step)</Button>
+              <Button asChild>
+                <Link href={`/lists/${list.id}/tasks/new`}>Add your first task</Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (
           <div className="space-y-3">
-            {list.templates.map((template) => (
-              <Card key={template.id}>
+            {list.instances.map((task) => (
+              <Card key={task.id}>
                 <CardHeader className="py-4">
-                  <CardTitle className="text-base">{template.description}</CardTitle>
+                  <div className="flex items-center justify-between gap-3">
+                    <CardTitle className="text-base">{task.descriptionSnapshot}</CardTitle>
+                    <Badge variant="outline">{task.status.replace("_", " ")}</Badge>
+                  </div>
+                  {task.deadlineAt ? (
+                    <p className="text-xs text-gray-500">
+                      Due {new Date(task.deadlineAt).toLocaleString()}
+                    </p>
+                  ) : null}
                 </CardHeader>
               </Card>
             ))}
