@@ -9,11 +9,8 @@ export function CursorEffect() {
 
     let effect: { destroy: () => void } | null = null;
 
-    import("cursor-effects").then(({ trailingCursor }) => {
-      effect = trailingCursor({
-        particles: 15,
-        rate: 0.4,
-      });
+    import("cursor-effects").then(({ ghostCursor }) => {
+      effect = ghostCursor();
     });
 
     return () => {
