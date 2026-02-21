@@ -6,7 +6,6 @@ interface StatCardProps {
   value: string | number;
   description?: string;
   icon?: LucideIcon;
-  trend?: "up" | "down" | "neutral";
   className?: string;
 }
 
@@ -20,25 +19,25 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-card p-5 ring-1 ring-border/50",
+        "rounded-2xl border border-border bg-card p-6",
         className
       )}
     >
       <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="space-y-2">
+          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
             {label}
           </p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-foreground">
+          <p className="text-3xl font-bold tracking-tight text-foreground">
             {value}
           </p>
           {description && (
-            <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
           )}
         </div>
         {Icon && (
-          <div className="rounded-xl bg-primary/10 p-2.5">
-            <Icon className="size-5 text-primary" />
+          <div className="rounded-full border border-border p-3">
+            <Icon className="size-5 text-muted-foreground" />
           </div>
         )}
       </div>

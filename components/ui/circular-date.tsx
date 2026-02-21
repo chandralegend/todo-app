@@ -2,29 +2,20 @@ import { cn } from "@/lib/utils";
 
 interface CircularDateProps {
   date: Date;
-  /** Whether the date is overdue */
   overdue?: boolean;
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
 const MONTHS_SHORT = [
-  "JAN",
-  "FEB",
-  "MAR",
-  "APR",
-  "MAY",
-  "JUN",
-  "JUL",
-  "AUG",
-  "SEP",
-  "OCT",
-  "NOV",
-  "DEC",
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
 
 export function CircularDate({
   date,
   overdue = false,
+  size = "md",
   className,
 }: CircularDateProps) {
   const day = date.getDate();
@@ -33,15 +24,35 @@ export function CircularDate({
   return (
     <div
       className={cn(
-        "circular-date border-2 font-medium",
+        "circular-date border-2 select-none",
+        size === "sm" && "!w-10 !h-10",
+        size === "md" && "!w-14 !h-14",
+        size === "lg" && "!w-20 !h-20",
         overdue
-          ? "border-destructive bg-destructive/10 text-destructive"
-          : "border-border bg-muted/50 text-foreground",
+          ? "border-destructive bg-destructive/5 text-destructive"
+          : "border-border bg-card text-foreground",
         className
       )}
     >
-      <span className="text-base font-bold leading-none">{day}</span>
-      <span className="text-[0.6rem] uppercase tracking-wider leading-none text-muted-foreground">
+      <span
+        className={cn(
+          "font-bold leading-none",
+          size === "sm" && "text-sm",
+          size === "md" && "text-xl",
+          size === "lg" && "text-3xl"
+        )}
+      >
+        {day}
+      </span>
+      <span
+        className={cn(
+          "uppercase tracking-wider leading-none",
+          overdue ? "text-destructive/70" : "text-muted-foreground",
+          size === "sm" && "text-[0.45rem]",
+          size === "md" && "text-[0.6rem]",
+          size === "lg" && "text-xs"
+        )}
+      >
         {month}
       </span>
     </div>

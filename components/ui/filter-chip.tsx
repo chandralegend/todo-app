@@ -7,6 +7,7 @@ interface FilterChipProps {
   label: string;
   value?: string;
   onRemove?: () => void;
+  active?: boolean;
   className?: string;
 }
 
@@ -14,18 +15,22 @@ export function FilterChip({
   label,
   value,
   onRemove,
+  active = false,
   className,
 }: FilterChipProps) {
   return (
     <span
       className={cn(
-        "filter-chip inline-flex items-center gap-1.5 rounded-full border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground",
+        "filter-chip inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "border-foreground bg-foreground text-background"
+          : "border-border bg-card text-foreground",
         className
       )}
     >
       {value ? (
         <>
-          <span className="text-muted-foreground">{label}:</span>
+          <span className={active ? "text-background/60" : "text-muted-foreground"}>{label}</span>
           <span>{value}</span>
         </>
       ) : (
@@ -34,7 +39,10 @@ export function FilterChip({
       {onRemove && (
         <button
           onClick={onRemove}
-          className="ml-0.5 rounded-full p-0.5 hover:bg-muted transition-colors"
+          className={cn(
+            "ml-0.5 rounded-full p-0.5 transition-colors cursor-pointer",
+            active ? "hover:bg-background/20" : "hover:bg-muted"
+          )}
           aria-label={`Remove ${label} filter`}
         >
           <X className="size-3" />

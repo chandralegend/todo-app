@@ -1,9 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface BentoCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** Whether to show hover scale effect */
   interactive?: boolean;
-  /** Add a colored left accent bar */
   accent?: "coral" | "destructive" | "success" | "none";
 }
 
@@ -17,11 +15,11 @@ export function BentoCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-card p-6 ring-1 ring-border/50",
+        "rounded-2xl border border-border bg-card p-6",
         interactive && "bento-card cursor-pointer",
-        accent === "coral" && "border-l-3 border-l-primary",
-        accent === "destructive" && "border-l-3 border-l-destructive",
-        accent === "success" && "border-l-3 border-l-status-completed",
+        accent === "coral" && "border-l-[3px] border-l-coral",
+        accent === "destructive" && "border-l-[3px] border-l-destructive",
+        accent === "success" && "border-l-[3px] border-l-status-completed",
         className
       )}
       {...props}
@@ -39,7 +37,7 @@ export function BentoGrid({
   return (
     <div
       className={cn(
-        "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
+        "grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
         className
       )}
       {...props}

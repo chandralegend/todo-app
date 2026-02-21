@@ -11,12 +11,16 @@ import {
   Search,
   Trash2,
   Edit,
-  Activity,
   Inbox,
   TrendingUp,
+  Menu,
+  Lock,
+  BarChart3,
+  RefreshCw,
+  Mic,
+  Eye,
 } from "lucide-react";
 
-// shadcn base components
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,13 +30,6 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -67,11 +64,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Toggle,
-} from "@/components/ui/toggle";
+import { Toggle } from "@/components/ui/toggle";
 
-// Custom primitives
 import { BentoCard, BentoGrid } from "@/components/ui/bento-card";
 import { PillButton } from "@/components/ui/pill-button";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
@@ -82,9 +76,7 @@ import { ImportanceBadge } from "@/components/ui/importance-badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 
-// ────────────────────────────────────────────
-// Section wrapper
-// ────────────────────────────────────────────
+/* ─── Helpers ─── */
 function Section({
   title,
   description,
@@ -95,7 +87,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">{title}</h2>
         {description && (
@@ -107,214 +99,374 @@ function Section({
   );
 }
 
-function ColorSwatch({
-  name,
+function IconButton({
+  children,
   className,
-  textClass = "text-white",
 }: {
-  name: string;
-  className: string;
-  textClass?: string;
+  children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div
-        className={`h-16 w-16 rounded-xl border ${className} flex items-center justify-center`}
-      >
-        <span className={`text-[0.6rem] font-mono ${textClass}`}>Aa</span>
-      </div>
-      <span className="text-xs text-muted-foreground">{name}</span>
-    </div>
+    <button
+      className={`flex items-center justify-center rounded-full border border-border bg-card p-3 transition-colors hover:bg-muted ${className ?? ""}`}
+    >
+      {children}
+    </button>
   );
 }
 
-// ────────────────────────────────────────────
-// Design page
-// ────────────────────────────────────────────
+/* ─── Page ─── */
 export default function DesignPage() {
   const [chipFilters, setChipFilters] = useState([
-    { label: "Status", value: "Todo" },
-    { label: "Importance", value: "High" },
-    { label: "Tag", value: "#work" },
+    { label: "Team", value: "" },
+    { label: "Insights", value: "" },
+    { label: "Today", value: "" },
   ]);
 
   const [togglePressed, setTogglePressed] = useState(false);
 
-  const removeChip = (index: number) => {
-    setChipFilters((prev) => prev.filter((_, i) => i !== index));
-  };
-
   return (
     <TooltipProvider delayDuration={0}>
       <div className="min-h-screen bg-background">
-        {/* Header */}
-        <div className="border-b bg-card">
-          <div className="mx-auto max-w-6xl px-6 py-8">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Design System
-            </h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              TodoApp UI component showcase — warm coral/terracotta theme
-            </p>
+        {/* ══════════════════════════════════════════════════════
+            HERO / HEADER - mimics the reference top bar
+        ══════════════════════════════════════════════════════ */}
+        <div className="border-b border-border bg-card">
+          <div className="mx-auto max-w-7xl px-8 py-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <IconButton>
+                <Menu className="size-5 text-foreground" />
+              </IconButton>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background font-bold text-sm">
+                  T
+                </div>
+                <div>
+                  <p className="font-semibold text-sm leading-tight">TodoApp</p>
+                  <p className="text-xs text-muted-foreground">Design System</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <IconButton>
+                <Plus className="size-5 text-foreground" />
+              </IconButton>
+              <Avatar className="h-10 w-10 border border-border">
+                <AvatarFallback className="bg-coral-light text-coral font-semibold text-sm">
+                  DT
+                </AvatarFallback>
+              </Avatar>
+              <div className="hidden md:block">
+                <p className="text-sm font-medium leading-tight">Dwayne Tatum</p>
+                <p className="text-xs text-muted-foreground">CEO Assistant</p>
+              </div>
+              <IconButton>
+                <Search className="size-5 text-foreground" />
+              </IconButton>
+              <div className="hidden lg:block relative">
+                <Input
+                  placeholder="Start searching ..."
+                  className="w-56 rounded-full border-border bg-card pl-4 pr-4 h-10"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-6xl space-y-16 px-6 py-12">
-          {/* ───── COLORS ───── */}
+        <div className="mx-auto max-w-7xl px-8 py-10 space-y-16">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 1: HERO BENTO ROW (like the reference date + CTA row)
+          ══════════════════════════════════════════════════════ */}
+          <section>
+            <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-center">
+              {/* Date + CTA cluster */}
+              <div className="flex items-center gap-5">
+                <CircularDate date={new Date()} size="lg" />
+                <div className="hidden sm:block">
+                  <p className="text-sm text-muted-foreground">
+                    {new Date().toLocaleDateString("en-US", { weekday: "short" })},
+                  </p>
+                  <p className="text-sm font-medium">
+                    {new Date().toLocaleDateString("en-US", { month: "long" })}
+                  </p>
+                </div>
+                <Separator orientation="vertical" className="h-10 hidden sm:block" />
+                <PillButton variant="primary" size="md">
+                  Show my Tasks
+                </PillButton>
+                <IconButton>
+                  <Calendar className="size-5 text-foreground" />
+                </IconButton>
+              </div>
+              {/* Greeting */}
+              <div className="rounded-2xl border border-border bg-card px-8 py-6 flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold">
+                    Hey, Need help?
+                  </h1>
+                  <p className="text-lg text-muted-foreground mt-1">
+                    Just ask me anything!
+                  </p>
+                </div>
+                <IconButton className="hidden sm:flex">
+                  <Mic className="size-5 text-foreground" />
+                </IconButton>
+              </div>
+            </div>
+          </section>
+
+          {/* ══════════════════════════════════════════════════════
+              SECTION 2: BENTO GRID (varied card sizes like reference)
+          ══════════════════════════════════════════════════════ */}
           <Section
-            title="Color Palette"
-            description="Warm coral/terracotta accent with neutral backgrounds and semantic status colors."
+            title="Bento Dashboard"
+            description="Cards with thin borders, generous padding, varied grid sizes."
           >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Primary & Neutral
-                </h3>
-                <div className="flex flex-wrap gap-4">
-                  <ColorSwatch name="Primary" className="bg-primary" />
-                  <ColorSwatch
-                    name="Primary FG"
-                    className="bg-primary-foreground"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Background"
-                    className="bg-background"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Card"
-                    className="bg-card"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Muted"
-                    className="bg-muted"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Accent"
-                    className="bg-accent"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Secondary"
-                    className="bg-secondary"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch name="Destructive" className="bg-destructive" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {/* Large card - spans 2 cols */}
+              <div className="sm:col-span-2 rounded-2xl border border-border bg-card p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full border border-border p-2">
+                      <ListTodo className="size-5 text-muted-foreground" />
+                    </div>
+                    <p className="font-bold">Work Tasks</p>
+                  </div>
+                  <FilterChip label="Weekly" />
+                </div>
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                  Total tasks
+                </p>
+                <p className="text-4xl font-bold">23</p>
+                <div className="flex gap-3 pt-2">
+                  <PillButton size="sm" variant="primary">Complete</PillButton>
+                  <PillButton size="sm" variant="outline" showArrow={false}>View</PillButton>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Custom Coral Tokens
-                </h3>
-                <div className="flex flex-wrap gap-4">
-                  <ColorSwatch name="Coral" className="bg-coral" />
-                  <ColorSwatch name="Coral Hover" className="bg-coral-hover" />
-                  <ColorSwatch
-                    name="Coral Light"
-                    className="bg-coral-light"
-                    textClass="text-foreground"
-                  />
-                  <ColorSwatch
-                    name="Coral Muted"
-                    className="bg-coral-muted"
-                    textClass="text-white"
-                  />
+              {/* Icon card - small */}
+              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center text-center gap-3">
+                <div className="rounded-full border border-border p-4">
+                  <Lock className="size-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium">System Lock</p>
+              </div>
+
+              {/* Stat card */}
+              <div className="rounded-2xl border border-border bg-card p-6 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="rounded-full border border-border p-2">
+                    <Clock className="size-5 text-muted-foreground" />
+                  </div>
+                  <div className="rounded-full border border-border p-2">
+                    <BarChart3 className="size-5 text-muted-foreground" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold mt-3">13 Days</p>
+                <p className="text-sm text-muted-foreground">109 hours, 23 minutes</p>
+                {/* Dot pattern */}
+                <div className="flex gap-1 pt-2 flex-wrap">
+                  {Array.from({ length: 20 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full ${
+                        i < 8 ? "bg-coral" : "bg-border"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Status Colors
-                </h3>
-                <div className="flex flex-wrap gap-4">
-                  <ColorSwatch name="Draft" className="bg-status-draft" />
-                  <ColorSwatch name="Todo" className="bg-status-todo" />
-                  <ColorSwatch
-                    name="In Progress"
-                    className="bg-status-in-progress"
+              {/* Growth rate with ring */}
+              <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
+                <ProgressRing value={36} size="lg" />
+                <p className="text-sm text-muted-foreground mt-3">Growth rate</p>
+              </div>
+
+              {/* Activity card - spans 2 cols */}
+              <div className="sm:col-span-2 rounded-2xl border border-border bg-card p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-bold">Activity manager</p>
+                  <div className="flex items-center gap-2">
+                    <FilterChip label="Filters" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search in activities ..."
+                    className="pl-9 rounded-full border-border h-10"
                   />
-                  <ColorSwatch
-                    name="Completed"
-                    className="bg-status-completed"
+                </div>
+                <FilterChipGroup>
+                  <FilterChip
+                    label="Team"
+                    active
                   />
-                  <ColorSwatch name="Failed" className="bg-status-failed" />
+                  <FilterChip
+                    label="Insights"
+                    onRemove={() => {}}
+                  />
+                  <FilterChip
+                    label="Today"
+                    onRemove={() => {}}
+                  />
+                </FilterChipGroup>
+                {/* Mini bento inside */}
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  <div className="rounded-xl border border-border bg-background p-4 space-y-1">
+                    <p className="text-2xl font-bold">$ 43.20</p>
+                    <p className="text-xs text-muted-foreground">USD</p>
+                    {/* Mini bar chart */}
+                    <div className="flex items-end gap-1 h-8 pt-2">
+                      {[60, 80, 40, 90, 50, 70, 45].map((h, i) => (
+                        <div
+                          key={i}
+                          className={`w-2 rounded-sm ${
+                            i % 3 === 0 ? "bg-coral" : "bg-border"
+                          }`}
+                          style={{ height: `${h}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background p-4 space-y-2">
+                    <p className="text-sm font-semibold">Business plans</p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-coral" />
+                        <span className="text-xs text-muted-foreground">Bank loans</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-coral-muted" />
+                        <span className="text-xs text-muted-foreground">Accounting</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-coral" />
+                        <span className="text-xs text-muted-foreground">HR management</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-border bg-background p-4 flex flex-col items-center justify-center text-center gap-2">
+                    <div className="text-coral text-2xl">*</div>
+                    <p className="text-xs font-medium">Wallet Verification</p>
+                    <p className="text-[0.65rem] text-muted-foreground">Enable 2-step</p>
+                    <PillButton size="sm" variant="primary" showArrow={false}>
+                      Enable
+                    </PillButton>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Importance Colors
-                </h3>
-                <div className="flex flex-wrap gap-4">
-                  <ColorSwatch name="Low" className="bg-importance-low" />
-                  <ColorSwatch
-                    name="Medium"
-                    className="bg-importance-medium"
-                  />
-                  <ColorSwatch name="High" className="bg-importance-high" />
-                  <ColorSwatch
-                    name="Critical"
-                    className="bg-importance-critical"
-                  />
+              {/* Revenue card */}
+              <div className="rounded-2xl border border-border bg-card p-6 space-y-2">
+                <div className="rounded-full border border-border p-2 w-fit">
+                  <TrendingUp className="size-5 text-coral" />
+                </div>
+                <p className="text-2xl font-bold text-coral mt-3">$ 16,073.49</p>
+                <p className="text-xs text-muted-foreground">Monthly revenue</p>
+                {/* Wavy line placeholder */}
+                <div className="h-8 flex items-end">
+                  <svg viewBox="0 0 100 20" className="w-full h-6 text-coral/40">
+                    <path
+                      d="M0 15 Q10 5, 20 10 T40 8 T60 12 T80 6 T100 10"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── TYPOGRAPHY ───── */}
-          <Section
-            title="Typography"
-            description="Outfit for headings, Geist Sans for body text."
-          >
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold tracking-tight">
-                Heading 1 — The quick brown fox
-              </h1>
-              <h2 className="text-3xl font-bold tracking-tight">
-                Heading 2 — The quick brown fox
-              </h2>
-              <h3 className="text-2xl font-semibold">
-                Heading 3 — The quick brown fox
-              </h3>
-              <h4 className="text-xl font-semibold">
-                Heading 4 — The quick brown fox
-              </h4>
-              <p className="text-base text-foreground">
-                Body text — The quick brown fox jumps over the lazy dog. This is
-                regular paragraph text used throughout the application for
-                descriptions and content.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Muted text — Secondary information, timestamps, helper text, and
-                labels appear in this style.
-              </p>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Section Label — Small caps tracking wide
-              </p>
-              <p className="font-mono text-sm text-muted-foreground">
-                Monospace — IDs, codes, technical values
+          {/* ══════════════════════════════════════════════════════
+              SECTION 3: COLOR PALETTE
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Color Palette" description="Warm cream background, coral accent, neutral borders.">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+              {[
+                { name: "Background", cls: "bg-background border border-border", text: "text-foreground" },
+                { name: "Card", cls: "bg-card border border-border", text: "text-foreground" },
+                { name: "Primary", cls: "bg-primary", text: "text-white" },
+                { name: "Coral", cls: "bg-coral", text: "text-white" },
+                { name: "Coral Light", cls: "bg-coral-light border border-border", text: "text-coral" },
+                { name: "Coral Muted", cls: "bg-coral-muted", text: "text-white" },
+                { name: "Muted", cls: "bg-muted border border-border", text: "text-foreground" },
+                { name: "Secondary", cls: "bg-secondary border border-border", text: "text-foreground" },
+                { name: "Destructive", cls: "bg-destructive", text: "text-white" },
+                { name: "Status Draft", cls: "bg-status-draft", text: "text-white" },
+                { name: "Status Todo", cls: "bg-status-todo", text: "text-white" },
+                { name: "Status Done", cls: "bg-status-completed", text: "text-white" },
+              ].map((c) => (
+                <div key={c.name} className="flex flex-col items-center gap-2">
+                  <div className={`h-16 w-full rounded-xl ${c.cls} flex items-center justify-center`}>
+                    <span className={`text-xs font-medium ${c.text}`}>Aa</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{c.name}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <Separator className="my-4" />
+
+          {/* ══════════════════════════════════════════════════════
+              SECTION 4: TYPOGRAPHY
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Typography" description="Outfit for headings, Geist for body.">
+            <div className="rounded-2xl border border-border bg-card p-8 space-y-5">
+              <h1 className="text-4xl font-bold tracking-tight">Heading 1 — Bold 4xl</h1>
+              <h2 className="text-3xl font-bold tracking-tight">Heading 2 — Bold 3xl</h2>
+              <h3 className="text-2xl font-semibold">Heading 3 — Semibold 2xl</h3>
+              <h4 className="text-xl font-semibold">Heading 4 — Semibold xl</h4>
+              <p className="text-base">Body — Regular base text for descriptions and content.</p>
+              <p className="text-sm text-muted-foreground">Muted — Secondary info, timestamps, labels.</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                Section Label — Tracking widest
               </p>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── BUTTONS ───── */}
-          <Section
-            title="Buttons"
-            description="shadcn base buttons and custom pill buttons."
-          >
-            <div className="space-y-6">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 5: BUTTONS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Buttons" description="Pill buttons with coral accent and icon buttons with circle borders.">
+            <div className="rounded-2xl border border-border bg-card p-8 space-y-8">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  shadcn Button Variants
-                </h3>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                  Pill Buttons
+                </p>
+                <div className="flex flex-wrap items-center gap-4">
+                  <PillButton variant="primary" size="lg">Create Task</PillButton>
+                  <PillButton variant="primary" size="md">Show my Tasks</PillButton>
+                  <PillButton variant="primary" size="sm">Open</PillButton>
+                  <PillButton variant="outline" size="md">View All</PillButton>
+                  <PillButton variant="secondary" size="md">Filter</PillButton>
+                  <PillButton variant="ghost" size="md" showArrow={false}>Cancel</PillButton>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                  Icon Buttons (Circle Border)
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <IconButton><Menu className="size-5 text-foreground" /></IconButton>
+                  <IconButton><Plus className="size-5 text-foreground" /></IconButton>
+                  <IconButton><Search className="size-5 text-foreground" /></IconButton>
+                  <IconButton><Calendar className="size-5 text-foreground" /></IconButton>
+                  <IconButton><RefreshCw className="size-5 text-foreground" /></IconButton>
+                  <IconButton><Eye className="size-5 text-foreground" /></IconButton>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4">
+                  shadcn Base Buttons
+                </p>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button variant="default">Primary</Button>
                   <Button variant="secondary">Secondary</Button>
@@ -322,84 +474,21 @@ export default function DesignPage() {
                   <Button variant="ghost">Ghost</Button>
                   <Button variant="destructive">Destructive</Button>
                   <Button variant="link">Link</Button>
-                  <Button disabled>Disabled</Button>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Button Sizes
-                </h3>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button size="xs">Extra Small</Button>
-                  <Button size="sm">Small</Button>
-                  <Button size="default">Default</Button>
-                  <Button size="lg">Large</Button>
-                  <Button size="icon">
-                    <Plus />
-                  </Button>
-                  <Button size="icon-sm">
-                    <Plus />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Pill Buttons (Custom)
-                </h3>
-                <div className="flex flex-wrap items-center gap-3">
-                  <PillButton variant="primary">Create Task</PillButton>
-                  <PillButton variant="secondary">View All</PillButton>
-                  <PillButton variant="outline">Filter</PillButton>
-                  <PillButton variant="ghost" showArrow={false}>
-                    Cancel
-                  </PillButton>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Pill Button Sizes
-                </h3>
-                <div className="flex flex-wrap items-center gap-3">
-                  <PillButton size="sm">Small</PillButton>
-                  <PillButton size="md">Medium</PillButton>
-                  <PillButton size="lg">Large</PillButton>
-                  <PillButton showArrow={false} size="sm" variant="outline">
-                    No Arrow
-                  </PillButton>
                 </div>
               </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── BADGES ───── */}
-          <Section
-            title="Badges & Status Indicators"
-            description="shadcn badges, status badges, and importance badges."
-          >
-            <div className="space-y-6">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 6: BADGES & STATUS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Badges & Status" description="Status badges with dot indicators and importance levels.">
+            <div className="rounded-2xl border border-border bg-card p-8 space-y-6">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  shadcn Badge Variants
-                </h3>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="default">Default</Badge>
-                  <Badge variant="secondary">Secondary</Badge>
-                  <Badge variant="outline">Outline</Badge>
-                  <Badge variant="destructive">Destructive</Badge>
-                  <Badge variant="ghost">Ghost</Badge>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Status Badges (Custom)
-                </h3>
-                <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">Status</p>
+                <div className="flex flex-wrap gap-3">
                   <StatusBadge status="DRAFT" />
                   <StatusBadge status="TODO" />
                   <StatusBadge status="IN_PROGRESS" />
@@ -407,449 +496,240 @@ export default function DesignPage() {
                   <StatusBadge status="FAILED" />
                 </div>
               </div>
-
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Importance Badges (Custom)
-                </h3>
-                <div className="flex flex-wrap items-center gap-2">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">Importance</p>
+                <div className="flex flex-wrap gap-3">
                   <ImportanceBadge importance="LOW" />
                   <ImportanceBadge importance="MEDIUM" />
                   <ImportanceBadge importance="HIGH" />
                   <ImportanceBadge importance="CRITICAL" />
                 </div>
               </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-3">
+                  shadcn Badges
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="default">Default</Badge>
+                  <Badge variant="secondary">Secondary</Badge>
+                  <Badge variant="outline">Outline</Badge>
+                  <Badge variant="destructive">Destructive</Badge>
+                </div>
+              </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── FILTER CHIPS ───── */}
-          <Section
-            title="Filter Chips"
-            description="Dismissible filter tags for active filter display."
-          >
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Interactive (click X to remove)
-                </h3>
+          {/* ══════════════════════════════════════════════════════
+              SECTION 7: FILTER CHIPS & DATES
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Filter Chips & Circular Dates">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="rounded-2xl border border-border bg-card p-8 space-y-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Filter Chips</p>
                 <FilterChipGroup>
                   {chipFilters.map((chip, i) => (
                     <FilterChip
-                      key={`${chip.label}-${chip.value}`}
+                      key={chip.label}
                       label={chip.label}
-                      value={chip.value}
-                      onRemove={() => removeChip(i)}
+                      active={i === 0}
+                      onRemove={i > 0 ? () => setChipFilters((p) => p.filter((_, j) => j !== i)) : undefined}
                     />
                   ))}
-                  {chipFilters.length === 0 && (
-                    <span className="text-sm text-muted-foreground">
-                      No active filters —{" "}
-                      <button
-                        className="text-primary underline"
-                        onClick={() =>
-                          setChipFilters([
-                            { label: "Status", value: "Todo" },
-                            { label: "Importance", value: "High" },
-                            { label: "Tag", value: "#work" },
-                          ])
-                        }
-                      >
-                        reset
-                      </button>
-                    </span>
+                  {chipFilters.length < 3 && (
+                    <button
+                      className="text-xs text-coral underline"
+                      onClick={() =>
+                        setChipFilters([
+                          { label: "Team", value: "" },
+                          { label: "Insights", value: "" },
+                          { label: "Today", value: "" },
+                        ])
+                      }
+                    >
+                      reset
+                    </button>
                   )}
                 </FilterChipGroup>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Static (no close button)
-                </h3>
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground pt-4">Static Tags</p>
                 <FilterChipGroup>
                   <FilterChip label="#work" />
                   <FilterChip label="#personal" />
                   <FilterChip label="#urgent" />
-                  <FilterChip label="#meeting" />
                 </FilterChipGroup>
               </div>
-            </div>
-          </Section>
 
-          <Separator />
-
-          {/* ───── CIRCULAR DATE ───── */}
-          <Section
-            title="Circular Date"
-            description="Round date display showing day and abbreviated month."
-          >
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex flex-col items-center gap-2">
-                <CircularDate date={new Date()} />
-                <span className="text-xs text-muted-foreground">Today</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <CircularDate date={new Date(2026, 1, 25)} />
-                <span className="text-xs text-muted-foreground">Future</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <CircularDate date={new Date(2026, 1, 15)} overdue />
-                <span className="text-xs text-muted-foreground">Overdue</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <CircularDate date={new Date(2026, 11, 25)} />
-                <span className="text-xs text-muted-foreground">Dec 25</span>
-              </div>
-            </div>
-          </Section>
-
-          <Separator />
-
-          {/* ───── PROGRESS ───── */}
-          <Section
-            title="Progress Indicators"
-            description="Circular rings and linear progress bars."
-          >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Progress Rings (Custom)
-                </h3>
-                <div className="flex flex-wrap items-end gap-8">
+              <div className="rounded-2xl border border-border bg-card p-8 space-y-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  Circular Dates
+                </p>
+                <div className="flex items-end gap-6">
                   <div className="flex flex-col items-center gap-2">
-                    <ProgressRing value={0} size="sm" />
-                    <span className="text-xs text-muted-foreground">0%</span>
+                    <CircularDate date={new Date()} size="lg" />
+                    <span className="text-xs text-muted-foreground">Today</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <ProgressRing value={25} size="sm" />
-                    <span className="text-xs text-muted-foreground">25%</span>
+                    <CircularDate date={new Date(2026, 1, 25)} size="md" />
+                    <span className="text-xs text-muted-foreground">Future</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <ProgressRing value={50} size="md" />
-                    <span className="text-xs text-muted-foreground">50%</span>
+                    <CircularDate date={new Date(2026, 1, 15)} size="md" overdue />
+                    <span className="text-xs text-muted-foreground">Overdue</span>
                   </div>
                   <div className="flex flex-col items-center gap-2">
-                    <ProgressRing value={75} size="md" />
-                    <span className="text-xs text-muted-foreground">75%</span>
-                  </div>
-                  <div className="flex flex-col items-center gap-2">
-                    <ProgressRing value={100} size="lg" />
-                    <span className="text-xs text-muted-foreground">100%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Linear Progress (shadcn)
-                </h3>
-                <div className="space-y-3 max-w-lg">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0% complete</span>
-                      <span>0/12</span>
-                    </div>
-                    <Progress value={0} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>40% complete</span>
-                      <span>5/12</span>
-                    </div>
-                    <Progress value={40} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>67% complete</span>
-                      <span>8/12</span>
-                    </div>
-                    <Progress value={67} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>100% complete</span>
-                      <span>12/12</span>
-                    </div>
-                    <Progress value={100} />
+                    <CircularDate date={new Date(2026, 11, 25)} size="sm" />
+                    <span className="text-xs text-muted-foreground">Small</span>
                   </div>
                 </div>
               </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── STAT CARDS ───── */}
-          <Section
-            title="Stat Cards"
-            description="Summary metric cards for dashboard overview."
-          >
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                label="Today"
-                value={5}
-                description="tasks due today"
-                icon={Calendar}
-              />
-              <StatCard
-                label="Overdue"
-                value={2}
-                description="tasks past deadline"
-                icon={AlertTriangle}
-              />
-              <StatCard
-                label="In Progress"
-                value={3}
-                description="tasks active now"
-                icon={TrendingUp}
-              />
-              <StatCard
-                label="Completed"
-                value={12}
-                description="this week"
-                icon={CheckCircle2}
-              />
-            </div>
-          </Section>
-
-          <Separator />
-
-          {/* ───── BENTO CARDS ───── */}
-          <Section
-            title="Bento Cards"
-            description="Ring-bordered cards for bento grid layouts."
-          >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  List Cards (Bento Grid)
-                </h3>
-                <BentoGrid className="lg:grid-cols-3">
-                  <BentoCard>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">Work Tasks</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          12 tasks &middot; 3 overdue
-                        </p>
+          {/* ══════════════════════════════════════════════════════
+              SECTION 8: PROGRESS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Progress Indicators">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="rounded-2xl border border-border bg-card p-8 space-y-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Progress Rings</p>
+                <div className="flex items-end gap-8">
+                  <ProgressRing value={0} size="sm" />
+                  <ProgressRing value={25} size="sm" />
+                  <ProgressRing value={50} size="md" />
+                  <ProgressRing value={75} size="md" />
+                  <ProgressRing value={100} size="lg" />
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-8 space-y-4">
+                <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Linear Progress</p>
+                <div className="space-y-3">
+                  {[0, 40, 67, 100].map((v) => (
+                    <div key={v} className="space-y-1">
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{v}%</span>
                       </div>
-                      <ProgressRing value={67} size="sm" />
+                      <Progress value={v} />
                     </div>
-                    <div className="mt-4">
-                      <Progress value={67} />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        67% complete
-                      </p>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      <Badge variant="secondary">#work</Badge>
-                      <Badge variant="secondary">#dev</Badge>
-                      <Badge variant="secondary">#urgent</Badge>
-                    </div>
-                    <div className="mt-4">
-                      <PillButton size="sm">Open</PillButton>
-                    </div>
-                  </BentoCard>
-
-                  <BentoCard>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">Personal</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          8 tasks &middot; 1 overdue
-                        </p>
-                      </div>
-                      <ProgressRing value={80} size="sm" />
-                    </div>
-                    <div className="mt-4">
-                      <Progress value={80} />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        80% complete
-                      </p>
-                    </div>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      <Badge variant="secondary">#home</Badge>
-                      <Badge variant="secondary">#health</Badge>
-                    </div>
-                    <div className="mt-4">
-                      <PillButton size="sm">Open</PillButton>
-                    </div>
-                  </BentoCard>
-
-                  <BentoCard
-                    interactive={false}
-                    className="border-dashed flex flex-col items-center justify-center text-center"
-                  >
-                    <div className="rounded-2xl bg-muted p-3 mb-3">
-                      <Plus className="size-6 text-muted-foreground" />
-                    </div>
-                    <h3 className="font-semibold">New List</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Create a new list to organize your tasks
-                    </p>
-                    <div className="mt-4">
-                      <PillButton size="sm" variant="outline">
-                        Create
-                      </PillButton>
-                    </div>
-                  </BentoCard>
-                </BentoGrid>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Accent Variants
-                </h3>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <BentoCard accent="coral">
-                    <h4 className="font-semibold">Coral Accent</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Left border accent in coral
-                    </p>
-                  </BentoCard>
-                  <BentoCard accent="destructive">
-                    <h4 className="font-semibold">Destructive Accent</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Used for overdue task cards
-                    </p>
-                  </BentoCard>
-                  <BentoCard accent="success">
-                    <h4 className="font-semibold">Success Accent</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Used for completed items
-                    </p>
-                  </BentoCard>
+                  ))}
                 </div>
               </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── TASK CARD PREVIEW ───── */}
-          <Section
-            title="Task Card Preview"
-            description="How task cards will look in the list view."
-          >
-            <div className="max-w-2xl space-y-3">
-              {/* Normal task */}
-              <BentoCard className="flex items-start gap-4 p-4">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 9: STAT CARDS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Stat Cards" description="Summary metrics with circle icon buttons.">
+            <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard label="Today" value={5} description="tasks due today" icon={Calendar} />
+              <StatCard label="Overdue" value={2} description="tasks past deadline" icon={AlertTriangle} />
+              <StatCard label="In Progress" value={3} description="tasks active now" icon={TrendingUp} />
+              <StatCard label="Completed" value={12} description="this week" icon={CheckCircle2} />
+            </div>
+          </Section>
+
+          <Separator className="my-4" />
+
+          {/* ══════════════════════════════════════════════════════
+              SECTION 10: TASK CARD PREVIEWS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Task Cards" description="How task list items will look.">
+            <div className="max-w-2xl space-y-4">
+              <BentoCard className="flex items-start gap-5 !p-5">
                 <CircularDate date={new Date(2026, 1, 22)} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-medium">Review PR #234</h4>
+                    <h4 className="font-semibold">Review PR #234</h4>
                     <ImportanceBadge importance="HIGH" />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Due tomorrow
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-muted-foreground mt-0.5">Due tomorrow</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">#code</Badge>
                     <Badge variant="secondary">#urgent</Badge>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      <StatusBadge status="TODO" />
-                    </span>
+                    <StatusBadge status="TODO" className="ml-auto" />
                   </div>
                 </div>
               </BentoCard>
 
-              {/* Overdue task */}
-              <BentoCard accent="destructive" className="flex items-start gap-4 p-4">
+              <BentoCard accent="destructive" className="flex items-start gap-5 !p-5">
                 <CircularDate date={new Date(2026, 1, 18)} overdue />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-medium">Fix login bug</h4>
+                    <h4 className="font-semibold">Fix login bug</h4>
                     <ImportanceBadge importance="CRITICAL" />
                   </div>
-                  <p className="text-sm text-destructive font-medium mt-0.5">
-                    Overdue by 3 days
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-destructive font-medium mt-0.5">Overdue by 3 days</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">#bug</Badge>
-                    <Badge variant="secondary">#urgent</Badge>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      <StatusBadge status="IN_PROGRESS" />
-                    </span>
+                    <StatusBadge status="IN_PROGRESS" className="ml-auto" />
                   </div>
                 </div>
               </BentoCard>
 
-              {/* Completed task */}
-              <BentoCard accent="success" className="flex items-start gap-4 p-4 opacity-75">
+              <BentoCard accent="success" className="flex items-start gap-5 !p-5 opacity-70">
                 <CircularDate date={new Date(2026, 1, 20)} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="font-medium line-through text-muted-foreground">
-                      Write documentation
-                    </h4>
+                    <h4 className="font-semibold line-through text-muted-foreground">Write documentation</h4>
                     <ImportanceBadge importance="MEDIUM" />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    Completed 2 days ago
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-muted-foreground mt-0.5">Completed 2 days ago</p>
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
                     <Badge variant="secondary">#docs</Badge>
-                    <span className="text-xs text-muted-foreground ml-auto">
-                      <StatusBadge status="COMPLETED" />
-                    </span>
+                    <StatusBadge status="COMPLETED" className="ml-auto" />
                   </div>
                 </div>
               </BentoCard>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── FORM ELEMENTS ───── */}
-          <Section
-            title="Form Elements"
-            description="Inputs, textareas, checkboxes, and toggles."
-          >
-            <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Text Input</label>
-                <Input placeholder="Enter task description..." />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Search Input</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                  <Input placeholder="Search tasks..." className="pl-9" />
-                </div>
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <label className="text-sm font-medium">Textarea</label>
-                <Textarea
-                  placeholder="Describe the task in detail..."
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Checkboxes</label>
+          {/* ══════════════════════════════════════════════════════
+              SECTION 11: FORM ELEMENTS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Form Elements">
+            <div className="rounded-2xl border border-border bg-card p-8">
+              <div className="grid gap-6 sm:grid-cols-2 max-w-2xl">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="c1" />
-                    <label htmlFor="c1" className="text-sm">
-                      Unchecked item
-                    </label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox id="c2" defaultChecked />
-                    <label htmlFor="c2" className="text-sm">
-                      Checked item
-                    </label>
+                  <label className="text-sm font-medium">Text Input</label>
+                  <Input placeholder="Enter task description..." className="rounded-xl" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Search</label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input placeholder="Search..." className="pl-9 rounded-full" />
                   </div>
                 </div>
-              </div>
-              <div className="space-y-3">
-                <label className="text-sm font-medium">Toggle</label>
-                <div className="flex items-center gap-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <label className="text-sm font-medium">Textarea</label>
+                  <Textarea placeholder="Describe the task..." rows={3} className="rounded-xl" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Checkboxes</label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="c1" />
+                      <label htmlFor="c1" className="text-sm">Unchecked</label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox id="c2" defaultChecked />
+                      <label htmlFor="c2" className="text-sm">Checked</label>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Toggle</label>
                   <Toggle
                     pressed={togglePressed}
                     onPressedChange={setTogglePressed}
-                    aria-label="Toggle recurring"
-                    className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    className="data-[state=on]:bg-coral data-[state=on]:text-white rounded-full px-4"
                   >
                     {togglePressed ? "Recurring ON" : "Recurring OFF"}
                   </Toggle>
@@ -858,459 +738,227 @@ export default function DesignPage() {
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── AVATARS ───── */}
-          <Section
-            title="Avatars"
-            description="User avatars with initials fallback."
-          >
-            <div className="flex items-center gap-4">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                  JD
-                </AvatarFallback>
-              </Avatar>
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-coral-light text-coral text-sm font-medium">
-                  AB
-                </AvatarFallback>
-              </Avatar>
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-muted text-foreground font-medium">
-                  CD
-                </AvatarFallback>
-              </Avatar>
-              <Avatar className="h-14 w-14">
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                  U
-                </AvatarFallback>
-              </Avatar>
+          {/* ══════════════════════════════════════════════════════
+              SECTION 12: TABS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Tabs">
+            <div className="rounded-2xl border border-border bg-card p-8 space-y-6">
+              <Tabs defaultValue="all">
+                <TabsList>
+                  <TabsTrigger value="all">All</TabsTrigger>
+                  <TabsTrigger value="today">Today</TabsTrigger>
+                  <TabsTrigger value="overdue">Overdue</TabsTrigger>
+                  <TabsTrigger value="active">Active</TabsTrigger>
+                </TabsList>
+                <TabsContent value="all">
+                  <p className="text-sm text-muted-foreground p-4">All tasks shown here.</p>
+                </TabsContent>
+                <TabsContent value="today">
+                  <p className="text-sm text-muted-foreground p-4">Today&apos;s tasks.</p>
+                </TabsContent>
+              </Tabs>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── TABS ───── */}
-          <Section
-            title="Tabs"
-            description="Tab navigation for quick filtering and view switching."
-          >
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Default Variant
-                </h3>
-                <Tabs defaultValue="all">
-                  <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="today">Today</TabsTrigger>
-                    <TabsTrigger value="overdue">Overdue</TabsTrigger>
-                    <TabsTrigger value="active">Active</TabsTrigger>
-                    <TabsTrigger value="completed">Completed</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="all">
-                    <p className="text-sm text-muted-foreground p-4">
-                      Showing all tasks...
-                    </p>
-                  </TabsContent>
-                  <TabsContent value="today">
-                    <p className="text-sm text-muted-foreground p-4">
-                      Showing today&apos;s tasks...
-                    </p>
-                  </TabsContent>
-                  <TabsContent value="overdue">
-                    <p className="text-sm text-muted-foreground p-4">
-                      Showing overdue tasks...
-                    </p>
-                  </TabsContent>
-                </Tabs>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Line Variant
-                </h3>
-                <Tabs defaultValue="tasks">
-                  <TabsList variant="line">
-                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    <TabsTrigger value="templates">Templates</TabsTrigger>
-                    <TabsTrigger value="logs">Logs</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="tasks">
-                    <p className="text-sm text-muted-foreground p-4">
-                      Task content here...
-                    </p>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </div>
-          </Section>
-
-          <Separator />
-
-          {/* ───── DIALOGS & SHEETS ───── */}
-          <Section
-            title="Dialogs, Sheets & Alerts"
-            description="Modal overlays for task creation, detail panels, and confirmations."
-          >
-            <div className="flex flex-wrap items-center gap-3">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>Open Dialog</Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>New Task</DialogTitle>
-                    <DialogDescription>
-                      Add a task to your list. Fill in the details below.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">
-                        Description
-                      </label>
-                      <Textarea
-                        placeholder="What needs to be done?"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Deadline</label>
-                        <Input type="date" />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                          Importance
-                        </label>
-                        <Input placeholder="Medium" />
+          {/* ══════════════════════════════════════════════════════
+              SECTION 13: DIALOGS, SHEETS, ALERTS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Overlays" description="Dialog, Sheet, AlertDialog, Tooltip.">
+            <div className="rounded-2xl border border-border bg-card p-8">
+              <div className="flex flex-wrap items-center gap-4">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <PillButton variant="primary" showArrow={false}>Open Dialog</PillButton>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-2xl">
+                    <DialogHeader>
+                      <DialogTitle>New Task</DialogTitle>
+                      <DialogDescription>Add a task to your list.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <Textarea placeholder="What needs to be done?" rows={3} className="rounded-xl" />
+                      <div className="flex justify-end gap-3">
+                        <PillButton variant="outline" showArrow={false}>Cancel</PillButton>
+                        <PillButton variant="primary">Create</PillButton>
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button variant="outline">Cancel</Button>
-                      <PillButton>Create Task</PillButton>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
 
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline">Open Sheet</Button>
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Task Details</SheetTitle>
-                    <SheetDescription>
-                      View and manage task information.
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="space-y-6 p-4">
-                    <div>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <PillButton variant="outline" showArrow={false}>Open Sheet</PillButton>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Task Details</SheetTitle>
+                      <SheetDescription>View and manage task info.</SheetDescription>
+                    </SheetHeader>
+                    <div className="p-4 space-y-4">
                       <h3 className="text-lg font-semibold">Review PR #234</h3>
-                      <StatusBadge status="IN_PROGRESS" className="mt-2" />
-                    </div>
-                    <Separator />
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Deadline</span>
-                        <span>Feb 22, 2026</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Importance
-                        </span>
-                        <ImportanceBadge importance="HIGH" />
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tags</span>
-                        <div className="flex gap-1">
-                          <Badge variant="secondary">#code</Badge>
-                          <Badge variant="secondary">#urgent</Badge>
+                      <StatusBadge status="IN_PROGRESS" />
+                      <Separator />
+                      <div className="text-sm space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Deadline</span>
+                          <span>Feb 22, 2026</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Importance</span>
+                          <ImportanceBadge importance="HIGH" />
                         </div>
                       </div>
+                      <Separator />
+                      <Button className="w-full"><Edit className="mr-2 size-4" />Edit</Button>
+                      <Button variant="destructive" className="w-full"><Trash2 className="mr-2 size-4" />Delete</Button>
                     </div>
-                    <Separator />
-                    <div className="flex flex-col gap-2">
-                      <Button className="w-full">
-                        <Edit className="mr-2 size-4" /> Edit Task
-                      </Button>
-                      <Button variant="destructive" className="w-full">
-                        <Trash2 className="mr-2 size-4" /> Delete Task
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                  </SheetContent>
+                </Sheet>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">Delete Alert</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this task?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. The task and all its
-                      instances will be permanently removed.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <PillButton variant="outline" showArrow={false}>Delete Alert</PillButton>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this task?</AlertDialogTitle>
+                      <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
 
-              <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Clock />
-                    </Button>
+                    <IconButton><Clock className="size-5 text-foreground" /></IconButton>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>This is a tooltip</p>
-                  </TooltipContent>
+                  <TooltipContent><p>Tooltip example</p></TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
-            </div>
-          </Section>
-
-          <Separator />
-
-          {/* ───── CARDS ───── */}
-          <Section
-            title="shadcn Cards"
-            description="Standard card component from shadcn."
-          >
-            <div className="grid gap-4 sm:grid-cols-2 max-w-2xl">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Card Title</CardTitle>
-                  <CardDescription>
-                    This is a standard shadcn card component.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm">
-                    Card content goes here. Can contain any elements.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="size-4 text-primary" />
-                    With Icon
-                  </CardTitle>
-                  <CardDescription>Card with an icon in header.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <Progress value={60} />
-                    <p className="text-xs text-muted-foreground">
-                      60% complete
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </Section>
-
-          <Separator />
-
-          {/* ───── SKELETONS ───── */}
-          <Section
-            title="Skeleton Loaders"
-            description="Loading placeholders for content."
-          >
-            <div className="space-y-6 max-w-xl">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Task Card Skeleton
-                </h3>
-                <div className="rounded-2xl border p-4 flex items-start gap-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                    <div className="flex gap-2 mt-3">
-                      <Skeleton className="h-5 w-16 rounded-full" />
-                      <Skeleton className="h-5 w-12 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                  Stat Card Skeleton
-                </h3>
-                <div className="grid grid-cols-3 gap-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="rounded-2xl border p-5 space-y-3">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-8 w-12" />
-                      <Skeleton className="h-3 w-24" />
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
           </Section>
 
-          <Separator />
+          <Separator className="my-4" />
 
-          {/* ───── EMPTY STATES ───── */}
-          <Section
-            title="Empty States"
-            description="Placeholder displays when no content is available."
-          >
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* ══════════════════════════════════════════════════════
+              SECTION 14: SKELETONS
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Loading Skeletons">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="rounded-2xl border border-border bg-card p-6 flex items-start gap-4">
+                <Skeleton className="h-14 w-14 rounded-full" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                    <Skeleton className="h-5 w-12 rounded-full" />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {[1, 2].map((i) => (
+                  <div key={i} className="rounded-2xl border border-border bg-card p-6 space-y-3">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-8 w-12" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Section>
+
+          <Separator className="my-4" />
+
+          {/* ══════════════════════════════════════════════════════
+              SECTION 15: EMPTY STATES
+          ══════════════════════════════════════════════════════ */}
+          <Section title="Empty States">
+            <div className="grid gap-5 sm:grid-cols-3">
               <EmptyState
                 icon={ListTodo}
                 title="No lists yet"
-                description="Create your first list to get started organizing your tasks."
+                description="Create your first list to get started."
                 action={<PillButton size="sm">Create List</PillButton>}
               />
               <EmptyState
                 icon={Inbox}
-                title="No tasks yet"
-                description="Add a task to get started with this list."
+                title="No tasks"
+                description="Add a task to this list."
                 action={<PillButton size="sm">Add Task</PillButton>}
               />
               <EmptyState
                 icon={Search}
                 title="No results"
-                description="No tasks match your current filters. Try adjusting them."
-                action={
-                  <PillButton size="sm" variant="outline" showArrow={false}>
-                    Clear Filters
-                  </PillButton>
-                }
+                description="Try adjusting your filters."
+                action={<PillButton size="sm" variant="outline" showArrow={false}>Clear Filters</PillButton>}
               />
             </div>
           </Section>
 
-          <Separator />
-
-          {/* ───── COMPOSITE: DASHBOARD PREVIEW ───── */}
-          <Section
-            title="Dashboard Preview"
-            description="Composite layout showing how components work together."
-          >
-            <div className="rounded-2xl border bg-card p-6 space-y-6">
-              {/* Greeting */}
-              <div>
-                <h2 className="text-2xl font-bold">Good morning, John</h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Here&apos;s your overview for today
-                </p>
-              </div>
-
-              {/* Stats row */}
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <StatCard
-                  label="Today"
-                  value={5}
-                  description="tasks due"
-                  icon={Calendar}
-                />
-                <StatCard
-                  label="Overdue"
-                  value={2}
-                  description="past deadline"
-                  icon={AlertTriangle}
-                />
-                <StatCard
-                  label="In Progress"
-                  value={3}
-                  description="active"
-                  icon={Activity}
-                />
-                <StatCard
-                  label="Done This Week"
-                  value={12}
-                  description="completed"
-                  icon={CheckCircle2}
-                />
-              </div>
-
-              {/* Lists header */}
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">My Lists</h3>
-                <PillButton size="sm" variant="outline">
-                  View All
-                </PillButton>
-              </div>
-
-              {/* List cards */}
-              <BentoGrid className="lg:grid-cols-3">
-                <BentoCard>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-semibold">Work Tasks</h4>
-                      <p className="text-sm text-muted-foreground">
-                        12 tasks &middot; 3 overdue
-                      </p>
-                    </div>
-                    <ProgressRing value={67} size="sm" />
+          {/* ══════════════════════════════════════════════════════
+              SECTION 16: LIST CARDS (BENTO)
+          ══════════════════════════════════════════════════════ */}
+          <Separator className="my-4" />
+          <Section title="List Cards" description="Bento grid cards for task lists.">
+            <BentoGrid>
+              <BentoCard>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg">Work Tasks</h3>
+                    <p className="text-sm text-muted-foreground mt-1">12 tasks &middot; 3 overdue</p>
                   </div>
-                  <Progress value={67} className="mt-3" />
-                  <div className="mt-3 flex gap-1.5">
-                    <Badge variant="secondary">#work</Badge>
-                    <Badge variant="secondary">#dev</Badge>
-                  </div>
-                  <div className="mt-3">
-                    <PillButton size="sm">
-                      Open
-                    </PillButton>
-                  </div>
-                </BentoCard>
+                  <ProgressRing value={67} size="sm" />
+                </div>
+                <Progress value={67} className="mt-4" />
+                <p className="text-xs text-muted-foreground mt-1">67% complete</p>
+                <div className="mt-3 flex gap-1.5">
+                  <Badge variant="secondary">#work</Badge>
+                  <Badge variant="secondary">#dev</Badge>
+                </div>
+                <div className="mt-4">
+                  <PillButton size="sm">Open</PillButton>
+                </div>
+              </BentoCard>
 
-                <BentoCard>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="font-semibold">Personal</h4>
-                      <p className="text-sm text-muted-foreground">
-                        8 tasks &middot; 0 overdue
-                      </p>
-                    </div>
-                    <ProgressRing value={80} size="sm" />
+              <BentoCard>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg">Personal</h3>
+                    <p className="text-sm text-muted-foreground mt-1">8 tasks &middot; 0 overdue</p>
                   </div>
-                  <Progress value={80} className="mt-3" />
-                  <div className="mt-3 flex gap-1.5">
-                    <Badge variant="secondary">#home</Badge>
-                  </div>
-                  <div className="mt-3">
-                    <PillButton size="sm">
-                      Open
-                    </PillButton>
-                  </div>
-                </BentoCard>
+                  <ProgressRing value={80} size="sm" />
+                </div>
+                <Progress value={80} className="mt-4" />
+                <p className="text-xs text-muted-foreground mt-1">80% complete</p>
+                <div className="mt-3 flex gap-1.5">
+                  <Badge variant="secondary">#home</Badge>
+                </div>
+                <div className="mt-4">
+                  <PillButton size="sm">Open</PillButton>
+                </div>
+              </BentoCard>
 
-                <BentoCard
-                  interactive={false}
-                  className="border-dashed flex flex-col items-center justify-center text-center"
-                >
-                  <Plus className="size-8 text-muted-foreground mb-2" />
-                  <h4 className="font-semibold">New List</h4>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Organize your tasks
-                  </p>
-                  <PillButton size="sm" variant="outline" className="mt-3">
-                    Create
-                  </PillButton>
-                </BentoCard>
-              </BentoGrid>
-            </div>
+              <BentoCard interactive={false} className="border-dashed flex flex-col items-center justify-center text-center">
+                <div className="rounded-full border border-border p-4 mb-3">
+                  <Plus className="size-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold">New List</h3>
+                <p className="text-xs text-muted-foreground mt-1">Organize your tasks</p>
+                <PillButton size="sm" variant="outline" className="mt-4">Create</PillButton>
+              </BentoCard>
+            </BentoGrid>
           </Section>
 
           {/* Footer */}
-          <div className="border-t pt-8 pb-4 text-center text-xs text-muted-foreground">
+          <div className="border-t border-border pt-8 pb-4 text-center text-xs text-muted-foreground">
             TodoApp Design System &middot; v0.1.0 &middot; Warm Coral Theme
           </div>
         </div>
