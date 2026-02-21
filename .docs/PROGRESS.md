@@ -5,30 +5,36 @@
 ### Phase 0: Foundation
 **Description:** Set up the core infrastructure - database, authentication, and deployment baseline.
 
-**Status:** Not Started
+**Status:** Completed
 
 **Sub Tasks:**
-- [ ] Initialize Prisma with PostgreSQL schema
-- [ ] Set up NextAuth/Auth.js with credentials provider
-- [ ] Create base layout with authentication state
-- [ ] Set up route protection (middleware)
-- [ ] Configure Vercel deployment pipeline
-- [ ] Create local env setup documentation
+- [x] Initialize Prisma with PostgreSQL schema
+- [x] Set up NextAuth/Auth.js with credentials provider
+- [x] Create base layout with authentication state
+- [x] Set up route protection (middleware)
+- [x] Configure Vercel deployment pipeline
+- [x] Create local env setup documentation
 
 **Summary of what has been done so far:**
 - Next.js project scaffolded with App Router
 - Tailwind CSS configured
 - shadcn/ui components set up (buttons, inputs, cards, badges, forms, dialogs, dropdowns, selects, comboboxes, etc.)
 - Base fonts configured (Outfit, Geist)
+- Prisma with PostgreSQL schema (User, TaskList, TaskListMember, TaskTemplate, RecurrenceRule, TaskInstance)
+- NextAuth with credentials provider
+- Login and register pages
+- Route protection via middleware
+- Docker Compose for local PostgreSQL
+- Local setup documentation (.docs/LOCAL_SETUP.md)
 
 **What is left to do:**
-- All Phase 0 tasks listed above
+- Phase 1: Lists and One Off Tasks
 
 **Notes:**
-- Current package.json uses bun (bun.lock present)
+- Prisma 7.x requires @prisma/adapter-pg and pg driver
 - Next.js 16.1.6, React 19.2.3
 - Uses Base UI and Radix UI for components
-- No tRPC installed yet - will need to add
+- tRPC not yet installed
 
 ---
 
