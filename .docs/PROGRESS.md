@@ -330,6 +330,43 @@
 
 ---
 
+### Phase 5f: Layout & Interaction Refinements
+**Description:** Refine list view layout, add dedicated lists page, switch task edit to modal, and improve kanban board layout.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Move Add Task button to breadcrumbs bar via new AppShell `action` prop
+- [x] Header card: large ProgressRing (lg) on the right side, stats + tags on the left
+- [x] Include aggregated tags in the list header card (collected from all tasks, max 8)
+- [x] Move `+Add Filter` inline with due filter pills (All, Today, Overdue, Upcoming)
+- [x] Kanban board: 3-column responsive grid (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`)
+- [x] Kanban board: contrasting background colors per status column (blue/amber/green/red tints)
+- [x] Table view: CircularDate component on the left of each task row
+- [x] Convert TaskEditSheet (side Sheet) to TaskEditDialog (centered Dialog modal)
+- [x] Create `/lists` page with server component + `ListsPageContent` client component
+- [x] Add "Lists" nav link to TopBar (desktop nav + mobile Sheet menu)
+- [x] Lint + build pass clean (13 pages)
+
+**Summary of what has been done:**
+- **AppShell:** Added `action` prop that renders on the right side of the breadcrumbs row. Used by list view to place "Add Task" button at the top-level breadcrumbs bar.
+- **Header card redesign:** Split into left (title, description, stats, tags) and right (large ProgressRing) flex layout. Tags collected from all tasks in the list (max 8) and displayed as clickable badges that filter by tag.
+- **Toolbar:** `+Add Filter` dropdown moved inline with the due pills (All, Today, Overdue, Upcoming) in the same FilterChipGroup. Active filter chips only shown when filters are active.
+- **Kanban board:** Changed from vertical stack (`space-y-4`) to responsive 3-column grid. Added per-status contrasting backgrounds: Draft (muted), Todo (blue tint), In Progress (amber tint), Completed (green tint), Failed (red tint). Cards show single-column list within each status column with vertical scroll.
+- **Table view:** Added CircularDate component as the first visual element in each task row (uses deadline date, falls back to occurrence date). Hidden on mobile.
+- **Task edit:** Converted from Sheet (side slide-over) to Dialog (centered modal). Same form fields and delete confirmation AlertDialog. Renamed export to `TaskEditDialog`.
+- **/lists page:** New dedicated page showing all user's task lists in a responsive grid with progress rings, tags, stats. "New List" action in breadcrumbs bar. Added "Lists" to TopBar navigation.
+
+**What is left to do:**
+- Merge `ui-redesign` branch to `main` (pending user approval)
+
+**Notes:**
+- 9 commits on `ui-redesign` branch total
+- `/lists` page reuses the same data fetching pattern as the dashboard but displays lists in a dedicated full-page layout
+- AppShell `action` prop is available for any page that needs a top-level action button
+
+---
+
 ## Future Plans
 
 ### Description
