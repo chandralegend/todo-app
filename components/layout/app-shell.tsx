@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopBar } from "@/components/layout/top-bar";
 import { Footer } from "@/components/layout/footer";
-import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { Toaster } from "@/components/ui/sonner";
 
 type TaskListItem = {
@@ -23,24 +22,19 @@ interface AppShellProps {
 export function AppShell({
   children,
   lists = [],
-  breadcrumbOverrides,
 }: AppShellProps) {
   return (
     <TooltipProvider delayDuration={0}>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={false}>
         <AppSidebar lists={lists} />
         <SidebarInset>
           <TopBar />
           <div className="flex flex-1 flex-col">
-            {/* Breadcrumbs */}
-            <div className="border-b px-4 sm:px-6 py-3">
-              <AppBreadcrumbs overrides={breadcrumbOverrides} />
-            </div>
+            {/* Main content — centered like /design */}
+            <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
+              {children}
+            </main>
 
-            {/* Main content */}
-            <main className="flex-1 px-4 py-4">{children}</main>
-
-            {/* Footer */}
             <Footer />
           </div>
         </SidebarInset>

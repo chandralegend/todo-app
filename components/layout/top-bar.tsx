@@ -1,11 +1,11 @@
 "use client";
 
-import { Search } from "lucide-react";
-import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { Search, Plus, Menu } from "lucide-react";
+import { useSession, signOut } from "next-auth/react";
 
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -14,12 +14,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { signOut } from "next-auth/react";
 import { Settings, LogOut, Activity } from "lucide-react";
-import Link from "next/link";
+
+function IconBtn({
+  children,
+  className,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }) {
+  return (
+    <button
+      className={`flex items-center justify-center rounded-full border border-border bg-card p-2 transition-colors hover:bg-muted cursor-pointer ${className ?? ""}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function TopBar() {
   const { data: session } = useSession();
+  const { toggleSidebar } = useSidebar();
 
   const userInitials = session?.user?.name
     ? session.user.name
@@ -31,60 +45,80 @@ export function TopBar() {
     : "U";
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b bg-card px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="h-5" />
-
-      {/* Search bar */}
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input
-          placeholder="Search tasks..."
-          className="pl-9 h-9 bg-muted/50 border-none"
-        />
-      </div>
-
-      <div className="ml-auto flex items-center gap-2">
-        {/* User avatar dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-full p-1.5 hover:bg-muted transition-colors cursor-pointer">
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium">{session?.user?.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {session?.user?.email}
-              </p>
+    <header className="border-b border-border bg-card">
+      <div className="mx-auto max-w-5xl px-5 py-3 flex items-center justify-between">
+        {/* Left: hamburger + logo */}
+        <div className="flex items-center gap-3">
+          <IconBtn onClick={toggleSidebar} aria-label="Toggle sidebar">
+            <Menu className="size-4" />
+          </IconBtn>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs">
+              T
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/admin/recurrence">
-                <Activity className="mr-2 size-4" />
-                Recurrence Logs
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/settings">
-                <Settings className="mr-2 size-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: "/login" })}
-            >
-              <LogOut className="mr-2 size-4" />
-              Sign Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <div className="leading-none">
+              <p className="font-semibold text-sm">TodoApp</p>
+              <p className="text-[0.65rem] text-muted-foreground">Task Manager</p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Right: actions + avatar + search */}
+        <div className="flex items-center gap-2">
+          <Link href="/lists/new">
+            <IconBtn as-child aria-label="New list">
+              <Plus className="size-4" />
+            </IconBtn>
+          </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 rounded-full hover:bg-muted transition-colors cursor-pointer p-1">
+                <Avatar className="h-8 w-8 border border-border">
+                  <AvatarFallback className="bg-coral-light text-coral font-semibold text-xs">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden md:block leading-none text-left">
+                  <p className="text-xs font-medium">{session?.user?.name ?? "User"}</p>
+                  <p className="text-[0.65rem] text-muted-foreground">{session?.user?.email ?? ""}</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-3 py-2">
+                <p className="text-sm font-medium">{session?.user?.name}</p>
+                <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/admin/recurrence">
+                  <Activity className="mr-2 size-4" />
+                  Recurrence Logs
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">
+                  <Settings className="mr-2 size-4" />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+                <LogOut className="mr-2 size-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <IconBtn aria-label="Search" className="hidden sm:flex">
+            <Search className="size-4" />
+          </IconBtn>
+          <Input
+            placeholder="Search ..."
+            className="hidden lg:block w-44 rounded-full border-border bg-card pl-3 h-8 text-xs"
+          />
+        </div>
       </div>
     </header>
   );

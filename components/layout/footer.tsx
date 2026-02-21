@@ -1,11 +1,8 @@
 export function Footer() {
   return (
-    <footer className="border-t bg-card/50 px-6 py-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} TodoApp. All rights reserved.</p>
-        <div className="flex items-center gap-4">
-          <span>v0.1.0</span>
-        </div>
+    <footer className="border-t border-border pt-4 pb-2">
+      <div className="mx-auto max-w-5xl px-5 text-center text-[0.6rem] text-muted-foreground">
+        TodoApp &middot; v0.1.0 &middot; &copy; {new Date().getFullYear()}
       </div>
     </footer>
   );

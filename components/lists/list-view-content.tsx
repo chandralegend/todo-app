@@ -16,9 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
 import { TaskEditSheet } from "@/components/lists/task-edit-sheet";
 import { KanbanBoard } from "@/components/lists/kanban-board";
 import { QuickAddDialog } from "@/components/lists/quick-add-dialog";
@@ -317,7 +315,7 @@ export function ListViewContent({
               }
             />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-w-2xl">
               {tasks.map((task) => {
                 const overdue = isOverdue(task.deadlineAt, task.status);
                 const deadline = task.deadlineAt
@@ -327,158 +325,65 @@ export function ListViewContent({
                 return (
                   <BentoCard
                     key={task.id}
-                    accent={overdue ? "destructive" : "none"}
-                    interactive
-                    className="p-4"
+                    accent={overdue ? "destructive" : task.status === "COMPLETED" ? "success" : "none"}
+                    className={`flex items-start gap-4 !p-4 ${task.status === "COMPLETED" ? "opacity-70" : ""}`}
                     onClick={() => {
                       setEditingTask(task);
                       setSheetOpen(true);
                     }}
                   >
-                    <div className="flex items-start gap-3">
-                      {/* Quick complete checkbox */}
-                      {canWrite && (
-                        <div
-                          className="pt-0.5 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
+                    {/* Circular date */}
+                    {deadline && (
+                      <CircularDate
+                        date={deadline}
+                        overdue={overdue}
+                        className="hidden sm:flex shrink-0"
+                      />
+                    )}
+
+                    {/* Task content — matches /design task card */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4
+                          className={`font-semibold text-sm ${
+                            task.status === "COMPLETED"
+                              ? "line-through text-muted-foreground"
+                              : ""
+                          }`}
                         >
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div>
-                                <Checkbox
-                                  checked={task.status === "COMPLETED"}
-                                  onCheckedChange={(checked) => {
-                                    const formData = new FormData();
-                                    formData.set("taskId", task.id);
-                                    formData.set(
-                                      "status",
-                                      checked ? "COMPLETED" : "TODO"
-                                    );
-                                    updateTaskStatusAction(formData);
-                                  }}
-                                  disabled={
-                                    task.status !== "COMPLETED" &&
-                                    task.status !== "TODO" &&
-                                    task.status !== "IN_PROGRESS"
-                                  }
-                                />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {task.status === "COMPLETED"
-                                ? "Mark as To Do"
-                                : "Mark as Complete"}
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      )}
+                          {task.descriptionSnapshot}
+                        </h4>
+                        <ImportanceBadge importance={task.importanceSnapshot} />
+                      </div>
 
-                      {/* Circular date */}
+                      {/* Due text */}
                       {deadline && (
-                        <CircularDate
-                          date={deadline}
-                          overdue={overdue}
-                          size="md"
-                          className="hidden sm:flex shrink-0"
-                        />
+                        <p
+                          className={`text-xs mt-0.5 ${
+                            overdue
+                              ? "text-destructive font-medium"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {formatDue(task.deadlineAt)}
+                        </p>
                       )}
 
-                      {/* Task content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
-                          <h3
-                            className={`text-sm font-medium leading-snug ${
-                              task.status === "COMPLETED"
-                                ? "line-through text-muted-foreground"
-                                : "text-foreground"
-                            }`}
+                      {/* Tags + StatusBadge inline — matches /design */}
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        {task.tagsSnapshot.map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(buildFilterUrl({ tag }));
+                            }}
+                            className="cursor-pointer"
                           >
-                            {task.descriptionSnapshot}
-                          </h3>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <ImportanceBadge
-                              importance={task.importanceSnapshot}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Deadline text (visible on mobile when no circular date) */}
-                        {deadline && (
-                          <p
-                            className={`text-xs mt-1 ${
-                              overdue
-                                ? "text-destructive font-medium"
-                                : "text-muted-foreground"
-                            }`}
-                          >
-                            {formatDue(task.deadlineAt)}
-                          </p>
-                        )}
-
-                        {/* Tags */}
-                        {task.tagsSnapshot.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {task.tagsSnapshot.map((tag) => (
-                              <button
-                                key={tag}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(buildFilterUrl({ tag }));
-                                }}
-                                className="cursor-pointer"
-                              >
-                                <Badge variant="secondary" className="text-[0.6rem] h-4 px-1.5 hover:bg-secondary/80 transition-colors">
-                                  #{tag}
-                                </Badge>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Status row */}
-                        <div className="flex items-center gap-2 mt-3">
-                          <StatusBadge status={task.status} />
-
-                          {canWrite && (
-                            <form
-                              action={updateTaskStatusAction}
-                              className="flex items-center gap-1.5 ml-auto"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <input
-                                type="hidden"
-                                name="taskId"
-                                value={task.id}
-                              />
-                              <select
-                                name="status"
-                                defaultValue={task.status}
-                                className="h-9 sm:h-7 rounded-lg border border-border bg-card px-2 py-0.5 text-sm sm:text-xs cursor-pointer"
-                              >
-                                {(allowedStatuses[task.id] ?? []).map(
-                                  (option: string) => (
-                                    <option key={option} value={option}>
-                                      {option.replace("_", " ")}
-                                    </option>
-                                  )
-                                )}
-                              </select>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    type="submit"
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-9 sm:h-7 px-3 sm:px-2.5 text-sm sm:text-xs"
-                                  >
-                                    Update
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>Change task status</TooltipContent>
-                              </Tooltip>
-                            </form>
-                          )}
-                        </div>
+                            <Badge variant="secondary">#{tag}</Badge>
+                          </button>
+                        ))}
+                        <StatusBadge status={task.status} className="ml-auto" />
                       </div>
                     </div>
                   </BentoCard>

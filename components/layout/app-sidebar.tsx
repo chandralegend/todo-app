@@ -65,12 +65,13 @@ export function AppSidebar({ lists = [] }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs">
             T
           </div>
-          <span className="font-bold text-lg tracking-tight group-data-[collapsible=icon]:hidden">
-            TodoApp
-          </span>
+          <div className="leading-none group-data-[collapsible=icon]:hidden">
+            <p className="font-semibold text-sm">TodoApp</p>
+            <p className="text-[0.65rem] text-muted-foreground">Task Manager</p>
+          </div>
         </Link>
       </SidebarHeader>
 
