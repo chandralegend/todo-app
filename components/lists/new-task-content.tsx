@@ -10,6 +10,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface NewTaskContentProps {
   list: { id: string; name: string };
@@ -67,35 +75,35 @@ export function NewTaskContent({
             {/* Importance + Status row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="importance">Importance</FieldLabel>
-                <select
-                  id="importance"
-                  name="importance"
-                  defaultValue="MEDIUM"
-                  className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                >
-                  {importanceOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                <FieldLabel>Importance</FieldLabel>
+                <Select name="importance" defaultValue="MEDIUM">
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {importanceOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="status">Initial Status</FieldLabel>
-                <select
-                  id="status"
-                  name="status"
-                  defaultValue="TODO"
-                  className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                <FieldLabel>Initial Status</FieldLabel>
+                <Select name="status" defaultValue="TODO">
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
             </div>
 
@@ -120,31 +128,25 @@ export function NewTaskContent({
               </div>
 
               <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="isRecurring"
-                  className="size-4 accent-primary"
-                />
+                <Checkbox name="isRecurring" value="on" />
                 Make this a recurring task
               </label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel htmlFor="recurrenceFrequency">
-                    Frequency
-                  </FieldLabel>
-                  <select
-                    id="recurrenceFrequency"
-                    name="recurrenceFrequency"
-                    defaultValue="DAILY"
-                    className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                  >
-                    {recurrenceOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
+                  <FieldLabel>Frequency</FieldLabel>
+                  <Select name="recurrenceFrequency" defaultValue="DAILY">
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {recurrenceOptions.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
 
                 <Field>
@@ -198,23 +200,21 @@ export function NewTaskContent({
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="recurrenceWeekday">
-                    Weekday (weekly)
-                  </FieldLabel>
-                  <select
-                    id="recurrenceWeekday"
-                    name="recurrenceWeekday"
-                    defaultValue={new Date().getDay()}
-                    className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                  >
-                    <option value={0}>Sunday</option>
-                    <option value={1}>Monday</option>
-                    <option value={2}>Tuesday</option>
-                    <option value={3}>Wednesday</option>
-                    <option value={4}>Thursday</option>
-                    <option value={5}>Friday</option>
-                    <option value={6}>Saturday</option>
-                  </select>
+                  <FieldLabel>Weekday (weekly)</FieldLabel>
+                  <Select name="recurrenceWeekday" defaultValue={String(new Date().getDay())}>
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Sunday</SelectItem>
+                      <SelectItem value="1">Monday</SelectItem>
+                      <SelectItem value="2">Tuesday</SelectItem>
+                      <SelectItem value="3">Wednesday</SelectItem>
+                      <SelectItem value="4">Thursday</SelectItem>
+                      <SelectItem value="5">Friday</SelectItem>
+                      <SelectItem value="6">Saturday</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
             </div>

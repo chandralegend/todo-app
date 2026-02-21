@@ -26,6 +26,13 @@ import { PillButton } from "@/components/ui/pill-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ImportanceBadge } from "@/components/ui/importance-badge";
 import { Button } from "@/components/ui/button";
@@ -117,7 +124,7 @@ export function TaskEditSheet({
         </div>
 
         {canWrite ? (
-          <form action={handleEdit} className="flex-1 flex flex-col">
+          <form key={task.id} action={handleEdit} className="flex-1 flex flex-col">
             <div className="flex-1 space-y-4 px-4 py-2">
               <input type="hidden" name="taskId" value={task.id} />
 
@@ -149,35 +156,35 @@ export function TaskEditSheet({
               {/* Importance + Status row */}
               <div className="grid grid-cols-2 gap-3">
                 <Field>
-                  <FieldLabel htmlFor="edit-importance">Importance</FieldLabel>
-                  <select
-                    id="edit-importance"
-                    name="importance"
-                    defaultValue={task.importanceSnapshot}
-                    className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                  >
-                    {importanceOptions.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
+                  <FieldLabel>Importance</FieldLabel>
+                  <Select name="importance" defaultValue={task.importanceSnapshot}>
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {importanceOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="edit-status">Status</FieldLabel>
-                  <select
-                    id="edit-status"
-                    name="status"
-                    defaultValue={task.status}
-                    className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                  >
-                    {allowedStatuses.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt.replace("_", " ")}
-                      </option>
-                    ))}
-                  </select>
+                  <FieldLabel>Status</FieldLabel>
+                  <Select name="status" defaultValue={task.status}>
+                    <SelectTrigger className="h-10 w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allowedStatuses.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt.replace("_", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </Field>
               </div>
 

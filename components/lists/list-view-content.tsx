@@ -18,12 +18,19 @@ import { AppShell } from "@/components/layout/app-shell";
 import { PillButton } from "@/components/ui/pill-button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ImportanceBadge } from "@/components/ui/importance-badge";
-import { Progress } from "@/components/ui/progress";
+import { ProgressRing } from "@/components/ui/progress-ring";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { FilterChip, FilterChipGroup } from "@/components/ui/filter-chip";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TaskEditSheet } from "@/components/lists/task-edit-sheet";
 import { KanbanBoard } from "@/components/lists/kanban-board";
 import { QuickAddDialog } from "@/components/lists/quick-add-dialog";
@@ -172,13 +179,7 @@ export function ListViewContent({
                 {list.completedCount} done
               </span>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-muted-foreground">Progress</span>
-                <span className="text-xs font-semibold">{list.progress}%</span>
-              </div>
-              <Progress value={list.progress} />
-            </div>
+            <ProgressRing value={list.progress} size="sm" />
           </div>
         </div>
 
@@ -201,17 +202,21 @@ export function ListViewContent({
 
           <div className="flex items-center gap-2">
             <ArrowUpDown className="size-3.5 text-muted-foreground" />
-            <select
+            <Select
               value={currentFilters.sort}
-              onChange={(e) =>
-                router.push(buildFilterUrl({ sort: e.target.value }))
+              onValueChange={(value) =>
+                router.push(buildFilterUrl({ sort: value }))
               }
-              className="h-8 rounded-lg border border-border bg-card px-2.5 py-1 text-xs cursor-pointer"
             >
-              <option value="created_desc">Newest</option>
-              <option value="deadline_asc">Deadline</option>
-              <option value="importance_desc">Importance</option>
-            </select>
+              <SelectTrigger className="h-8 w-[120px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">Newest</SelectItem>
+                <SelectItem value="deadline_asc">Deadline</SelectItem>
+                <SelectItem value="importance_desc">Importance</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

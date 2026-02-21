@@ -14,7 +14,7 @@ import { AppShell } from "@/components/layout/app-shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { BentoGrid } from "@/components/ui/bento-card";
 import { PillButton } from "@/components/ui/pill-button";
-import { Progress } from "@/components/ui/progress";
+import { ProgressRing } from "@/components/ui/progress-ring";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 
@@ -107,13 +107,10 @@ export function DashboardContent({ stats, lists }: DashboardContentProps) {
                       </p>
                     </div>
 
-                    {/* Progress bar + percentage */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-muted-foreground">Progress</span>
-                        <span className="text-xs font-semibold">{list.progress}%</span>
-                      </div>
-                      <Progress value={list.progress} />
+                    {/* Progress ring */}
+                    <div className="flex items-center gap-2">
+                      <ProgressRing value={list.progress} size="sm" />
+                      <span className="text-xs text-muted-foreground">complete</span>
                     </div>
 
                     {/* Tags */}

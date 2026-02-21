@@ -15,6 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddTaskDialogProps {
   open: boolean;
@@ -93,19 +101,19 @@ export function QuickAddDialog({
             </Field>
 
             <Field>
-              <FieldLabel htmlFor="add-importance">Importance</FieldLabel>
-              <select
-                id="add-importance"
-                name="importance"
-                defaultValue="MEDIUM"
-                className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-              >
-                {importanceOptions.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <FieldLabel>Importance</FieldLabel>
+              <Select name="importance" defaultValue="MEDIUM">
+                <SelectTrigger className="h-10 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {importanceOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>
+                      {opt}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
           </div>
 
@@ -139,19 +147,19 @@ export function QuickAddDialog({
 
               {/* Status */}
               <Field>
-                <FieldLabel htmlFor="add-status">Initial Status</FieldLabel>
-                <select
-                  id="add-status"
-                  name="status"
-                  defaultValue="TODO"
-                  className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option.replace("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                <FieldLabel>Initial Status</FieldLabel>
+                <Select name="status" defaultValue="TODO">
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </Field>
 
               {/* Recurrence */}
@@ -162,29 +170,25 @@ export function QuickAddDialog({
                 </div>
 
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    name="isRecurring"
-                    className="size-4 accent-primary"
-                  />
+                  <Checkbox name="isRecurring" value="on" />
                   Make this a recurring task
                 </label>
 
                 <div className="grid grid-cols-2 gap-3">
                   <Field>
-                    <FieldLabel htmlFor="add-frequency">Frequency</FieldLabel>
-                    <select
-                      id="add-frequency"
-                      name="recurrenceFrequency"
-                      defaultValue="DAILY"
-                      className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                    >
-                      {recurrenceOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
+                    <FieldLabel>Frequency</FieldLabel>
+                    <Select name="recurrenceFrequency" defaultValue="DAILY">
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {recurrenceOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                   <Field>
                     <FieldLabel htmlFor="add-interval">Every N units</FieldLabel>
@@ -225,21 +229,21 @@ export function QuickAddDialog({
                     />
                   </Field>
                   <Field>
-                    <FieldLabel htmlFor="add-weekday">Weekday (weekly)</FieldLabel>
-                    <select
-                      id="add-weekday"
-                      name="recurrenceWeekday"
-                      defaultValue={new Date().getDay()}
-                      className="h-10 w-full rounded-xl border border-border bg-card px-3 py-2 text-sm cursor-pointer"
-                    >
-                      <option value={0}>Sunday</option>
-                      <option value={1}>Monday</option>
-                      <option value={2}>Tuesday</option>
-                      <option value={3}>Wednesday</option>
-                      <option value={4}>Thursday</option>
-                      <option value={5}>Friday</option>
-                      <option value={6}>Saturday</option>
-                    </select>
+                    <FieldLabel>Weekday (weekly)</FieldLabel>
+                    <Select name="recurrenceWeekday" defaultValue={String(new Date().getDay())}>
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Sunday</SelectItem>
+                        <SelectItem value="1">Monday</SelectItem>
+                        <SelectItem value="2">Tuesday</SelectItem>
+                        <SelectItem value="3">Wednesday</SelectItem>
+                        <SelectItem value="4">Thursday</SelectItem>
+                        <SelectItem value="5">Friday</SelectItem>
+                        <SelectItem value="6">Saturday</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </Field>
                 </div>
               </div>
