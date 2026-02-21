@@ -436,6 +436,34 @@
 
 ---
 
+### Phase 6b: UI Polish — Cursor Effect
+**Description:** Add a decorative clock cursor effect using the `cursor-effects` npm package.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Install `cursor-effects` package (v1.0.18)
+- [x] Create `CursorEffect` client component with `clockCursor` (coral-themed colors)
+- [x] Skip effect on touch-only devices, cleanup on unmount
+- [x] Wire `CursorEffect` into root `app/layout.tsx`
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- Added `cursor-effects` package and created a `CursorEffect` component at `components/cursor-effect.tsx`
+- Uses dynamic `import("cursor-effects")` for lazy loading
+- Clock cursor styled with coral theme (dateColor: #E07A5F, secondsColor: #E07A5F, faceColor/minutesColor/hoursColor: stone shades)
+- Skips activation on touch-only devices via `pointer: coarse` media query
+- Properly destroys effect on component unmount
+- Imported in root layout inside `AuthProvider`
+
+**What is left to do:**
+- Nothing — completed
+
+**Notes:**
+- Commit `cbc51b6` on `ui-redesign` branch
+
+---
+
 ## Future Plans
 
 ### Description
