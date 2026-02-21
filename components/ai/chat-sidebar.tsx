@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { TaskListsResult, TasksInListResult } from "./tool-ui/task-list-card";
 import {
   CreatedTaskCard,
@@ -38,6 +38,7 @@ interface ChatSidebarProps {
 export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
   const {
     messages,
+    setMessages,
     sendMessage,
     status,
     error,
@@ -205,12 +206,25 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
         showCloseButton={true}
       >
         <SheetHeader className="border-b border-border px-4 py-3 shrink-0">
-          <SheetTitle className="flex items-center gap-2 text-sm">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-              <Sparkles className="size-3.5 text-primary" />
-            </div>
-            AI Assistant
-          </SheetTitle>
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 text-sm">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="size-3.5 text-primary" />
+              </div>
+              AI Assistant
+            </SheetTitle>
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                onClick={() => setMessages([])}
+                title="Clear chat"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
+          </div>
         </SheetHeader>
 
         {/* Messages area */}
