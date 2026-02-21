@@ -11,9 +11,10 @@ export function proxy(request: NextRequest) {
 
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
   const isApiAuth = pathname.startsWith("/api/auth");
+  const isPublicPage = pathname.startsWith("/design");
   const isStatic = pathname.startsWith("/_next") || pathname.startsWith("/static") || pathname.endsWith(".ico");
 
-  if (isStatic || isApiAuth) {
+  if (isStatic || isApiAuth || isPublicPage) {
     return NextResponse.next();
   }
 
