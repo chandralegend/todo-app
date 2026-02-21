@@ -1481,3 +1481,400 @@ No Results (Filtered):
 - High: Orange (#f97316)
 - Critical: Red (#dc2626)
 
+---
+
+# 25. UI/UX Redesign Plan
+
+## 25.1 Design Philosophy
+
+Premium, sophisticated, warm, minimal, modern aesthetic inspired by bento-grid
+dashboard layouts. Emphasis on generous whitespace, soft rounded corners,
+ring borders (not shadows), and a warm coral/terracotta accent color.
+
+## 25.2 Color Palette
+
+### Primary Colors
+- **Coral/Terracotta (Primary):** #E86C4F (warm accent for CTAs, highlights)
+- **Coral Hover:** #D4573C (darker for hover states)
+- **Coral Light:** #FEF0EC (very light tint for backgrounds, hover states)
+- **Foreground:** #1A1A1A (near-black for headings/body)
+- **Background:** #FAFAFA (off-white page background)
+- **Card:** #FFFFFF (pure white card backgrounds)
+
+### Neutral Colors
+- **Border:** #E8E8E8 (subtle gray ring borders on cards)
+- **Muted Text:** #8A8A8A (secondary text, timestamps, labels)
+- **Muted Background:** #F4F4F5 (subtle bg for badges, input fields)
+
+### Status Colors (Updated for Warm Theme)
+- Draft: #9CA3AF (gray-400)
+- Todo: #3B82F6 (blue-500)
+- In Progress: #E86C4F (matches primary coral)
+- Completed: #22C55E (green-500)
+- Failed: #EF4444 (red-500)
+
+### Importance Colors
+- Low: #9CA3AF (gray-400)
+- Medium: #3B82F6 (blue-500)
+- High: #F97316 (orange-500)
+- Critical: #EF4444 (red-500)
+
+## 25.3 Typography
+
+- **Headings:** Outfit, bold (700), large sizes (2xl-4xl)
+- **Body:** Geist Sans, regular/medium (400/500)
+- **Mono:** Geist Mono for IDs, code
+- **Small labels:** Geist Sans, medium (500), muted color, tracking-wide, uppercase
+
+## 25.4 Component Design Tokens
+
+- **Border Radius:** 16px (cards), 12px (inputs/buttons), 999px (pills/badges)
+- **Card Borders:** 1px solid #E8E8E8 (ring style, NO shadows)
+- **Button Style:** Pill-shaped (rounded-full), coral bg, white text, arrow icons
+- **Spacing:** 24px card padding, 32px section gaps, 48px page margins
+- **Transitions:** 200ms ease for hover/focus, spring for sidebar/sheet
+
+## 25.5 Layout Architecture
+
+### App Shell (Authenticated)
+```
++--+------------------------------------------------------+
+|  |  TopBar: [hamburger] [logo] [search...] [avatar]     |
+|S |------------------------------------------------------+
+|I |                                                       |
+|D |  Breadcrumbs: Home > Lists > Work Tasks               |
+|E |                                                       |
+|B |  +--PAGE CONTENT (bento grid, forms, etc.)----------+ |
+|A |  |                                                   | |
+|R |  |                                                   | |
+|  |  |                                                   | |
+|  |  +---------------------------------------------------+ |
+|  |                                                       |
+|  |  Footer: (c) 2026 TodoApp  |  Links  |  Version      |
++--+-------------------------------------------------------+
+```
+
+### Sidebar (Collapsible, 280px expanded / 64px collapsed)
+```
++----------------------------+
+| TODOAPP                    |  <- Logo/brand
+|                            |
+| NAVIGATION                 |
+| [*] Dashboard              |  <- Active item (coral accent)
+| [ ] My Lists               |
+| [ ] Calendar (future)      |
+| [ ] Search                 |
+|                            |
+| ─────────────────────────  |
+|                            |
+| MY LISTS                   |  <- Section header (small, muted)
+| > Work Tasks        (12)   |
+| > Personal          (8)    |
+| > Shopping          (5)    |
+|                            |
+| [+ New List]               |  <- Pill button
+|                            |
+| ─────────────────────────  |
+|                            |
+| ADMIN                      |
+| [ ] Recurrence Logs        |
+|                            |
+| ─────────────────────────  |
+|                            |
+| [ ] Settings               |
+| [avatar] John Doe     [>]  |  <- User section at bottom
++----------------------------+
+```
+
+## 25.6 Screen Wireframes (Redesigned)
+
+### Login Screen
+```
++---------------------------------------------------------------+
+|                                                               |
+|                         TODOAPP                               |
+|                    Your tasks, simplified                     |
+|                                                               |
+|              +-------------------------------+                |
+|              |                               |                |
+|              |  Welcome back                 |                |
+|              |  Sign in to your account      |                |
+|              |                               |                |
+|              |  Email                        |                |
+|              |  +-------------------------+  |                |
+|              |  | john@example.com        |  |                |
+|              |  +-------------------------+  |                |
+|              |                               |                |
+|              |  Password                     |                |
+|              |  +-------------------------+  |                |
+|              |  | ********                |  |                |
+|              |  +-------------------------+  |                |
+|              |                               |                |
+|              |  (Sign In -->)  pill button   |                |
+|              |                               |                |
+|              |  Don't have an account?       |                |
+|              |  Create one                   |                |
+|              |                               |                |
+|              +-------------------------------+                |
+|                      ring border, rounded-2xl                 |
++---------------------------------------------------------------+
+```
+
+### Dashboard (Bento Grid Layout)
+```
++--+----------------------------------------------------------+
+|  | [=] TODOAPP        [search..............] [@avatar]       |
+|S |----------------------------------------------------------+
+|I | Home > Dashboard                                          |
+|D |                                                           |
+|E | Good morning, John                                        |
+|B | Here's your overview for today                            |
+|A |                                                           |
+|R | +--SUMMARY CARDS (bento row)----------------------------+ |
+|  | | +-----------+ +-----------+ +-----------+ +----------+| |
+|  | | | TODAY     | | OVERDUE   | | IN PROG   | | DONE     || |
+|  | | |           | |           | |           | |          || |
+|  | | |  (5)      | |  (2)      | |  (3)      | |  (12)    || |
+|  | | |  tasks    | |  tasks    | |  tasks    | |  this wk || |
+|  | | +-----------+ +-----------+ +-----------+ +----------+| |
+|  | +-------------------------------------------------------+ |
+|  |                                                           |
+|  | My Lists                            (View All -->)        |
+|  |                                                           |
+|  | +--LIST CARDS (bento grid, 2-3 cols)--------------------+ |
+|  | | +-------------------------+ +-------------------------+| |
+|  | | | Work Tasks              | | Personal                || |
+|  | | |                         | |                         || |
+|  | | | 12 tasks  3 overdue     | | 8 tasks  1 overdue      || |
+|  | | |                         | |                         || |
+|  | | | [progress bar ===---]   | | [progress bar =====-]   || |
+|  | | | 67% complete            | | 80% complete            || |
+|  | | |                         | |                         || |
+|  | | | #work #dev #urgent      | | #home #health           || |
+|  | | |                         | |                         || |
+|  | | | (Open -->)              | | (Open -->)              || |
+|  | | +-------------------------+ +-------------------------+| |
+|  | |                                                        | |
+|  | | +-------------------------+ +-------------------------+| |
+|  | | | Shopping                | | + New List              || |
+|  | | |                         | |                         || |
+|  | | | 5 tasks  0 overdue      | |  Create a new list      || |
+|  | | | [progress bar ==----]   | |  to organize your       || |
+|  | | | 40% complete            | |  tasks                  || |
+|  | | |                         | |                         || |
+|  | | | #groceries              | |  (Create -->)           || |
+|  | | |                         | |                         || |
+|  | | | (Open -->)              | |                         || |
+|  | | +-------------------------+ +-------------------------+| |
+|  | +-------------------------------------------------------+ |
+|  |                                                           |
+|  | Footer: (c) 2026 TodoApp  v0.1.0                         |
++--+-----------------------------------------------------------+
+```
+
+### Task List View (Per List)
+```
++--+----------------------------------------------------------+
+|  | [=] TODOAPP        [search..............] [@avatar]       |
+|S |----------------------------------------------------------+
+|I | Home > Lists > Work Tasks                                 |
+|D |                                                           |
+|E | Work Tasks                                                |
+|B | 12 tasks  |  3 overdue  |  67% complete                   |
+|A |                                                           |
+|R | Filter:                                                   |
+|  | [All] [Today] [Overdue] [Active] [Completed]  <- pills   |
+|  |                                                           |
+|  | Active filters:                                           |
+|  | [Status: Todo x] [Importance: High x] [+ Add Filter]     |
+|  |                                                           |
+|  | Sort: [Deadline ^]                 (+ New Task -->)       |
+|  |                                                           |
+|  | +--TASK CARDS (vertical list)---------------------------+ |
+|  | |                                                        | |
+|  | | +----------------------------------------------------+| |
+|  | | | +--+                                               || |
+|  | | | |21|  Review PR #234                     [High]    || |
+|  | | | |FE|  Due tomorrow                                 || |
+|  | | | |B |                                               || |
+|  | | | +--+  [#code] [#urgent]                            || |
+|  | | |       Status: [Todo v]                             || |
+|  | | +----------------------------------------------------+| |
+|  | |                                                        | |
+|  | | +----------------------------------------------------+| |
+|  | | | +--+                                               || |
+|  | | | |20|  Fix login bug                   [Critical]   || |
+|  | | | |FE|  OVERDUE (red accent bar)                     || |
+|  | | | |B |                                               || |
+|  | | | +--+  [#bug] [#urgent]                             || |
+|  | | |       Status: [In Progress v]                      || |
+|  | | +----------------------------------------------------+| |
+|  | |                                                        | |
+|  | | +----------------------------------------------------+| |
+|  | | | +--+                                               || |
+|  | | | |25|  Write documentation              [Medium]    || |
+|  | | | |FE|  Due in 4 days                                || |
+|  | | | |B |                                               || |
+|  | | | +--+  [#docs]                [recurring icon]      || |
+|  | | |       Status: [Todo v]                             || |
+|  | | +----------------------------------------------------+| |
+|  | |                                                        | |
+|  | +-------------------------------------------------------+ |
+|  |                                                           |
+|  | Footer: (c) 2026 TodoApp  v0.1.0                         |
++--+-----------------------------------------------------------+
+
+Note: +--+ circular date display shows day + month abbreviated
+      Task cards have ring borders, no shadows
+      Overdue tasks get a left coral/red accent bar
+```
+
+### Task Create/Edit (Sheet/Dialog)
+```
++---------------------------------------------------+
+|                                           [X]     |
+|  New Task                                         |
+|  Add a task to Work Tasks                         |
+|                                                   |
+|  Description *                                    |
+|  +---------------------------------------------+ |
+|  |                                             | |
+|  |                                             | |
+|  +---------------------------------------------+ |
+|                                                   |
+|  +---------------------+  +--------------------+ |
+|  | Deadline             |  | Time               | |
+|  | [Feb 25, 2026    v]  |  | [10:00 AM      v]  | |
+|  +---------------------+  +--------------------+ |
+|                                                   |
+|  Importance                                       |
+|  (Low) (Medium) (High) (Critical)  <- pill group  |
+|                                                   |
+|  Initial Status                                   |
+|  (Draft) (Todo)  <- pill toggle                   |
+|                                                   |
+|  Tags                                             |
+|  [work x] [dev x] [+ add tag...]                 |
+|                                                   |
+|  ─────────────────────────────────────────────── |
+|                                                   |
+|  [toggle] Recurring Task                          |
+|                                                   |
+|  (if toggled on:)                                 |
+|  Frequency: [Daily v]                             |
+|  Every: [1] day(s)                                |
+|  Time of day: [10:00 AM v]                        |
+|  Start: [Feb 25, 2026 v]                          |
+|  End: [Optional v]                                |
+|                                                   |
+|  ─────────────────────────────────────────────── |
+|                                                   |
+|           (Cancel)    (Create Task -->)            |
+|                                                   |
++---------------------------------------------------+
+```
+
+### Admin / Recurrence Logs
+```
++--+----------------------------------------------------------+
+|  | [=] TODOAPP        [search..............] [@avatar]       |
+|S |----------------------------------------------------------+
+|I | Home > Admin > Recurrence Logs                            |
+|D |                                                           |
+|E | Recurrence Logs                                           |
+|B | Monitor automated task generation                         |
+|A |                                                           |
+|R | +--SUMMARY CARDS (bento row)----------------------------+ |
+|  | | +-----------+ +-----------+ +-----------+             | |
+|  | | | TOTAL     | | LAST RUN  | | CREATED   |             | |
+|  | | | RUNS      | |           | | TODAY     |             | |
+|  | | |  (24)     | |  2h ago   | |  (7)      |             | |
+|  | | +-----------+ +-----------+ +-----------+             | |
+|  | +-------------------------------------------------------+ |
+|  |                                                           |
+|  | +--TABLE----------------------------------------------+   |
+|  | | Run ID | Date       | Templates | Created | Errors |   |
+|  | |--------|------------|-----------|---------|--------|   |
+|  | | #24    | Feb 21 10a | 8         | 7       | 0      |   |
+|  | | #23    | Feb 21 6a  | 8         | 0       | 0      |   |
+|  | | #22    | Feb 20 10p | 8         | 5       | 0      |   |
+|  | +-------------------------------------------------------+ |
+|  |                                                           |
+|  | Footer: (c) 2026 TodoApp  v0.1.0                         |
++--+-----------------------------------------------------------+
+```
+
+### Mobile Responsive (< 640px)
+```
++---------------------------+
+| [=] TODOAPP     [@]       |  <- hamburger + avatar
++---------------------------+
+| Home > Work Tasks         |  <- breadcrumbs (scrollable)
+|                           |
+| Work Tasks                |
+| 12 tasks | 3 overdue      |
+|                           |
+| [All] [Today] [Overdue]  |  <- scrollable pill row
+| [Active] [Completed]     |
+|                           |
+| Active: [Status:Todo x]  |  <- chip row
+|                           |
+| +---------------------+  |
+| | +--+                |  |
+| | |21| Review PR #234 |  |
+| | |FE| Due tomorrow   |  |
+| | |B | [#code] [High] |  |
+| | +--+ [Todo v]       |  |
+| +---------------------+  |
+|                           |
+| +---------------------+  |
+| | +--+                |  |
+| | |20| Fix login bug  |  |
+| | |FE| OVERDUE        |  |
+| | |B | [#bug] [Crit]  |  |
+| | +--+ [In Prog v]    |  |
+| +---------------------+  |
+|                           |
+|               (+) FAB     |  <- floating action button
++---------------------------+
+
+Sidebar: slides as Sheet overlay on mobile
+Footer: stacks vertically
+```
+
+## 25.7 Component Architecture
+
+### New Layout Components (components/layout/)
+- `app-shell.tsx` - Main authenticated wrapper with sidebar + topbar + footer
+- `sidebar.tsx` - Collapsible sidebar with nav, lists, user section
+- `top-bar.tsx` - Hamburger toggle, logo, search, avatar dropdown
+- `footer.tsx` - Copyright, version, links
+- `breadcrumbs.tsx` - Route-aware breadcrumb trail
+
+### New UI Primitives (components/ui/ via shadcn + custom)
+- `bento-card.tsx` - Ring-bordered card for bento grid layouts
+- `pill-button.tsx` - Rounded-full button variant with arrow icon
+- `filter-chip.tsx` - Dismissible filter tag with close button
+- `circular-date.tsx` - Round date display (day + month)
+- `progress-ring.tsx` - Circular or linear progress indicator
+- `status-badge.tsx` - Color-coded status badge
+- `importance-badge.tsx` - Color-coded importance indicator
+- `stat-card.tsx` - Summary metric card (number + label)
+- `empty-state.tsx` - Illustrated empty state with CTA
+
+### shadcn Components to Install
+sidebar, breadcrumb, sonner, sheet, avatar, skeleton, progress,
+tooltip, popover, dialog, scroll-area, toggle, toggle-group,
+collapsible, tabs, checkbox, table, drawer, navigation-menu, hover-card
+
+## 25.8 Animation Plan
+
+- **Sidebar:** slide in/out with 200ms spring
+- **Sheet/Drawer:** slide from right (desktop) / bottom (mobile)
+- **Cards:** subtle scale(1.01) on hover with 150ms ease
+- **Buttons:** background-color transition 200ms
+- **Page transitions:** fade-in 150ms on route change
+- **Sonner toasts:** slide up from bottom-right
+- **Filter chips:** animate in/out with scale + opacity
+- **Skeleton loaders:** pulse animation for loading states
+
