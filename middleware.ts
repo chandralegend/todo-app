@@ -1,26 +1,31 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isOnLoginPage = req.nextUrl.pathname.startsWith("/login");
-  const isOnRegisterPage = req.nextUrl.pathname.startsWith("/register");
-  const isOnApiAuth = req.nextUrl.pathname.startsWith("/api/auth");
+export function middleware(request: NextRequest) {
+  const sessionCookie = request.cookies.get("next-auth.session-token") || 
+                        request.cookies.get("__Secure-next-auth.session-token");
+  
+  const isLoggedIn = !!sessionCookie;
+  const { pathname } = request.nextUrl;
 
-  if (isOnApiAuth) {
+  const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/register");
+  const isApiAuth = pathname.startsWith("/api/auth");
+  const isStatic = pathname.startsWith("/_next") || pathname.startsWith("/static") || pathname.endsWith(".ico");
+
+  if (isStatic || isApiAuth) {
     return NextResponse.next();
   }
 
-  if (!isLoggedIn && !isOnLoginPage && !isOnRegisterPage) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!isLoggedIn && !isAuthPage) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (isLoggedIn && (isOnLoginPage || isOnRegisterPage)) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (isLoggedIn && isAuthPage) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
