@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 
 export default function RegisterPage() {
@@ -45,19 +44,35 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription>Sign up for Todo App</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm">
+        {/* Brand */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+            T
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight">TodoApp</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your tasks, simplified
+          </p>
+        </div>
+
+        {/* Card */}
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold">Create an account</h2>
+            <p className="text-sm text-muted-foreground">
+              Get started with TodoApp
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
-                {error}
-              </div>
-            )}
             <Field>
               <FieldLabel>Email</FieldLabel>
               <Input
@@ -66,6 +81,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
+                className="h-10"
               />
             </Field>
             <Field>
@@ -75,6 +91,7 @@ export default function RegisterPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="johndoe"
+                className="h-10"
               />
             </Field>
             <Field>
@@ -84,6 +101,7 @@ export default function RegisterPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="John Doe"
+                className="h-10"
               />
             </Field>
             <Field>
@@ -92,23 +110,43 @@ export default function RegisterPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Min. 6 characters"
                 required
                 minLength={6}
+                className="h-10"
               />
             </Field>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
-            </Button>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="size-4" />
+                </>
+              )}
+            </button>
           </form>
-          <div className="mt-4 text-center text-sm">
+
+          <div className="mt-5 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link
+              href="/login"
+              className="text-primary font-medium hover:underline"
+            >
               Sign in
             </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

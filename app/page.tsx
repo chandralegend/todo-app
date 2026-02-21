@@ -1,12 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/lib/prisma";
-import { signOut } from "@/lib/auth";
 import { listAccessibleWhere } from "@/lib/permissions";
+import { DashboardContent } from "@/components/dashboard/dashboard-content";
 
 export default async function HomePage() {
   const session = await auth();
@@ -15,14 +11,24 @@ export default async function HomePage() {
     redirect("/login");
   }
 
+  const userId = session.user.id;
+
+  // Fetch lists with task counts
   const taskLists = await prisma.taskList.findMany({
-    where: listAccessibleWhere(session.user.id),
+    where: listAccessibleWhere(userId),
     include: {
       _count: {
         select: { templates: true, instances: true },
       },
+      instances: {
+        select: {
+          status: true,
+          deadlineAt: true,
+          tagsSnapshot: true,
+        },
+      },
       members: {
-        where: { userId: session.user.id },
+        where: { userId },
         select: { role: true },
         take: 1,
       },
@@ -30,77 +36,95 @@ export default async function HomePage() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Compute stats
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const endOfToday = new Date(startOfToday);
+  endOfToday.setDate(endOfToday.getDate() + 1);
+
+  let todayCount = 0;
+  let overdueCount = 0;
+  let inProgressCount = 0;
+  let completedThisWeekCount = 0;
+
+  // Get start of this week (Monday)
+  const startOfWeek = new Date(now);
+  const dayOfWeek = startOfWeek.getDay();
+  const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  startOfWeek.setDate(startOfWeek.getDate() - diff);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const allInstances = taskLists.flatMap((l) => l.instances);
+  for (const inst of allInstances) {
+    if (inst.status === "IN_PROGRESS") inProgressCount++;
+    if (inst.status === "COMPLETED") {
+      completedThisWeekCount++;
+    }
+    if (inst.deadlineAt) {
+      const dl = new Date(inst.deadlineAt);
+      if (dl >= startOfToday && dl < endOfToday && inst.status !== "COMPLETED" && inst.status !== "FAILED") {
+        todayCount++;
+      }
+      if (dl < now && inst.status !== "COMPLETED" && inst.status !== "FAILED") {
+        overdueCount++;
+      }
+    }
+  }
+
+  // Build list summaries for sidebar and dashboard
+  const listsForSidebar = taskLists.map((l) => ({
+    id: l.id,
+    name: l.name,
+    taskCount: l._count.instances,
+  }));
+
+  const listsForDashboard = taskLists.map((l) => {
+    const total = l.instances.length;
+    const completed = l.instances.filter((i) => i.status === "COMPLETED").length;
+    const overdue = l.instances.filter(
+      (i) =>
+        i.deadlineAt &&
+        new Date(i.deadlineAt) < now &&
+        i.status !== "COMPLETED" &&
+        i.status !== "FAILED"
+    ).length;
+    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    // Collect unique tags (max 4)
+    const tagSet = new Set<string>();
+    for (const inst of l.instances) {
+      for (const tag of inst.tagsSnapshot) {
+        tagSet.add(tag);
+        if (tagSet.size >= 4) break;
+      }
+      if (tagSet.size >= 4) break;
+    }
+
+    return {
+      id: l.id,
+      name: l.name,
+      description: l.description,
+      taskCount: total,
+      overdue,
+      progress,
+      tags: Array.from(tagSet),
+      isOwner: l.ownerUserId === userId,
+      role: l.ownerUserId === userId ? "OWNER" : l.members[0]?.role ?? "VIEWER",
+    };
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">Todo App</h1>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/recurrence" className="text-sm text-gray-600 hover:underline">
-              Recurrence
-            </Link>
-            <span className="text-sm text-gray-600">{session.user.email}</span>
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirect: true, redirectTo: "/login" });
-              }}
-            >
-              <Button variant="outline" size="sm">
-                Sign Out
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold">My Lists</h2>
-          <Button>
-            <Link href="/lists/new">+ New List</Link>
-          </Button>
-        </div>
-
-        {taskLists.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-gray-500 mb-4">No lists yet</p>
-              <Button>
-                <Link href="/lists/new">Create your first list</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {taskLists.map((list) => (
-              <Card key={list.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="py-4">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={`/lists/${list.id}`}
-                      className="hover:underline font-medium"
-                    >
-                      {list.name}
-                    </Link>
-                    <Badge variant="secondary">
-                      {list._count.templates + list._count.instances} tasks
-                    </Badge>
-                    {list.ownerUserId === session.user.id ? (
-                      <Badge variant="outline">OWNER</Badge>
-                    ) : list.members[0] ? (
-                      <Badge variant="outline">{list.members[0].role}</Badge>
-                    ) : null}
-                  </div>
-                  {list.description && (
-                    <p className="text-sm text-gray-500">{list.description}</p>
-                  )}
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+    <DashboardContent
+      userName={session.user.name ?? "there"}
+      stats={{
+        today: todayCount,
+        overdue: overdueCount,
+        inProgress: inProgressCount,
+        completedThisWeek: completedThisWeekCount,
+      }}
+      lists={listsForDashboard}
+      sidebarLists={listsForSidebar}
+    />
   );
 }
