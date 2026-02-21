@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Plus, Menu, LayoutDashboard, ListTodo, Activity } from "lucide-react";
+import { Search, Menu, LayoutDashboard, Activity } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,7 +22,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { PillButton } from "@/components/ui/pill-button";
 import { Settings, LogOut } from "lucide-react";
 
 function IconBtn({
@@ -42,7 +41,6 @@ function IconBtn({
 
 const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/lists/new", label: "My Lists", icon: ListTodo },
   { href: "/admin/recurrence", label: "Admin", icon: Activity },
 ];
 
@@ -105,13 +103,6 @@ export function TopBar() {
                   );
                 })}
               </nav>
-              <div className="border-t border-border p-4">
-                <Link href="/" onClick={() => setMobileOpen(false)}>
-                  <PillButton variant="primary" size="sm" className="w-full justify-center">
-                    Show my Tasks
-                  </PillButton>
-                </Link>
-              </div>
             </SheetContent>
           </Sheet>
           <Link href="/" className="flex items-center gap-2">
@@ -142,15 +133,6 @@ export function TopBar() {
           ))}
         </nav>
 
-        {/* Desktop: Show my Tasks pill (hidden on mobile) */}
-        <div className="hidden lg:flex ml-1">
-          <Link href="/">
-            <PillButton variant="primary" size="sm">
-              Show my Tasks
-            </PillButton>
-          </Link>
-        </div>
-
         {/* Center: Search (grows to fill space) */}
         <div className="flex-1 flex justify-center px-2">
           <div className="relative w-full max-w-xs">
@@ -162,14 +144,8 @@ export function TopBar() {
           </div>
         </div>
 
-        {/* Right: actions + avatar */}
+        {/* Right: avatar */}
         <div className="flex items-center gap-2">
-          <Link href="/lists/new" className="hidden sm:block">
-            <IconBtn aria-label="New list">
-              <Plus className="size-4" />
-            </IconBtn>
-          </Link>
-
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 rounded-full hover:bg-muted transition-colors cursor-pointer p-1">
