@@ -249,13 +249,55 @@
 - All loading skeletons updated to match new layouts
 
 **What is left to do:**
-- Merge `ui-redesign` branch to `main` (pending user approval)
+- Nothing — completed
 
 **Notes:**
 - 12 commits on `ui-redesign` branch total
 - The app pages now visually match the `/design` showcase page
 - Navigation available via sidebar (hamburger toggle) and avatar dropdown menu
 - Build passes clean with no lint errors
+
+---
+
+### Phase 5d: Navigation Overhaul — Replace Sidebar with Horizontal Nav
+**Description:** Remove the sidebar entirely and replace it with a horizontal navigation bar in the TopBar. Streamline the layout by removing the greeting/hero section from the dashboard, fixing footer alignment, and improving task list sizing.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Remove sidebar from AppShell (SidebarProvider, SidebarInset, AppSidebar)
+- [x] Rewrite TopBar with horizontal nav links for desktop (Dashboard | My Lists | Admin)
+- [x] Add hamburger + Sheet mobile menu for mobile/tablet (hidden on desktop via `lg:hidden`)
+- [x] Move "Show my Tasks" PillButton from dashboard hero to navbar
+- [x] Center global search input in the navbar
+- [x] Remove greeting/hero section (CircularDate + greeting card) from dashboard
+- [x] Fix footer layout: copyright left-aligned, version right-aligned (flex justify-between)
+- [x] Widen TasksList card container from max-w-2xl to max-w-3xl for better consistency
+- [x] Clean up sidebarLists prop threading from all 5 server pages and 5 content components
+- [x] Remove unused sidebar data queries from server pages (reduced DB calls)
+- [x] Update DashboardSkeleton to remove hero skeleton
+- [x] Fix loading.tsx files to use simplified AppShell
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **AppShell:** Completely simplified — removed SidebarProvider, SidebarInset, AppSidebar imports. Now just uses TooltipProvider > div > TopBar > main > Footer > Toaster. No more `lists` or `breadcrumbOverrides` props.
+- **TopBar (mobile/tablet):** Hamburger icon button + "T TodoApp" logo only visible below `lg` breakpoint. Hamburger opens a Sheet with nav links (Dashboard, My Lists, Admin) with active state styling (coral text + bg). Sheet also includes "Show my Tasks" pill button.
+- **TopBar (desktop):** Horizontal nav links (Dashboard | My Lists | Admin) with pill-shaped active states (coral bg/text). "Show my Tasks" pill button next to nav. Centered search input with search icon. Right side: + New button and avatar dropdown.
+- **Dashboard:** Removed entire hero section (CircularDate, weekday/month text, separator, PillButton, greeting card). Dashboard now starts directly with stat cards. Removed `userName` prop since greeting is gone.
+- **Footer:** Changed from centered single line to `flex justify-between` with copyright left and version right.
+- **TasksList:** Widened card container from `max-w-2xl` to `max-w-3xl`.
+- **Prop cleanup:** Removed `SidebarListItem` type, `sidebarLists` prop, and `breadcrumbOverrides` prop from all content components. Removed sidebar data queries from 5 server pages (app/page.tsx, lists/[id]/page.tsx, lists/[id]/tasks/new/page.tsx, lists/new/page.tsx, admin/recurrence/page.tsx). This also reduces unnecessary database queries.
+
+**What is left to do:**
+- Merge `ui-redesign` branch to `main` (pending user approval)
+
+**Notes:**
+- 14 commits on `ui-redesign` branch total
+- Sidebar component file (`app-sidebar.tsx`) still exists but is no longer imported anywhere
+- `useSidebar` hook no longer used outside of the sidebar component itself
+- Navigation now uses `usePathname()` for active state detection
+- Mobile Sheet menu uses the shadcn Sheet component (already installed)
+- Build passes clean with no lint errors, all 12 static pages generate successfully
 
 ---
 
@@ -296,11 +338,11 @@ After redesign is merged, the following features could be considered:
 - **Components Available:** alert-dialog, avatar, badge, breadcrumb, button, card, checkbox, collapsible, combobox, dialog, drawer, dropdown-menu, field, hover-card, input, input-group, label, popover, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, table, tabs, textarea, toggle, toggle-group, tooltip (32 total)
 
 ### Custom Layout Components
-- `components/layout/app-shell.tsx` - Main authenticated shell with sidebar + topbar + footer
-- `components/layout/app-sidebar.tsx` - Collapsible sidebar with nav, lists, admin, user sections
-- `components/layout/top-bar.tsx` - Top bar with sidebar trigger, search, avatar dropdown
-- `components/layout/footer.tsx` - Copyright and version footer
-- `components/layout/breadcrumbs.tsx` - Route-aware breadcrumb trail
+- `components/layout/app-shell.tsx` - Main authenticated shell with TopBar + main content + Footer (no sidebar)
+- `components/layout/top-bar.tsx` - Horizontal nav (desktop) + hamburger/Sheet (mobile) + centered search + avatar dropdown
+- `components/layout/footer.tsx` - Copyright left, version right footer
+- `components/layout/breadcrumbs.tsx` - Route-aware breadcrumb trail (currently unused)
+- `components/layout/app-sidebar.tsx` - (Legacy) Collapsible sidebar, no longer imported
 
 ### Custom UI Primitives
 - `components/ui/bento-card.tsx` - Ring-bordered card with hover effect for bento grids
