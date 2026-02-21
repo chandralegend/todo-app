@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canTransitionStatus } from "@/lib/task-status";
+import { listAccessibleWhere } from "@/lib/permissions";
 import { TodayContent } from "@/components/today/today-content";
 
 export default async function TodayPage() {
@@ -52,6 +53,84 @@ export default async function TodayPage() {
   const completedCount = serializedTasks.filter((t) => t.completed).length;
   const totalCount = serializedTasks.length;
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  // Fetch pending tasks (not already in today's focus) for the "Add Tasks" dialog
+  const focusTaskIds = new Set(focusTasks.map((f) => f.taskInstance.id));
+
+  const pendingTasks = await prisma.taskInstance.findMany({
+    where: {
+      taskList: listAccessibleWhere(userId),
+      status: { in: ["TODO", "IN_PROGRESS"] },
+    },
+    select: {
+      id: true,
+      descriptionSnapshot: true,
+      status: true,
+      importanceSnapshot: true,
+      deadlineAt: true,
+      tagsSnapshot: true,
+      taskList: { select: { id: true, name: true } },
+    },
+    orderBy: [{ importanceSnapshot: "desc" }, { deadlineAt: "asc" }],
+    take: 100,
+  });
+
+  const availableTasks = pendingTasks
+    .filter((t) => !focusTaskIds.has(t.id))
+    .map((t) => ({
+      id: t.id,
+      description: t.descriptionSnapshot,
+      status: t.status,
+      importance: t.importanceSnapshot,
+      deadline: t.deadlineAt ? t.deadlineAt.toISOString() : null,
+      tags: t.tagsSnapshot,
+      listName: t.taskList.name,
+      listId: t.taskList.id,
+    }));
+
+  async function addToFocus(formData: FormData) {
+    "use server";
+
+    const currentSession = await auth();
+    if (!currentSession?.user) {
+      redirect("/login");
+    }
+
+    const taskIdsStr = String(formData.get("taskIds") ?? "");
+    if (!taskIdsStr) return;
+
+    const taskIds = taskIdsStr.split(",").filter(Boolean);
+    if (taskIds.length === 0) return;
+
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+
+    // Get current max position
+    const maxPos = await prisma.dailyFocus.findFirst({
+      where: { userId: currentSession.user.id, date: todayDate },
+      orderBy: { position: "desc" },
+      select: { position: true },
+    });
+
+    let position = (maxPos?.position ?? -1) + 1;
+
+    for (const taskId of taskIds) {
+      try {
+        await prisma.dailyFocus.create({
+          data: {
+            userId: currentSession.user.id,
+            taskInstanceId: taskId,
+            date: todayDate,
+            position: position++,
+          },
+        });
+      } catch {
+        // Duplicate — skip
+      }
+    }
+
+    revalidatePath("/today");
+  }
 
   async function toggleFocusComplete(formData: FormData) {
     "use server";
@@ -175,9 +254,11 @@ export default async function TodayPage() {
   return (
     <TodayContent
       tasks={serializedTasks}
+      availableTasks={availableTasks}
       completedCount={completedCount}
       totalCount={totalCount}
       progress={progress}
+      addToFocusAction={addToFocus}
       toggleFocusCompleteAction={toggleFocusComplete}
       updateTaskStatusAction={updateTaskStatus}
       removeFocusAction={removeFocus}

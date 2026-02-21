@@ -7,9 +7,13 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { ImportanceBadge } from "@/components/ui/importance-badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sun, X, Sparkles } from "lucide-react";
+import { Sun, X, Sparkles, Plus } from "lucide-react";
 import type { TaskStatus, Importance } from "@prisma/client";
 import { toast } from "sonner";
+import {
+  AddToTodayDialog,
+  type AvailableTask,
+} from "@/components/today/add-to-today-dialog";
 
 interface TodayTask {
   focusId: string;
@@ -27,9 +31,11 @@ interface TodayTask {
 
 interface TodayContentProps {
   tasks: TodayTask[];
+  availableTasks: AvailableTask[];
   completedCount: number;
   totalCount: number;
   progress: number;
+  addToFocusAction: (formData: FormData) => Promise<void>;
   toggleFocusCompleteAction: (formData: FormData) => Promise<void>;
   updateTaskStatusAction: (formData: FormData) => Promise<void>;
   removeFocusAction: (formData: FormData) => Promise<void>;
@@ -37,9 +43,11 @@ interface TodayContentProps {
 
 export function TodayContent({
   tasks,
+  availableTasks,
   completedCount,
   totalCount,
   progress,
+  addToFocusAction,
   toggleFocusCompleteAction,
   updateTaskStatusAction,
   removeFocusAction,
@@ -72,7 +80,17 @@ export function TodayContent({
   }
 
   return (
-    <AppShell breadcrumbOverrides={{ today: "Today" }}>
+    <AppShell
+      breadcrumbOverrides={{ today: "Today" }}
+      action={
+        <AddToTodayDialog tasks={availableTasks} addToFocusAction={addToFocusAction}>
+          <Button size="sm" className="h-8 text-xs gap-1.5 rounded-full">
+            <Plus className="size-3.5" />
+            Add Tasks
+          </Button>
+        </AddToTodayDialog>
+      }
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div>
@@ -101,8 +119,8 @@ export function TodayContent({
           </div>
           <h2 className="text-sm font-medium mb-1">No tasks for today</h2>
           <p className="text-xs text-muted-foreground max-w-[280px]">
-            Open the AI assistant to plan your day and add tasks to your focus
-            list.
+            Use the <strong>Add Tasks</strong> button above to pick tasks for
+            today, or open the AI assistant to plan your day.
           </p>
         </div>
       ) : (
