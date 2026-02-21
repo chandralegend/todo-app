@@ -355,13 +355,19 @@ export function buildTools(userId: string) {
 
   const planMyDay = tool({
     description:
-      "Suggest a daily focus plan. The user will see the plan and can accept or reject it. You MUST call getPendingTasks first to get the data, then call this with your recommended task IDs.",
+      "Suggest a daily focus plan. The user will see the plan with task details and can accept or reject it. You MUST call getPendingTasks first to get task data, then call this with the tasks you recommend. After the user accepts, call addToTodayFocus with the accepted task IDs.",
     inputSchema: z.object({
-      selectedTaskIds: z
-        .array(z.string())
-        .describe(
-          "IDs of tasks the AI recommends for today's focus, ordered by priority"
-        ),
+      tasks: z
+        .array(
+          z.object({
+            id: z.string().describe("Task instance ID"),
+            description: z.string().describe("Task description"),
+            importance: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+            deadline: z.string().nullable().optional(),
+            listName: z.string().optional(),
+          })
+        )
+        .describe("Tasks recommended for today, ordered by priority"),
       reasoning: z
         .string()
         .describe(

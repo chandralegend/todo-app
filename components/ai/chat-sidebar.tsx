@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from "react";
 import { useChat } from "@ai-sdk/react";
+import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import {
   Sheet,
   SheetContent,
@@ -43,6 +44,7 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
     addToolOutput,
   } = useChat({
     id: "todo-ai-chat",
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -146,7 +148,9 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
         break;
 
       // ─── Interactive tools ───
-      case "tool-planMyDay":
+      case "tool-planMyDay": {
+        const planTasks = part.input?.tasks ?? [];
+        const planTaskIds = planTasks.map((t: { id: string }) => t.id);
         return (
           <PlanPreview
             input={part.input}
@@ -155,7 +159,7 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
               addToolOutput({
                 tool: "planMyDay",
                 toolCallId: part.toolCallId,
-                output: { accepted: true, taskIds: part.input.selectedTaskIds },
+                output: { accepted: true, taskIds: planTaskIds },
               });
             }}
             onReject={() => {
@@ -167,6 +171,7 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
             }}
           />
         );
+      }
     }
 
     // For input-available state on visible tools, show executing
