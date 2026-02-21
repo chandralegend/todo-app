@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Activity, Clock, Zap, AlertCircle, CheckCircle2 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -122,69 +123,70 @@ export function RecurrenceContent({
               </thead>
               <tbody>
                 {logs.map((log) => (
-                  <tr
-                    key={log.id}
-                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors"
-                  >
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="text-foreground font-medium">
-                        {new Date(log.createdAt).toLocaleDateString(undefined, {
+                  <React.Fragment key={log.id}>
+                    <tr className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-foreground font-medium">
+                          {new Date(log.createdAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </span>
+                        <span className="text-muted-foreground ml-1">
+                          {new Date(log.createdAt).toLocaleTimeString(undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+                            log.status === "SUCCESS"
+                              ? "text-status-completed"
+                              : "text-destructive"
+                          }`}
+                        >
+                          {log.status === "SUCCESS" ? (
+                            <CheckCircle2 className="size-3.5" />
+                          ) : (
+                            <AlertCircle className="size-3.5" />
+                          )}
+                          {log.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {log.templatesScanned}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums font-medium">
+                        {log.generated}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
+                        {log.duplicateOrExisting}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                        {new Date(log.windowStart).toLocaleDateString(undefined, {
                           month: "short",
                           day: "numeric",
                         })}
-                      </span>
-                      <span className="text-muted-foreground ml-1">
-                        {new Date(log.createdAt).toLocaleTimeString(undefined, {
-                          hour: "2-digit",
-                          minute: "2-digit",
+                        {" - "}
+                        {new Date(log.windowEnd).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
                         })}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                          log.status === "SUCCESS"
-                            ? "text-status-completed"
-                            : "text-destructive"
-                        }`}
-                      >
-                        {log.status === "SUCCESS" ? (
-                          <CheckCircle2 className="size-3.5" />
-                        ) : (
-                          <AlertCircle className="size-3.5" />
-                        )}
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
-                      {log.templatesScanned}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums font-medium">
-                      {log.generated}
-                    </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-                      {log.duplicateOrExisting}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                      {new Date(log.windowStart).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                      {" - "}
-                      {new Date(log.windowEnd).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
-                    {log.errorMessage && (
-                      <td
-                        colSpan={6}
-                        className="px-4 py-2 text-xs text-destructive"
-                      >
-                        {log.errorMessage}
                       </td>
+                    </tr>
+                    {log.errorMessage && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-2 text-xs text-destructive bg-destructive/5"
+                        >
+                          {log.errorMessage}
+                        </td>
+                      </tr>
                     )}
-                  </tr>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>

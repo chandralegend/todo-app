@@ -77,7 +77,7 @@ export function DashboardContent({
       </div>
 
       {/* Summary stat cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatCard
           label="Today"
           value={stats.today}
@@ -139,7 +139,7 @@ export function DashboardContent({
                 {/* Header */}
                 <div>
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-base text-foreground leading-tight">
+                    <h3 className="font-semibold text-base text-foreground leading-tight line-clamp-1">
                       {list.name}
                     </h3>
                     {!list.isOwner && (

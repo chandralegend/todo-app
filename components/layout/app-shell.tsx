@@ -33,12 +33,12 @@ export function AppShell({
           <TopBar />
           <div className="flex flex-1 flex-col">
             {/* Breadcrumbs */}
-            <div className="border-b px-6 py-3">
+            <div className="border-b px-4 sm:px-6 py-3">
               <AppBreadcrumbs overrides={breadcrumbOverrides} />
             </div>
 
             {/* Main content */}
-            <main className="flex-1 px-6 py-6">{children}</main>
+            <main className="flex-1 px-4 sm:px-6 py-4 sm:py-6">{children}</main>
 
             {/* Footer */}
             <Footer />

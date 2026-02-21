@@ -48,7 +48,7 @@ export function TopBar() {
         {/* User avatar dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-full p-1 hover:bg-muted transition-colors">
+            <button className="flex items-center gap-2 rounded-full p-1.5 hover:bg-muted transition-colors cursor-pointer">
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
                   {userInitials}

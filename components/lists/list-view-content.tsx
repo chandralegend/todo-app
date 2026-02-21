@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { ClipboardList, Plus, ArrowUpDown, Search } from "lucide-react";
+import { ClipboardList, Plus, ArrowUpDown, Search, X } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { BentoCard } from "@/components/ui/bento-card";
@@ -143,7 +143,7 @@ export function ListViewContent({
         </div>
 
         {/* Stats row */}
-        <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground flex-wrap">
           <span>{list.totalTasks} tasks</span>
           <span className="text-border">|</span>
           {list.overdueCount > 0 && (
@@ -167,7 +167,7 @@ export function ListViewContent({
           <button
             key={pill.value}
             onClick={() => router.push(buildFilterUrl({ due: pill.value }))}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium border transition-colors cursor-pointer ${
+            className={`rounded-full px-4 py-2 sm:py-1.5 text-sm sm:text-xs font-medium border transition-colors cursor-pointer min-h-[44px] sm:min-h-0 ${
               currentFilters.due === pill.value
                 ? "bg-foreground text-background border-foreground"
                 : "bg-card text-foreground border-border hover:bg-muted"
@@ -179,43 +179,46 @@ export function ListViewContent({
       </div>
 
       {/* Active filters + sort row */}
-      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="flex items-center gap-2 flex-wrap">
           {currentFilters.status !== "ALL" && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1 text-xs font-medium">
+            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
               <span className="opacity-60">Status:</span>
               {currentFilters.status.replace("_", " ")}
               <button
                 onClick={() => router.push(buildFilterUrl({ status: "ALL" }))}
-                className="ml-0.5 hover:opacity-70 cursor-pointer"
+                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
+                aria-label="Remove status filter"
               >
-                x
+                <X className="size-3" />
               </button>
             </span>
           )}
           {currentFilters.importance !== "ALL" && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1 text-xs font-medium">
+            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
               <span className="opacity-60">Importance:</span>
               {currentFilters.importance}
               <button
                 onClick={() =>
                   router.push(buildFilterUrl({ importance: "ALL" }))
                 }
-                className="ml-0.5 hover:opacity-70 cursor-pointer"
+                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
+                aria-label="Remove importance filter"
               >
-                x
+                <X className="size-3" />
               </button>
             </span>
           )}
           {currentFilters.tag && (
-            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1 text-xs font-medium">
+            <span className="filter-chip inline-flex items-center gap-1.5 rounded-full border border-foreground bg-foreground text-background px-3 py-1.5 text-xs font-medium min-h-[36px]">
               <span className="opacity-60">Tag:</span>
               #{currentFilters.tag}
               <button
                 onClick={() => router.push(buildFilterUrl({ tag: "" }))}
-                className="ml-0.5 hover:opacity-70 cursor-pointer"
+                className="ml-0.5 p-1 -mr-1 rounded-full hover:bg-background/20 cursor-pointer"
+                aria-label="Remove tag filter"
               >
-                x
+                <X className="size-3" />
               </button>
             </span>
           )}
@@ -230,7 +233,7 @@ export function ListViewContent({
                   })
                 )
               }
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer py-2 px-1"
             >
               Clear all
             </button>
@@ -251,7 +254,7 @@ export function ListViewContent({
             onChange={(e) =>
               router.push(buildFilterUrl({ sort: e.target.value }))
             }
-            className="h-8 rounded-lg border border-border bg-card px-2.5 py-1 text-xs cursor-pointer"
+            className="h-10 sm:h-8 rounded-lg border border-border bg-card px-2.5 py-1 text-sm sm:text-xs cursor-pointer"
           >
             <option value="created_desc">Newest</option>
             <option value="deadline_asc">Deadline</option>
@@ -354,14 +357,14 @@ export function ListViewContent({
 
                     {/* Tags */}
                     {task.tagsSnapshot.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-1.5 mt-2">
                         {task.tagsSnapshot.map((tag) => (
                           <button
                             key={tag}
                             onClick={() =>
                               router.push(buildFilterUrl({ tag }))
                             }
-                            className="text-[0.65rem] text-muted-foreground bg-muted px-2 py-0.5 rounded-full hover:bg-muted/80 transition-colors cursor-pointer"
+                            className="text-[0.65rem] text-muted-foreground bg-muted px-2.5 py-1.5 rounded-full hover:bg-muted/80 transition-colors cursor-pointer"
                           >
                             #{tag}
                           </button>
@@ -386,7 +389,7 @@ export function ListViewContent({
                           <select
                             name="status"
                             defaultValue={task.status}
-                            className="h-7 rounded-lg border border-border bg-card px-2 py-0.5 text-xs cursor-pointer"
+                            className="h-9 sm:h-7 rounded-lg border border-border bg-card px-2 py-0.5 text-sm sm:text-xs cursor-pointer"
                           >
                             {(allowedStatuses[task.id] ?? []).map(
                               (option: string) => (
@@ -400,7 +403,7 @@ export function ListViewContent({
                             type="submit"
                             size="sm"
                             variant="outline"
-                            className="h-7 px-2.5 text-xs"
+                            className="h-9 sm:h-7 px-3 sm:px-2.5 text-sm sm:text-xs"
                           >
                             Update
                           </Button>
@@ -434,21 +437,21 @@ function FilterDropdown({
 
   return (
     <details className="relative">
-      <summary className="text-xs text-primary hover:text-primary/80 cursor-pointer select-none font-medium">
+      <summary className="text-xs text-primary hover:text-primary/80 cursor-pointer select-none font-medium py-2 px-1">
         + Add Filter
       </summary>
-      <div className="absolute top-full left-0 mt-1 z-50 w-56 rounded-xl border border-border bg-card p-3 shadow-lg">
+      <div className="absolute top-full left-0 mt-1 z-50 w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card p-3 shadow-lg">
         <div className="space-y-3">
           <div>
             <p className="text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1.5">
               Status
             </p>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {statusOptions.map((s) => (
                 <button
                   key={s}
                   onClick={() => onApply({ status: s })}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                     currentFilters.status === s
                       ? "bg-foreground text-background border-foreground"
                       : "border-border hover:bg-muted"
@@ -463,12 +466,12 @@ function FilterDropdown({
             <p className="text-[0.65rem] uppercase tracking-widest text-muted-foreground mb-1.5">
               Importance
             </p>
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1.5">
               {importanceOptions.map((i) => (
                 <button
                   key={i}
                   onClick={() => onApply({ importance: i })}
-                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-colors cursor-pointer ${
                     currentFilters.importance === i
                       ? "bg-foreground text-background border-foreground"
                       : "border-border hover:bg-muted"
