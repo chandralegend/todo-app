@@ -41,12 +41,12 @@
 ### Phase 1: Lists and One Off Tasks
 **Description:** Core task management - TaskList CRUD, TaskTemplate/TaskInstance models, task list UI with filters.
 
-**Status:** Not Started
+**Status:** In Progress
 
 **Sub Tasks:**
-- [ ] Create TaskList CRUD operations
-- [ ] Implement TaskTemplate and TaskInstance Prisma models
-- [ ] Build task list screen (main productivity view)
+- [x] Create TaskList CRUD operations
+- [x] Implement TaskTemplate and TaskInstance Prisma models
+- [x] Build task list screen (main productivity view)
 - [ ] Add filtering controls (status, importance, tag, due state)
 - [ ] Add sorting controls (deadline, importance, created date)
 - [ ] Implement quick status change from task list
@@ -54,6 +54,8 @@
 - [ ] Ensure responsive UI for mobile
 
 **Notes:**
+- Implemented list creation flow (`/lists/new`) and list detail view (`/lists/[id]`)
+- Dashboard now lists user task lists with direct navigation
 - Will need tRPC for API layer
 - UI should support quick capture and quick status updates per PLAN.md
 
