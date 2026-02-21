@@ -202,7 +202,7 @@ export function ChatSidebar({ open, onOpenChange }: ChatSidebarProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:max-w-md p-0 flex flex-col"
+        className="w-full max-w-full sm:max-w-md p-0 flex flex-col"
         showCloseButton={true}
       >
         <SheetHeader className="border-b border-border px-4 pr-12 py-3 shrink-0">
