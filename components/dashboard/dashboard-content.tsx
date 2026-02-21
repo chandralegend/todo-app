@@ -96,21 +96,18 @@ export function DashboardContent({ stats, lists }: DashboardContentProps) {
               {lists.map((list) => (
                 <Link key={list.id} href={`/lists/${list.id}`} className="block">
                   <div className="rounded-2xl border border-border bg-card px-4 py-3.5 bento-card cursor-pointer h-full flex flex-col gap-2.5">
-                    {/* Title + task count */}
-                    <div>
-                      <h3 className="font-bold text-base leading-tight">{list.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        {list.taskCount} {list.taskCount === 1 ? "task" : "tasks"}
-                        {list.overdue > 0 && (
-                          <> &middot; <span className="text-destructive font-medium">{list.overdue} overdue</span></>
-                        )}
-                      </p>
-                    </div>
-
-                    {/* Progress ring */}
+                    {/* Title + progress ring */}
                     <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-base leading-tight truncate">{list.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          {list.taskCount} {list.taskCount === 1 ? "task" : "tasks"}
+                          {list.overdue > 0 && (
+                            <> &middot; <span className="text-destructive font-medium">{list.overdue} overdue</span></>
+                          )}
+                        </p>
+                      </div>
                       <ProgressRing value={list.progress} size="sm" />
-                      <span className="text-xs text-muted-foreground">complete</span>
                     </div>
 
                     {/* Tags */}
