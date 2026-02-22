@@ -138,20 +138,23 @@ module.exports = {
     const nodeArch = archMap[context.arch] || process.arch;
 
     console.log(`[afterPack] Rebuilding better-sqlite3 for Electron ${electronVersion} (arch: ${nodeArch})...`);
+    let rebuildSucceeded = false;
     try {
       execSync(
         `npx node-gyp rebuild --target=${electronVersion} --arch=${nodeArch} --dist-url=https://electronjs.org/headers`,
-        { cwd: betterSqliteDir, stdio: "pipe", timeout: 120_000 }
+        { cwd: betterSqliteDir, stdio: "pipe", timeout: 300_000 }
       );
       console.log("[afterPack] better-sqlite3 rebuilt for Electron Node ABI");
+      rebuildSucceeded = true;
     } catch (e) {
       console.warn("[afterPack] WARNING: node-gyp rebuild failed:", e.message?.substring(0, 200));
     }
 
     const rebuiltBinary = path.join(betterSqliteDir, "build", "Release", "better_sqlite3.node");
 
-    if (!fs.existsSync(rebuiltBinary)) {
-      console.warn("[afterPack] WARNING: rebuilt better-sqlite3 binary not found");
+    if (!rebuildSucceeded || !fs.existsSync(rebuiltBinary)) {
+      console.warn("[afterPack] WARNING: rebuilt better-sqlite3 binary not found, skipping patching");
+      console.warn("[afterPack] The app may fail to load better-sqlite3 if the ABI doesn't match");
       return;
     }
 
@@ -173,10 +176,29 @@ module.exports = {
       }
     }
 
+    // Copy with retry for Windows EBUSY errors
+    function copyWithRetry(src, dest, retries = 3, delayMs = 1000) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          fs.copyFileSync(src, dest);
+          return true;
+        } catch (e) {
+          if (i < retries - 1 && e.code === "EBUSY") {
+            console.log(`[afterPack] EBUSY on copy, retrying in ${delayMs}ms...`);
+            const end = Date.now() + delayMs;
+            while (Date.now() < end) { /* busy wait */ }
+          } else {
+            throw e;
+          }
+        }
+      }
+      return false;
+    }
+
     let patched = 0;
     for (const target of targets) {
       if (fs.existsSync(target)) {
-        fs.copyFileSync(rebuiltBinary, target);
+        copyWithRetry(rebuiltBinary, target);
         console.log(`[afterPack] Patched: ${path.relative(context.appOutDir, target)}`);
         patched++;
       }
