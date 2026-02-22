@@ -636,6 +636,45 @@
 
 ---
 
+### Phase 7E: Settings Infrastructure & UI Improvements
+**Description:** Add a database-backed app settings system (key-value store), wire settings into the Settings page UI, and make the ant cursor effect toggleable.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Add `AppSetting` key-value model to Prisma schema (key PK, value, updated_at)
+- [x] Create SQLite migration `20260222120416_add_app_settings`
+- [x] Create `lib/settings.ts` — getSetting, setSetting, getAllSettings, getOpenAIApiKey helpers
+- [x] Create `/api/settings` endpoint (GET all settings, PUT single key-value)
+- [x] Update `/api/chat/route.ts` — use `createOpenAI({ apiKey })` reading key from DB (falls back to env var)
+- [x] Add `Appearance` tab to Settings page with ant cursor on/off toggle (persisted to DB)
+- [x] Wire `AI` tab to save/load OpenAI API key from database instead of localStorage
+- [x] Show masked API key with remove button when key is set
+- [x] Update `CursorEffect` component to fetch `cursor_enabled` setting on mount
+- [x] Add real-time cursor toggle via custom `setting-changed` DOM event
+- [x] Add shadcn `Switch` component
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- New `AppSetting` model provides a generic key-value settings store in SQLite
+- Known keys: `openai_api_key`, `cursor_enabled` (defined in `lib/settings.ts` SETTING_KEYS)
+- Settings page now has 4 tabs: General, Appearance, AI, Recurrence
+- Appearance tab has a Switch toggle for the ant cursor trail effect
+- AI tab saves/loads API key from database (no longer localStorage), shows masked key with remove option
+- Chat route uses `createOpenAI({ apiKey })` with DB key, falling back to `OPENAI_API_KEY` env var
+- CursorEffect fetches setting on mount and listens for live changes from Settings page
+
+**What is left to do:**
+- Nothing — completed
+
+**Notes:**
+- Branch: `electron-migration`
+- Commit: `d3c7c73`
+- Settings are global (not per-user) since this is a self-hosted single-user desktop app
+- Default cursor_enabled is `true` (ants on) when no setting exists
+
+---
+
 ## Future Plans
 
 ### Description
@@ -681,7 +720,7 @@ After Phase 7 (Electron migration) is merged to `main`, the following features c
 - **Package Manager:** Bun
 - **Drag & Drop:** @dnd-kit/core 6.3.1, @dnd-kit/sortable 10.0.0, @dnd-kit/utilities 3.2.2
 - **AI:** ai 6.0.97, @ai-sdk/react 3.0.99, @ai-sdk/openai 3.0.30, zod 4.3.6
-- **Components Available:** alert-dialog, avatar, badge, breadcrumb, button, card, checkbox, collapsible, combobox, dialog, drawer, dropdown-menu, field, hover-card, input, input-group, label, popover, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, table, tabs, textarea, toggle, toggle-group, tooltip (32 total)
+- **Components Available:** alert-dialog, avatar, badge, breadcrumb, button, card, checkbox, collapsible, combobox, dialog, drawer, dropdown-menu, field, hover-card, input, input-group, label, popover, progress, scroll-area, select, separator, sheet, sidebar, skeleton, sonner, switch, table, tabs, textarea, toggle, toggle-group, tooltip (33 total)
 
 ### Custom Layout Components
 - `components/layout/app-shell.tsx` - Main authenticated shell with TopBar + ChatSidebar + main content + Footer
@@ -722,8 +761,13 @@ After Phase 7 (Electron migration) is merged to `main`, the following features c
 ### Today Page Components
 - `components/today/today-content.tsx` - Today's Focus page with checkbox, status, remove actions
 
+### Settings Components
+- `components/settings/settings-content.tsx` - Settings page with 4 tabs (General, Appearance, AI, Recurrence)
+- `lib/settings.ts` - getSetting, setSetting, getAllSettings, getOpenAIApiKey helpers
+- `app/api/settings/route.ts` - GET all settings, PUT single key-value pair
+
 ### AI Backend
 - `lib/ai/system-prompt.ts` - Date-aware productivity assistant system prompt
 - `lib/ai/tools.ts` - 9 AI agent tools with Prisma queries and access control
 - `lib/ai/task-context.ts` - Task context snapshot builder for AI (from Phase 4)
-- `app/api/chat/route.ts` - Streaming chat endpoint with streamText + tool loop
+- `app/api/chat/route.ts` - Streaming chat endpoint with streamText + tool loop (uses DB-stored API key)
