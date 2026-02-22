@@ -6,7 +6,7 @@ import { lastAssistantMessageIsCompleteWithToolCalls } from "ai";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Send, Bot, User, Loader2, Sparkles, Trash2, X } from "lucide-react";
+import { Send, Bot, User, Loader2, Trash2, ArrowLeft } from "lucide-react";
 import { TaskListsResult, TasksInListResult } from "./tool-ui/task-list-card";
 import {
   CreatedTaskCard,
@@ -191,44 +191,36 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
 
   return (
     <div className="flex flex-col h-full w-full">
-      {/* Header — height aligned with TopBar */}
-      <div className="border-b border-border px-4 py-3 shrink-0 min-h-14 flex items-center">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
-              <Sparkles className="size-3.5 text-primary" />
-            </div>
-            AI Assistant
-          </div>
-          <div className="flex items-center gap-1">
-            {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                onClick={() => setMessages([])}
-                title="Clear chat"
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-              title="Close chat"
-            >
-              <X className="size-3.5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
           <div className="p-4 space-y-4">
+            {/* Top action row: mobile back + clear */}
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-muted-foreground hover:text-foreground text-[0.65rem] gap-1 sm:hidden"
+                onClick={onClose}
+              >
+                <ArrowLeft className="size-3" />
+                Back
+              </Button>
+              {messages.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-muted-foreground hover:text-foreground text-[0.65rem] gap-1 ml-auto"
+                  onClick={() => setMessages([])}
+                >
+                  <Trash2 className="size-3" />
+                  Clear
+                </Button>
+              ) : (
+                <span />
+              )}
+            </div>
+
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 mb-3">
@@ -334,8 +326,8 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
         </div>
       )}
 
-      {/* Input area — height aligned with Footer */}
-      <div className="border-t border-border px-4 py-2 shrink-0 min-h-12 flex items-center">
+      {/* Input area */}
+      <div className="px-4 pb-4 pt-2 shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2 w-full">
           <Input
             ref={inputRef}
