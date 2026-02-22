@@ -4,7 +4,7 @@ import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 /** Default SQLite path for development. Electron sets DATABASE_URL at runtime. */
 const DEFAULT_DB_PATH = "./prisma/dev.db";
 
-/** Resolved database file path (without file: prefix). */
+/** Resolved local database file path (without file: prefix). */
 export function getDatabasePath(): string {
   const envUrl = process.env.DATABASE_URL;
   if (envUrl) return envUrl.replace("file:", "");

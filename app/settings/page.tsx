@@ -79,6 +79,8 @@ export default async function SettingsPage() {
         cursorEnabled: appSettings.cursor_enabled !== "false", // default true
         hasApiKey,
         maskedApiKey,
+        dbMode: (appSettings.db_mode as "local" | "cloud") || "local",
+        cloudDbUrl: appSettings.cloud_db_url || "",
       }}
     />
   );

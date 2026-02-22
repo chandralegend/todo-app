@@ -16,6 +16,10 @@ import {
   Save,
   Paintbrush,
   Bug,
+  HardDrive,
+  Cloud,
+  Loader2,
+  Upload,
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -47,6 +51,8 @@ interface AppSettings {
   cursorEnabled: boolean;
   hasApiKey: boolean;
   maskedApiKey: string;
+  dbMode: "local" | "cloud";
+  cloudDbUrl: string;
 }
 
 interface SettingsContentProps {
@@ -378,27 +384,213 @@ function AppearanceSection({ cursorEnabled: initialCursorEnabled }: { cursorEnab
   );
 }
 
-function DatabaseSection({ databaseUrl }: { databaseUrl: string }) {
+function DatabaseSection({
+  databaseUrl,
+  initialMode,
+  initialCloudUrl,
+}: {
+  databaseUrl: string;
+  initialMode: "local" | "cloud";
+  initialCloudUrl: string;
+}) {
+  const [mode, setMode] = useState<"local" | "cloud">(initialMode);
+  const [cloudUrl, setCloudUrl] = useState(initialCloudUrl);
+  const [saving, setSaving] = useState(false);
+  const [pushing, setPushing] = useState(false);
+  const [pushResult, setPushResult] = useState<{ ok: boolean; message: string } | null>(null);
+
+  async function handleModeChange(newMode: "local" | "cloud") {
+    setMode(newMode);
+    setSaving(true);
+    const ok = await saveSetting("db_mode", newMode);
+    setSaving(false);
+    if (ok) {
+      toast.success(`Database mode set to ${newMode}`);
+      if (newMode === "local") {
+        setPushResult(null);
+      }
+    } else {
+      setMode(mode); // revert
+      toast.error("Failed to update database mode");
+    }
+  }
+
+  async function handleSaveCloudUrl(e: React.FormEvent) {
+    e.preventDefault();
+    if (!cloudUrl.trim()) {
+      toast.error("Please enter a database URL");
+      return;
+    }
+    setSaving(true);
+    const ok = await saveSetting("cloud_db_url", cloudUrl.trim());
+    setSaving(false);
+    if (ok) {
+      toast.success("Cloud database URL saved");
+      setPushResult(null);
+    } else {
+      toast.error("Failed to save database URL");
+    }
+  }
+
+  async function handlePushSchema() {
+    if (!cloudUrl.trim()) {
+      toast.error("Please save a database URL first");
+      return;
+    }
+    setPushing(true);
+    setPushResult(null);
+    try {
+      const res = await fetch("/api/settings/push-schema", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: cloudUrl.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPushResult({ ok: true, message: data.message || "Schema pushed successfully" });
+        toast.success("Schema pushed to cloud database");
+      } else {
+        setPushResult({ ok: false, message: data.error || "Push failed" });
+        toast.error("Schema push failed");
+      }
+    } catch {
+      setPushResult({ ok: false, message: "Network error" });
+      toast.error("Network error");
+    } finally {
+      setPushing(false);
+    }
+  }
+
   return (
     <BentoCard interactive={false}>
       <div className="flex items-center gap-2 mb-4">
         <Database className="size-4 text-coral" />
         <h3 className="font-semibold text-sm">Database</h3>
       </div>
-      <p className="text-xs text-muted-foreground mb-4">
-        SQLite database location. In the desktop app, this defaults to your user data directory.
+      <p className="text-xs text-muted-foreground mb-5">
+        Choose where your data is stored. Local uses an embedded SQLite database on this device.
+        Cloud lets you connect to an external database.
       </p>
-      <div className="space-y-1.5 max-w-lg">
-        <Label className="text-xs">Database Path</Label>
-        <Input
-          value={databaseUrl}
-          readOnly
-          className="font-mono text-xs bg-muted"
-        />
-        <p className="text-[0.65rem] text-muted-foreground">
-          This path is managed automatically by the application.
-        </p>
+
+      {/* Mode toggle */}
+      <div className="flex gap-2 mb-5">
+        <button
+          type="button"
+          onClick={() => handleModeChange("local")}
+          disabled={saving}
+          className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer flex-1 max-w-[200px] ${
+            mode === "local"
+              ? "border-coral bg-coral/5 text-coral"
+              : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <HardDrive className="size-4" />
+          Local
+        </button>
+        <button
+          type="button"
+          onClick={() => handleModeChange("cloud")}
+          disabled={saving}
+          className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer flex-1 max-w-[200px] ${
+            mode === "cloud"
+              ? "border-coral bg-coral/5 text-coral"
+              : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
+        >
+          <Cloud className="size-4" />
+          Cloud
+        </button>
       </div>
+
+      {/* Local mode */}
+      {mode === "local" && (
+        <div className="space-y-1.5 max-w-lg">
+          <Label className="text-xs">Database Path</Label>
+          <Input
+            value={databaseUrl}
+            readOnly
+            className="font-mono text-xs bg-muted"
+          />
+          <p className="text-[0.65rem] text-muted-foreground">
+            Managed automatically by the application. Data is stored on this device.
+          </p>
+        </div>
+      )}
+
+      {/* Cloud mode */}
+      {mode === "cloud" && (
+        <div className="space-y-4 max-w-lg">
+          <form onSubmit={handleSaveCloudUrl} className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cloud-db-url" className="text-xs">
+                Database URL
+              </Label>
+              <Input
+                id="cloud-db-url"
+                type="text"
+                value={cloudUrl}
+                onChange={(e) => setCloudUrl(e.target.value)}
+                placeholder="postgresql://user:pass@host:5432/dbname"
+                className="font-mono text-xs"
+              />
+              <p className="text-[0.65rem] text-muted-foreground">
+                Supports PostgreSQL, MySQL, or any Prisma-compatible connection string.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="submit"
+                disabled={saving || !cloudUrl.trim()}
+                className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2 text-xs font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50"
+              >
+                <Save className="size-3.5" />
+                {saving ? "Saving..." : "Save URL"}
+              </button>
+              <button
+                type="button"
+                onClick={handlePushSchema}
+                disabled={pushing || !cloudUrl.trim()}
+                className="inline-flex items-center gap-2 rounded-full border border-coral text-coral px-4 py-2 text-xs font-medium hover:bg-coral/5 transition-colors disabled:opacity-50"
+              >
+                {pushing ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Upload className="size-3.5" />
+                )}
+                {pushing ? "Pushing..." : "Push Schema"}
+              </button>
+            </div>
+          </form>
+
+          {/* Push result */}
+          {pushResult && (
+            <div
+              className={`rounded-lg border px-3 py-2 text-xs ${
+                pushResult.ok
+                  ? "border-status-completed/30 bg-status-completed/5 text-status-completed"
+                  : "border-destructive/30 bg-destructive/5 text-destructive"
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                {pushResult.ok ? (
+                  <CheckCircle2 className="size-3.5 mt-0.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="size-3.5 mt-0.5 shrink-0" />
+                )}
+                <pre className="whitespace-pre-wrap break-all font-mono text-[0.65rem] leading-relaxed">
+                  {pushResult.message}
+                </pre>
+              </div>
+            </div>
+          )}
+
+          <p className="text-[0.65rem] text-muted-foreground">
+            <strong>Push Schema</strong> creates or updates the database tables on your cloud database.
+            Run this after connecting a new database or when the app has been updated.
+            Requires the app to restart to take effect.
+          </p>
+        </div>
+      )}
     </BentoCard>
   );
 }
@@ -566,7 +758,11 @@ export function SettingsContent({ user, recurrence, databaseUrl, appSettings }: 
           </BentoCard>
 
           <ChangePasswordSection />
-          <DatabaseSection databaseUrl={databaseUrl} />
+          <DatabaseSection
+            databaseUrl={databaseUrl}
+            initialMode={appSettings.dbMode}
+            initialCloudUrl={appSettings.cloudDbUrl}
+          />
         </TabsContent>
 
         {/* Appearance Tab */}

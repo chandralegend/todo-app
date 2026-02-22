@@ -4,7 +4,11 @@ import { prisma } from "@/lib/prisma";
 export const SETTING_KEYS = {
   OPENAI_API_KEY: "openai_api_key",
   CURSOR_ENABLED: "cursor_enabled",
+  DB_MODE: "db_mode", // "local" | "cloud"
+  CLOUD_DB_URL: "cloud_db_url",
 } as const;
+
+export type DbMode = "local" | "cloud";
 
 /**
  * Get a single setting value. Returns null if not set.
