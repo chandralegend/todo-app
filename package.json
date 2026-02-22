@@ -9,9 +9,9 @@
     "start": "next start",
     "lint": "eslint",
     "electron:compile": "node electron/build.mjs",
-    "electron:dev": "bun run electron:compile && concurrently -k \"next dev\" \"wait-on tcp:3000 && electron .\"",
+    "electron:dev": "npm rebuild better-sqlite3 && bun run electron:compile && concurrently -k \"next dev\" \"wait-on tcp:3000 && electron .\"",
     "electron:build": "bun run build && node electron/prepare-standalone.mjs && bun run electron:compile && electron-builder --config electron-builder.config.js",
-    "electron:preview": "bun run build && bun run electron:compile && electron ."
+    "electron:preview": "npm rebuild better-sqlite3 && bun run build && bun run electron:compile && electron ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.30",
