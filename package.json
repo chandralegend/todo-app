@@ -2,11 +2,16 @@
   "name": "the-todo-app",
   "version": "0.1.0",
   "private": true,
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "bun run electron:compile && concurrently -k \"next dev\" \"wait-on tcp:3000 && electron .\"",
+    "electron:build": "bun run build && bun run electron:compile && electron-builder",
+    "electron:preview": "bun run build && bun run electron:compile && electron ."
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.30",
@@ -47,10 +52,14 @@
     "@types/pg": "^8.16.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "electron": "^40.6.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.4"
   },
   "ignoreScripts": [
     "sharp",
@@ -59,6 +68,7 @@
   "trustedDependencies": [
     "@prisma/engines",
     "better-sqlite3",
+    "electron",
     "prisma",
     "sharp",
     "unrs-resolver"
