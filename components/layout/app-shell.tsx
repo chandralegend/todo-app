@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { TopBar } from "@/components/layout/top-bar";
-
+import { DesktopSidebar, MobileTopBar } from "@/components/layout/top-bar";
 import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { Toaster } from "@/components/ui/sonner";
 import { ChatPanel } from "@/components/ai/chat-sidebar";
@@ -17,20 +16,31 @@ interface AppShellProps {
 
 export function AppShell({ children, breadcrumbOverrides, action }: AppShellProps) {
   const [chatOpen, setChatOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex min-h-svh">
-        {/* Main content column — full height, scrolls independently */}
+        {/* Desktop sidebar — fixed left */}
+        <DesktopSidebar
+          onAiClick={() => setChatOpen((o) => !o)}
+          chatOpen={chatOpen}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
+        />
+
+        {/* Main content column */}
         <div
-          className={`flex-1 flex flex-col min-w-0 overflow-y-auto transition-all duration-300 ${
+          className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
             chatOpen ? "hidden sm:flex" : "flex"
           }`}
         >
-          <TopBar
+          {/* Mobile top bar */}
+          <MobileTopBar
             onAiClick={() => setChatOpen((o) => !o)}
             chatOpen={chatOpen}
           />
+
           <main className="flex-1 mx-auto max-w-5xl w-full px-5 py-6">
             <div className="mb-4 flex items-center justify-between gap-4">
               <AppBreadcrumbs overrides={breadcrumbOverrides} />
@@ -38,10 +48,9 @@ export function AppShell({ children, breadcrumbOverrides, action }: AppShellProp
             </div>
             {children}
           </main>
-          <span className="px-5 pb-2 text-[0.6rem] text-muted-foreground">v0.1.0</span>
         </div>
 
-        {/* Chat panel — full viewport height, pushes content */}
+        {/* Chat panel — right side, full viewport height */}
         <div
           className={`border-l border-border bg-card transition-all duration-300 ease-in-out shrink-0 overflow-hidden h-svh sticky top-0 ${
             chatOpen
