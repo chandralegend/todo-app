@@ -1,5 +1,8 @@
-import { app, BrowserWindow, shell } from "electron";
+import { app, BrowserWindow, shell, ipcMain } from "electron";
 import path from "node:path";
+import { ensureDatabase, getDatabaseUrl } from "./database";
+import { startCronScheduler, stopCronScheduler } from "./cron";
+import { setupMenu } from "./menu";
 
 const isDev = !app.isPackaged;
 const DEV_URL = "http://localhost:3000";
@@ -43,7 +46,7 @@ function createWindow(): void {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
     // In production, load the standalone Next.js server
-    // Phase D will set this up — for now, fall back to localhost
+    // Phase D will set this up with embedded server — for now, fall back to localhost
     mainWindow.loadURL(DEV_URL);
   }
 
@@ -51,6 +54,24 @@ function createWindow(): void {
     mainWindow = null;
   });
 }
+
+// ---------- IPC Handlers ----------
+
+// Return app version to renderer
+ipcMain.handle("get-app-version", () => app.getVersion());
+
+// Window control IPC (for custom titlebar if needed)
+ipcMain.on("window-minimize", () => mainWindow?.minimize());
+ipcMain.on("window-maximize", () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize();
+  } else {
+    mainWindow?.maximize();
+  }
+});
+ipcMain.on("window-close", () => mainWindow?.close());
+
+// ---------- App Lifecycle ----------
 
 // macOS: re-create window when dock icon is clicked
 app.on("activate", () => {
@@ -66,5 +87,26 @@ app.on("window-all-closed", () => {
   }
 });
 
-// Create window when Electron is ready
-app.whenReady().then(createWindow);
+// Clean up cron on quit
+app.on("will-quit", () => {
+  stopCronScheduler();
+});
+
+// ---------- Initialization ----------
+
+app.whenReady().then(() => {
+  // 1. Ensure database exists and migrations are applied
+  //    Sets DATABASE_URL env var for the Next.js process
+  ensureDatabase();
+
+  console.log(`[electron] DATABASE_URL = ${getDatabaseUrl()}`);
+
+  // 2. Set up native window menu
+  setupMenu();
+
+  // 3. Create the main window
+  createWindow();
+
+  // 4. Start cron scheduler for recurring task generation
+  startCronScheduler();
+});

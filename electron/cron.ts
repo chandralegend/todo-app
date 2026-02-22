@@ -1,0 +1,77 @@
+import { schedule, ScheduledTask } from "node-cron";
+
+const NEXT_SERVER_URL = "http://localhost:3000";
+let cronTask: ScheduledTask | null = null;
+
+/**
+ * Trigger recurrence generation by calling the local Next.js API endpoint.
+ * This replaces the external cron service (e.g., Vercel cron) for the desktop app.
+ */
+async function runRecurrenceGeneration(): Promise<void> {
+  try {
+    const response = await fetch(`${NEXT_SERVER_URL}/api/cron/recurrence`, {
+      method: "GET",
+      headers: {
+        // In dev mode, the cron endpoint allows unauthenticated requests
+        // In production, we use a local secret
+        "x-cron-secret": process.env.CRON_SECRET || "",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(
+        `[electron:cron] Recurrence generation failed: ${response.status} ${response.statusText}`
+      );
+      return;
+    }
+
+    const result = (await response.json()) as {
+      templatesScanned?: number;
+      generated?: number;
+      duplicateOrExisting?: number;
+    };
+    console.log(
+      `[electron:cron] Recurrence generation complete:`,
+      `scanned=${result.templatesScanned ?? 0}, generated=${result.generated ?? 0}, duplicates=${result.duplicateOrExisting ?? 0}`
+    );
+  } catch (error) {
+    // Expected during startup before Next.js is ready, or if the server is temporarily unavailable
+    if (error instanceof Error && error.message.includes("ECONNREFUSED")) {
+      console.log("[electron:cron] Next.js server not ready yet, skipping...");
+    } else {
+      console.error("[electron:cron] Error running recurrence generation:", error);
+    }
+  }
+}
+
+/**
+ * Start the cron scheduler for recurring task generation.
+ * Runs every hour at minute 0 (e.g., 8:00, 9:00, 10:00).
+ * Also runs once after a 10-second delay on startup.
+ */
+export function startCronScheduler(): void {
+  // Run once shortly after startup (give Next.js time to boot)
+  setTimeout(() => {
+    console.log("[electron:cron] Running initial recurrence generation...");
+    runRecurrenceGeneration();
+  }, 10_000);
+
+  // Schedule hourly runs
+  cronTask = schedule("0 * * * *", () => {
+    console.log("[electron:cron] Running scheduled recurrence generation...");
+    runRecurrenceGeneration();
+  });
+
+  console.log("[electron:cron] Cron scheduler started (hourly at :00)");
+}
+
+/**
+ * Stop the cron scheduler. Called on app quit.
+ */
+export function stopCronScheduler(): void {
+  if (cronTask) {
+    cronTask.stop();
+    cronTask = null;
+    console.log("[electron:cron] Cron scheduler stopped.");
+  }
+}
