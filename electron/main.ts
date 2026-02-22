@@ -27,11 +27,30 @@ function createWindow(): void {
     // Frameless look with native traffic lights on macOS
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
     show: false, // Don't show until ready
+    backgroundColor: "#F5F3EF", // Match app background to avoid white flash
   });
 
   // Show window once the page is loaded to avoid flash
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show();
+  });
+
+  // Fallback: if ready-to-show doesn't fire within 5s, show anyway
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isVisible()) {
+      console.log("[electron] Timeout waiting for ready-to-show, showing window");
+      mainWindow.show();
+    }
+  }, 5000);
+
+  // Handle page load failures — retry after a short delay
+  mainWindow.webContents.on("did-fail-load", (_event, errorCode, errorDescription) => {
+    console.error(`[electron] Page failed to load: ${errorCode} ${errorDescription}`);
+    // Retry loading after 2 seconds
+    setTimeout(() => {
+      console.log("[electron] Retrying page load...");
+      mainWindow?.loadURL(serverUrl);
+    }, 2000);
   });
 
   // Open external links in the default browser
@@ -102,13 +121,18 @@ app.whenReady().then(async () => {
 
   console.log(`[electron] DATABASE_URL = ${getDatabaseUrl()}`);
 
-  // 2. Start the embedded Next.js server (production only)
-  //    In dev mode, this returns http://localhost:3000 immediately
-  serverUrl = await startServer();
-  console.log(`[electron] Server URL = ${serverUrl}`);
-
-  // 3. Set up native window menu
+  // 2. Set up native window menu (before server — menu is instant)
   setupMenu();
+
+  // 3. Start the embedded Next.js server (production only)
+  //    In dev mode, this returns http://localhost:3000 immediately
+  try {
+    serverUrl = await startServer();
+    console.log(`[electron] Server URL = ${serverUrl}`);
+  } catch (error) {
+    console.error("[electron] Failed to start server:", error);
+    // Continue anyway — window will show error and retry
+  }
 
   // 4. Create the main window
   createWindow();

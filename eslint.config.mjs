@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "dist/**",
     "release/**",
     "electron/**",
+    "electron-builder.config.js",
   ]),
 ]);
 
