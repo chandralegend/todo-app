@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell, ipcMain } from "electron";
 import path from "node:path";
+import crypto from "node:crypto";
 import { ensureDatabase, getDatabaseUrl } from "./database";
 import { startCronScheduler, stopCronScheduler } from "./cron";
 import { startServer, stopServer } from "./server";
@@ -121,10 +122,18 @@ app.whenReady().then(async () => {
 
   console.log(`[electron] DATABASE_URL = ${getDatabaseUrl()}`);
 
-  // 2. Set up native window menu (before server — menu is instant)
+  // 2. Generate a random CRON_SECRET for internal cron requests.
+  //    This is set in the environment so both the Next.js server (child process)
+  //    and the cron scheduler (main process) share the same secret.
+  if (!process.env.CRON_SECRET) {
+    process.env.CRON_SECRET = crypto.randomBytes(32).toString("hex");
+    console.log("[electron] Generated internal CRON_SECRET for cron scheduler");
+  }
+
+  // 3. Set up native window menu (before server — menu is instant)
   setupMenu();
 
-  // 3. Start the embedded Next.js server (production only)
+  // 4. Start the embedded Next.js server (production only)
   //    In dev mode, this returns http://localhost:3000 immediately
   try {
     serverUrl = await startServer();
@@ -134,9 +143,9 @@ app.whenReady().then(async () => {
     // Continue anyway — window will show error and retry
   }
 
-  // 4. Create the main window
+  // 5. Create the main window
   createWindow();
 
-  // 5. Start cron scheduler for recurring task generation
+  // 6. Start cron scheduler for recurring task generation
   startCronScheduler();
 });
