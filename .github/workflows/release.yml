@@ -1,0 +1,186 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v0.2.0)"
+        required: true
+
+# Cancel in-progress runs for the same tag
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  # ── Build matrix ──────────────────────────────────────────────────────
+  # Each platform builds natively because better-sqlite3 has native deps.
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14          # Apple Silicon runner
+            platform: mac
+            arch: arm64
+          - os: macos-13          # Intel runner
+            platform: mac
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # ── Build Next.js + prepare standalone ───────────────────────────
+      - name: Build Next.js
+        run: bun run build
+
+      - name: Prepare standalone output
+        run: node electron/prepare-standalone.mjs
+
+      - name: Compile Electron TypeScript
+        run: bun run electron:compile
+
+      # ── Platform-specific: install native build tools ────────────────
+      - name: Install Linux build dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libarchive-tools rpm
+
+      # ── Build distributable with electron-builder ────────────────────
+      - name: Build Electron app
+        run: npx electron-builder --${{ matrix.platform }} --${{ matrix.arch }} --config electron-builder.config.js --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Upload artifacts ─────────────────────────────────────────────
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            release/**/*.dmg
+            release/**/*.zip
+            release/**/*.exe
+            release/**/*.AppImage
+            release/**/*.deb
+            release/**/*.blockmap
+            release/**/*.yml
+            release/**/*.yaml
+            !release/**/builder-debug.yml
+          if-no-files-found: error
+          retention-days: 7
+
+  # ── Create GitHub Release ──────────────────────────────────────────────
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find artifacts -type f | sort
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          VERSION="${TAG#v}"
+          cat > release_notes.md << 'NOTES_EOF'
+          ## TodoApp ${{ steps.tag.outputs.tag }}
+
+          ### Downloads
+
+          | Platform | Architecture | File |
+          |----------|-------------|------|
+          | macOS | Apple Silicon (arm64) | `TodoApp-VERSION-mac-arm64.dmg` |
+          | macOS | Intel (x64) | `TodoApp-VERSION-mac-x64.dmg` |
+          | Windows | x64 | `TodoApp-VERSION-win-x64.exe` |
+          | Linux | x64 (AppImage) | `TodoApp-VERSION-linux-x64.AppImage` |
+          | Linux | x64 (deb) | `TodoApp-VERSION-linux-x64.deb` |
+
+          ### Installation
+
+          **macOS**: Open the `.dmg` file and drag TodoApp to Applications.
+          > The app is ad-hoc signed. On first launch, right-click > Open to bypass Gatekeeper.
+
+          **Windows**: Run the `.exe` installer. Choose install directory when prompted.
+
+          **Linux (AppImage)**: `chmod +x TodoApp-*.AppImage && ./TodoApp-*.AppImage`
+
+          **Linux (deb)**: `sudo dpkg -i TodoApp-*.deb`
+
+          ### What's New
+
+          See commit history for detailed changes.
+          NOTES_EOF
+          sed -i "s/VERSION/${VERSION}/g" release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: TodoApp ${{ steps.tag.outputs.tag }}
+          body_path: release_notes.md
+          draft: true
+          prerelease: false
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.zip
+            artifacts/**/*.exe
+            artifacts/**/*.AppImage
+            artifacts/**/*.deb
+            artifacts/**/*.blockmap
+            artifacts/**/*.yml
+            artifacts/**/*.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

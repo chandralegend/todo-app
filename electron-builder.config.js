@@ -185,16 +185,21 @@ module.exports = {
     console.log(`[afterPack] Patched ${patched} better-sqlite3 native module(s) with Electron-compatible build`);
   },
 
-  // macOS
+  // Publish to GitHub Releases
+  publish: {
+    provider: "github",
+    releaseType: "draft",
+  },
+
+  // macOS — arch controlled by CLI flags in CI (--arm64 / --x64)
   mac: {
     target: [
-      {
-        target: "dmg",
-        arch: ["arm64"],
-      },
+      { target: "dmg" },
+      { target: "zip" },
     ],
     category: "public.app-category.productivity",
     icon: "build/icon.icns",
+    artifactName: "${productName}-${version}-mac-${arch}.${ext}",
   },
 
   dmg: {
@@ -221,6 +226,7 @@ module.exports = {
       },
     ],
     icon: "build/icon.ico",
+    artifactName: "${productName}-${version}-win-${arch}.${ext}",
   },
 
   nsis: {
@@ -237,8 +243,17 @@ module.exports = {
         target: "AppImage",
         arch: ["x64"],
       },
+      {
+        target: "deb",
+        arch: ["x64"],
+      },
     ],
     category: "Office",
     icon: "build/icon.png",
+    artifactName: "${productName}-${version}-linux-${arch}.${ext}",
+  },
+
+  deb: {
+    depends: ["libgtk-3-0", "libnotify4", "libnss3", "libxss1", "libxtst6", "xdg-utils", "libatspi2.0-0", "libuuid1"],
   },
 };

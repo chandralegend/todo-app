@@ -768,10 +768,62 @@
 
 ---
 
+### Phase 8: CI/CD — GitHub Actions Release Pipeline
+**Description:** Create GitHub Actions workflows for automated multi-platform Electron builds and GitHub Release publishing.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Research electron-builder GitHub Actions best practices (native deps require per-platform builds)
+- [x] Generate Windows `icon.ico` from existing PNG iconset
+- [x] Update `electron-builder.config.js` for all platforms with `publish` config and `artifactName` templates
+- [x] Add macOS ZIP target alongside DMG for portable distribution
+- [x] Add Linux `deb` target alongside AppImage
+- [x] Add `description` and `author` to `package.json` (fixes electron-builder warnings)
+- [x] Create `.github/workflows/release.yml` — multi-platform release workflow
+- [x] Create `.github/workflows/ci.yml` — lint + build CI for PRs and main pushes
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **Release workflow** (`.github/workflows/release.yml`):
+  - Triggered by `v*` tag push or manual `workflow_dispatch` with tag input
+  - **4 parallel build jobs** via matrix strategy:
+    - macOS arm64 (Apple Silicon) on `macos-14`
+    - macOS x64 (Intel) on `macos-13`
+    - Windows x64 on `windows-latest`
+    - Linux x64 on `ubuntu-latest`
+  - Each job: checkout -> setup Node 20 + Bun -> install deps -> build Next.js -> prepare standalone -> compile Electron -> electron-builder
+  - Linux job installs `libarchive-tools` and `rpm` for packaging
+  - All artifacts uploaded via `actions/upload-artifact@v4`
+  - **Release job** runs after all builds complete: downloads all artifacts, generates release notes with download table, creates draft GitHub Release via `softprops/action-gh-release@v2`
+- **CI workflow** (`.github/workflows/ci.yml`):
+  - Runs on push to `main` and pull requests
+  - Single Ubuntu job: lint + Next.js build + Electron compile
+  - Fast feedback loop (~2-3 min)
+- **electron-builder.config.js** updates:
+  - Added `publish: { provider: "github", releaseType: "draft" }`
+  - macOS: DMG + ZIP targets, arch controlled by CI `--arm64`/`--x64` flags
+  - Windows: NSIS x64 with `artifactName` template
+  - Linux: AppImage + deb, both x64
+  - All artifacts use `${productName}-${version}-${platform}-${arch}.${ext}` naming
+- **Windows icon**: Generated `build/icon.ico` (ICO with embedded PNG: 16x16, 32x32, 256x256)
+
+**What is left to do:**
+- Nothing — completed
+
+**Notes:**
+- Branch: `main`
+- Native dependencies (`better-sqlite3`) require each platform to build on its own OS — cross-compilation is not possible
+- macOS builds are ad-hoc signed (no Apple Developer certificate); users must right-click > Open on first launch
+- Release is created as **draft** — the repo owner reviews and publishes manually
+- `workflow_dispatch` allows triggering a release build manually without pushing a tag
+
+---
+
 ## Future Plans
 
 ### Description
-The core application is complete with a working macOS Electron build. The following features could be considered:
+The core application is complete with multi-platform CI/CD releasing to GitHub. The following features could be considered:
 
 1. **Code Signing** — Sign the app for macOS notarization and Windows SmartScreen
 2. **Auto-Updater** — Electron autoUpdater for seamless updates
@@ -784,14 +836,13 @@ The core application is complete with a working macOS Electron build. The follow
    - Weekly review summaries
    - Natural language task entry
 5. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
-6. **Windows/Linux builds** — Generate `.ico` icon, test NSIS installer and AppImage
 
 ### Timeline
-- macOS build: Completed (v0.1.0 arm64 DMG)
+- Multi-platform CI/CD: Completed (GitHub Actions, macOS/Windows/Linux)
+- Latest release: v0.2.0
 - Code signing: Before public distribution
-- Shared lists: Post-v0.1.0
+- Shared lists: Post-v1.0
 - Advanced AI: Future roadmap
-- Windows/Linux: On demand
 
 ### Dependencies and Requirements
 - TaskListMember model and permission system must be in place (done)
