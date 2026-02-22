@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { canTransitionStatus, getAllowedTaskStatuses } from "@/lib/task-status";
 import { canWriteList, getListAccess } from "@/lib/permissions";
 import { ListViewContent } from "@/components/lists/list-view-content";
+import { parseTags, serializeTags } from "@/lib/array-fields";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -91,7 +92,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     whereClause.importanceSnapshot = importanceFilter;
   }
   if (tagFilter) {
-    whereClause.tagsSnapshot = { has: tagFilter };
+    whereClause.tagsSnapshot = { contains: tagFilter };
   }
   if (dueFilter === "today") {
     whereClause.deadlineAt = { gte: startOfToday, lt: endOfToday };
@@ -141,7 +142,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
   // Collect unique tags (max 8)
   const tagSet = new Set<string>();
   for (const t of allTasks) {
-    for (const tag of t.tagsSnapshot) {
+    for (const tag of parseTags(t.tagsSnapshot)) {
       tagSet.add(tag);
       if (tagSet.size >= 8) break;
     }
@@ -161,7 +162,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     status: t.status,
     importanceSnapshot: t.importanceSnapshot,
     deadlineAt: t.deadlineAt ? t.deadlineAt.toISOString() : null,
-    tagsSnapshot: t.tagsSnapshot,
+    tagsSnapshot: parseTags(t.tagsSnapshot),
     occurrenceDate: t.occurrenceDate.toISOString(),
   }));
 
@@ -273,7 +274,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
     const updateData: any = {
       descriptionSnapshot: description || undefined,
       importanceSnapshot: importance,
-      tagsSnapshot: tags,
+      tagsSnapshot: serializeTags(tags),
       deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
     };
     /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -378,7 +379,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
         description,
         importance,
         templateStatus: status,
-        tags,
+        tags: serializeTags(tags),
       },
     });
 
@@ -391,7 +392,7 @@ export default async function ListPage({ params, searchParams }: PageProps) {
         deadlineAt: deadlineAtStr ? new Date(deadlineAtStr) : null,
         descriptionSnapshot: description,
         importanceSnapshot: importance,
-        tagsSnapshot: tags,
+        tagsSnapshot: serializeTags(tags),
         status,
       },
     });

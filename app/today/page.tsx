@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { canTransitionStatus } from "@/lib/task-status";
 import { listAccessibleWhere } from "@/lib/permissions";
 import { TodayContent } from "@/components/today/today-content";
+import { parseTags } from "@/lib/array-fields";
 
 export default async function TodayPage() {
   const session = await auth();
@@ -43,7 +44,7 @@ export default async function TodayPage() {
     deadline: f.taskInstance.deadlineAt
       ? f.taskInstance.deadlineAt.toISOString()
       : null,
-    tags: f.taskInstance.tagsSnapshot,
+    tags: parseTags(f.taskInstance.tagsSnapshot),
     listName: f.taskInstance.taskList.name,
     listId: f.taskInstance.taskList.id,
     completed: f.completed,
@@ -83,7 +84,7 @@ export default async function TodayPage() {
       status: t.status,
       importance: t.importanceSnapshot,
       deadline: t.deadlineAt ? t.deadlineAt.toISOString() : null,
-      tags: t.tagsSnapshot,
+      tags: parseTags(t.tagsSnapshot),
       listName: t.taskList.name,
       listId: t.taskList.id,
     }));

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { generateRecurringInstances } from "@/lib/recurrence";
 import { canWriteList, getListAccess } from "@/lib/permissions";
 import { NewTaskContent } from "@/components/lists/new-task-content";
+import { serializeTags, serializeDaysOfWeek } from "@/lib/array-fields";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -103,7 +104,7 @@ export default async function NewTaskPage({ params }: PageProps) {
               endDate: recurrenceEndDate,
               timezone: "Asia/Colombo",
               daysOfWeek:
-                recurrenceFrequency === "WEEKLY" ? [recurrenceWeekday] : [],
+                recurrenceFrequency === "WEEKLY" ? serializeDaysOfWeek([recurrenceWeekday]) : serializeDaysOfWeek([]),
             },
           })
         : null;
@@ -122,7 +123,7 @@ export default async function NewTaskPage({ params }: PageProps) {
             | "IN_PROGRESS"
             | "COMPLETED"
             | "FAILED",
-          tags,
+          tags: serializeTags(tags),
           recurrenceRuleId: recurrenceRule?.id,
         },
       });
@@ -140,7 +141,7 @@ export default async function NewTaskPage({ params }: PageProps) {
               | "MEDIUM"
               | "HIGH"
               | "CRITICAL",
-            tagsSnapshot: tags,
+            tagsSnapshot: serializeTags(tags),
             status: status as
               | "DRAFT"
               | "TODO"

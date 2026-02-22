@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { listAccessibleWhere } from "@/lib/permissions";
 import { ListsPageContent } from "@/components/lists/lists-page-content";
+import { parseTags } from "@/lib/array-fields";
 
 export default async function ListsPage() {
   const session = await auth();
@@ -49,7 +50,7 @@ export default async function ListsPage() {
     // Collect unique tags (max 6)
     const tagSet = new Set<string>();
     for (const inst of l.instances) {
-      for (const tag of inst.tagsSnapshot) {
+      for (const tag of parseTags(inst.tagsSnapshot)) {
         tagSet.add(tag);
         if (tagSet.size >= 6) break;
       }

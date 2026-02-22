@@ -1,12 +1,14 @@
 import { Importance, RecurrenceFrequency } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { parseDaysOfWeek } from "@/lib/array-fields";
 
+/** Raw shape from Prisma (daysOfWeek and tags are JSON strings in SQLite) */
 type RecurrenceRuleLike = {
   frequency: RecurrenceFrequency;
   intervalValue: number;
   startDate: Date;
   endDate: Date | null;
-  daysOfWeek: number[];
+  daysOfWeek: string;
   timeOfDay: string | null;
 };
 
@@ -15,7 +17,7 @@ type RecurringTemplate = {
   taskListId: string;
   description: string;
   importance: Importance;
-  tags: string[];
+  tags: string;
   defaultDeadlineTime: string | null;
   recurrenceRule: RecurrenceRuleLike;
 };
@@ -85,7 +87,8 @@ function matchesRuleOnDate(date: Date, rule: RecurrenceRuleLike): boolean {
       return false;
     }
 
-    const allowedWeekdays = rule.daysOfWeek.length > 0 ? rule.daysOfWeek : [start.getUTCDay()];
+    const days = parseDaysOfWeek(rule.daysOfWeek);
+    const allowedWeekdays = days.length > 0 ? days : [start.getUTCDay()];
     return allowedWeekdays.includes(day.getUTCDay());
   }
 
@@ -177,12 +180,15 @@ export async function generateRecurringInstances(args?: {
       status: "TODO" as const,
     }));
 
-    const result = await prisma.taskInstance.createMany({
-      data: rows,
-      skipDuplicates: true,
-    });
-
-    generated += result.count;
+    // SQLite doesn't support skipDuplicates — insert one-by-one, catching unique constraint errors
+    for (const row of rows) {
+      try {
+        await prisma.taskInstance.create({ data: row });
+        generated++;
+      } catch {
+        // Duplicate (unique constraint on [taskTemplateId, occurrenceDate]) — skip
+      }
+    }
   }
 
   return {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getListAccess } from "@/lib/permissions";
+import { parseTags } from "@/lib/array-fields";
 
 export type TaskContextSnapshot = {
   list: {
@@ -67,7 +68,7 @@ export async function buildTaskContextForUser(args: {
       status: task.status,
       importance: task.importanceSnapshot,
       deadlineAt: task.deadlineAt ? task.deadlineAt.toISOString() : null,
-      tags: task.tagsSnapshot,
+      tags: parseTags(task.tagsSnapshot),
     })),
   };
 }

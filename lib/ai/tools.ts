@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { listAccessibleWhere } from "@/lib/permissions";
 import { canTransitionStatus } from "@/lib/task-status";
+import { parseTags, serializeTags } from "@/lib/array-fields";
 
 /**
  * Build all AI agent tools scoped to a specific user.
@@ -88,7 +89,7 @@ export function buildTools(userId: string) {
           status: t.status,
           importance: t.importanceSnapshot,
           deadline: t.deadlineAt ? t.deadlineAt.toISOString() : null,
-          tags: t.tagsSnapshot,
+          tags: parseTags(t.tagsSnapshot),
         })),
       };
     },
@@ -168,7 +169,7 @@ export function buildTools(userId: string) {
           description,
           importance,
           templateStatus: status,
-          tags: normalizedTags,
+          tags: serializeTags(normalizedTags),
         },
       });
 
@@ -181,7 +182,7 @@ export function buildTools(userId: string) {
           deadlineAt: deadline ? new Date(deadline) : null,
           descriptionSnapshot: description,
           importanceSnapshot: importance,
-          tagsSnapshot: normalizedTags,
+          tagsSnapshot: serializeTags(normalizedTags),
           status,
         },
       });
@@ -192,7 +193,7 @@ export function buildTools(userId: string) {
         status: instance.status,
         importance: instance.importanceSnapshot,
         deadline: instance.deadlineAt ? instance.deadlineAt.toISOString() : null,
-        tags: instance.tagsSnapshot,
+        tags: parseTags(instance.tagsSnapshot),
         listName: list.name,
         message: `Task "${description}" created in "${list.name}".`,
       };
@@ -298,7 +299,7 @@ export function buildTools(userId: string) {
         importance: t.importanceSnapshot,
         deadline: t.deadlineAt ? t.deadlineAt.toISOString() : null,
         isOverdue: t.deadlineAt ? t.deadlineAt < now : false,
-        tags: t.tagsSnapshot,
+        tags: parseTags(t.tagsSnapshot),
         listId: t.taskList.id,
         listName: t.taskList.name,
       }));
@@ -470,7 +471,7 @@ export function buildTools(userId: string) {
         deadline: f.taskInstance.deadlineAt
           ? f.taskInstance.deadlineAt.toISOString()
           : null,
-        tags: f.taskInstance.tagsSnapshot,
+        tags: parseTags(f.taskInstance.tagsSnapshot),
         listName: f.taskInstance.taskList.name,
         completed: f.completed,
         position: f.position,

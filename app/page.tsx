@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { listAccessibleWhere } from "@/lib/permissions";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import { parseTags } from "@/lib/array-fields";
 
 export default async function HomePage() {
   const session = await auth();
@@ -87,7 +88,7 @@ export default async function HomePage() {
     // Collect unique tags (max 4)
     const tagSet = new Set<string>();
     for (const inst of l.instances) {
-      for (const tag of inst.tagsSnapshot) {
+      for (const tag of parseTags(inst.tagsSnapshot)) {
         tagSet.add(tag);
         if (tagSet.size >= 4) break;
       }
