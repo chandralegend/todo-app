@@ -6,9 +6,11 @@ export const SETTING_KEYS = {
   CURSOR_ENABLED: "cursor_enabled",
   DB_MODE: "db_mode", // "local" | "cloud"
   CLOUD_DB_URL: "cloud_db_url",
+  THEME_MODE: "theme_mode", // "system" | "light" | "dark"
 } as const;
 
 export type DbMode = "local" | "cloud";
+export type ThemeMode = "system" | "light" | "dark";
 
 /**
  * Get a single setting value. Returns null if not set.

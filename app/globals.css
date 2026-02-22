@@ -46,11 +46,11 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Coral design tokens */
+  /* Coral design tokens (light defaults, overridden by .dark below) */
   --color-coral: #E07A5F;
   --color-coral-hover: #C9664B;
-  --color-coral-light: #FDF0EC;
-  --color-coral-muted: #F2C4B6;
+  --color-coral-light: var(--coral-light);
+  --color-coral-muted: var(--coral-muted);
 
   /* Status colors */
   --color-status-draft: #9CA3AF;
@@ -67,6 +67,8 @@
 }
 
 :root {
+  --coral-light: #FDF0EC;
+  --coral-muted: #F2C4B6;
   --background: #F5F3EF;
   --foreground: #1A1A1A;
   --card: #FFFFFF;
@@ -102,6 +104,8 @@
 }
 
 .dark {
+  --coral-light: #3A2E28;
+  --coral-muted: #5C4A42;
   --background: #1A1816;
   --foreground: #F5F3EF;
   --card: #252220;
@@ -151,6 +155,9 @@
 .bento-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+.dark .bento-card:hover {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Pill button arrow animation */

@@ -81,6 +81,7 @@ export default async function SettingsPage() {
         maskedApiKey,
         dbMode: (appSettings.db_mode as "local" | "cloud") || "local",
         cloudDbUrl: appSettings.cloud_db_url || "",
+        themeMode: (appSettings.theme_mode as "system" | "light" | "dark") || "system",
       }}
     />
   );

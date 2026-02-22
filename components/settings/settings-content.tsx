@@ -20,6 +20,9 @@ import {
   Cloud,
   Loader2,
   Upload,
+  Monitor,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -53,6 +56,7 @@ interface AppSettings {
   maskedApiKey: string;
   dbMode: "local" | "cloud";
   cloudDbUrl: string;
+  themeMode: "system" | "light" | "dark";
 }
 
 interface SettingsContentProps {
@@ -321,8 +325,21 @@ function ApiKeySection({ hasApiKey, maskedApiKey }: { hasApiKey: boolean; masked
   );
 }
 
-function AppearanceSection({ cursorEnabled: initialCursorEnabled }: { cursorEnabled: boolean }) {
+const themeOptions = [
+  { value: "system" as const, label: "System", icon: Monitor },
+  { value: "light" as const, label: "Light", icon: Sun },
+  { value: "dark" as const, label: "Dark", icon: Moon },
+];
+
+function AppearanceSection({
+  cursorEnabled: initialCursorEnabled,
+  themeMode: initialThemeMode,
+}: {
+  cursorEnabled: boolean;
+  themeMode: "system" | "light" | "dark";
+}) {
   const [cursorEnabled, setCursorEnabled] = useState(initialCursorEnabled);
+  const [themeMode, setThemeMode] = useState(initialThemeMode);
   const [saving, setSaving] = useState(false);
 
   async function handleCursorToggle(checked: boolean) {
@@ -332,34 +349,85 @@ function AppearanceSection({ cursorEnabled: initialCursorEnabled }: { cursorEnab
     setSaving(false);
     if (ok) {
       toast.success(checked ? "Ant cursor enabled" : "Ant cursor disabled");
-      // Dispatch a custom event so the CursorEffect component can react
       window.dispatchEvent(
         new CustomEvent("setting-changed", {
           detail: { key: "cursor_enabled", value: checked ? "true" : "false" },
         })
       );
     } else {
-      // Revert on failure
       setCursorEnabled(!checked);
       toast.error("Failed to update setting");
     }
   }
 
-  return (
-    <BentoCard interactive={false}>
-      <div className="flex items-center gap-2 mb-4">
-        <Paintbrush className="size-4 text-coral" />
-        <h3 className="font-semibold text-sm">Appearance</h3>
-      </div>
+  async function handleThemeChange(mode: "system" | "light" | "dark") {
+    const prev = themeMode;
+    setThemeMode(mode);
+    setSaving(true);
+    const ok = await saveSetting("theme_mode", mode);
+    setSaving(false);
+    if (ok) {
+      // Dispatch event so ThemeProvider applies the change immediately
+      window.dispatchEvent(
+        new CustomEvent("setting-changed", {
+          detail: { key: "theme_mode", value: mode },
+        })
+      );
+    } else {
+      setThemeMode(prev);
+      toast.error("Failed to update theme");
+    }
+  }
 
-      <div className="space-y-4">
+  return (
+    <>
+      {/* Theme */}
+      <BentoCard interactive={false}>
+        <div className="flex items-center gap-2 mb-4">
+          <Paintbrush className="size-4 text-coral" />
+          <h3 className="font-semibold text-sm">Theme</h3>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Choose how the application looks. System follows your OS preference.
+        </p>
+        <div className="flex gap-2">
+          {themeOptions.map((opt) => {
+            const Icon = opt.icon;
+            const active = themeMode === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => handleThemeChange(opt.value)}
+                disabled={saving}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                  active
+                    ? "border-coral bg-coral/5 text-coral"
+                    : "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="size-4" />
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </BentoCard>
+
+      {/* Cursor effect */}
+      <BentoCard interactive={false}>
+        <div className="flex items-center gap-2 mb-4">
+          <Bug className="size-4 text-coral" />
+          <h3 className="font-semibold text-sm">Cursor Effect</h3>
+        </div>
+
         <div className="flex items-center justify-between max-w-sm">
           <div className="space-y-0.5">
             <Label htmlFor="cursor-toggle" className="text-sm font-medium">
               Ant Cursor Trail
             </Label>
             <p className="text-xs text-muted-foreground">
-              Show a trail of ants following your cursor
+              A trail of ants follows your cursor around the screen
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -374,13 +442,8 @@ function AppearanceSection({ cursorEnabled: initialCursorEnabled }: { cursorEnab
             />
           </div>
         </div>
-
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Bug className="size-3.5" />
-          <span>The ant cursor is a fun Easter egg that adds animated ants following your mouse.</span>
-        </div>
-      </div>
-    </BentoCard>
+      </BentoCard>
+    </>
   );
 }
 
@@ -767,7 +830,10 @@ export function SettingsContent({ user, recurrence, databaseUrl, appSettings }: 
 
         {/* Appearance Tab */}
         <TabsContent value="appearance" className="space-y-6">
-          <AppearanceSection cursorEnabled={appSettings.cursorEnabled} />
+          <AppearanceSection
+            cursorEnabled={appSettings.cursorEnabled}
+            themeMode={appSettings.themeMode}
+          />
         </TabsContent>
 
         {/* AI Tab */}
