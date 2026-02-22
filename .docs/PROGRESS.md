@@ -531,14 +531,61 @@
 - Security: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`
 
 **What is left to do:**
-- Phase C: Desktop adaptations (dynamic DB path, node-cron, auto-migrations, native menu)
-- Phase D: Packaging & distribution
+- Nothing — completed
 
 **Notes:**
 - Branch: `electron-migration`
 - Commit: `3a48606`
 - Electron 40.6.0 (Chromium 132, Node 22)
 - `electron-squirrel-startup` NOT used (electron-builder handles installation differently)
+
+---
+
+### Phase 7C: Desktop Adaptations
+**Description:** Add desktop-specific features: dynamic database path, auto-migrations, node-cron for recurring tasks, native window menu with keyboard shortcuts.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Create `electron/database.ts` — dynamic DATABASE_URL management
+  - Dev: `./prisma/dev.db` (relative to project root)
+  - Production: `app.getPath('userData')/todo.db` (platform-specific user data dir)
+  - Auto-create database directory if missing
+  - Run `prisma migrate deploy` on startup (safe for production — only applies pending migrations)
+- [x] Create `electron/cron.ts` — node-cron scheduler replacing HTTP cron endpoint
+  - Hourly recurrence generation at minute :00
+  - Initial run 10 seconds after app startup (wait for Next.js to boot)
+  - Graceful handling of server not ready (ECONNREFUSED)
+  - Clean stop on app quit
+- [x] Create `electron/menu.ts` — native window menu
+  - macOS: App menu (About, Services, Hide, Quit)
+  - Edit menu (Undo, Redo, Cut, Copy, Paste, Select All)
+  - View menu (Reload, DevTools, Zoom, Fullscreen)
+  - Navigate menu: Dashboard (Cmd+1), My Lists (Cmd+2), Today's Focus (Cmd+3)
+  - Window menu (Minimize, Zoom, Front)
+  - Help menu (About TodoApp link)
+- [x] Update `electron/main.ts` — integrate all modules
+  - IPC handlers: get-app-version, window-minimize/maximize/close
+  - Startup sequence: ensureDatabase → setupMenu → createWindow → startCronScheduler
+  - Lifecycle: stop cron on will-quit
+- [x] Install `node-cron@4.2.1` and `@types/node-cron`
+- [x] Verified: electron compiles, lint passes, build succeeds, electron starts with DB detection + migrations + cron
+
+**Summary of what has been done:**
+- Full desktop adaptation layer: database management, scheduled tasks, and native menu
+- Database path is dynamic — dev uses project-local SQLite, production uses platform user data directory
+- Migrations run automatically on every startup (idempotent — only applies pending)
+- Cron scheduler replaces the Vercel/external cron service for recurring task generation
+- Navigate menu provides keyboard shortcuts for quick page access
+
+**What is left to do:**
+- Phase D: Packaging & distribution
+
+**Notes:**
+- Branch: `electron-migration`
+- Commit: `171b743`
+- node-cron 4.2.1 — lightweight, no dependencies, standard cron syntax
+- `prisma migrate deploy` is production-safe (unlike `prisma migrate dev` which can reset data)
 
 ---
 
