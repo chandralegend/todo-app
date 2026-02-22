@@ -727,7 +727,6 @@
 - **prepare-standalone.mjs**: Added exclusion list for directories that Next.js standalone output copies from the project root (release/, dist-standalone/, dist-electron/, .git, etc.) that were causing codesign failures.
 
 **What is left to do:**
-- Fix cron recurrence generation in packaged app (returns HTML login page instead of JSON — needs auth bypass for internal requests)
 - Build and test DMG distribution
 - Windows/Linux build testing
 
@@ -737,6 +736,35 @@
 - The `electron:build` script must rebuild better-sqlite3 for system Node afterward (or dev mode breaks)
 - Auth JWT "no matching decryption secret" errors on first launch are expected — fresh DB has no sessions
 - The `migrate.mjs` script creates a Prisma-compatible `_prisma_migrations` table so `prisma migrate deploy` can still be used in dev
+
+---
+
+### Phase 7H: Fix Cron Auth Bypass in Packaged App
+**Description:** Fix the internal cron scheduler's HTTP requests to `/api/cron/recurrence` being redirected to the login page in the packaged Electron app.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Add `/api/cron` and `/api/health` to proxy.ts bypass list (these routes handle their own auth)
+- [x] Generate random `CRON_SECRET` in `electron/main.ts` at startup via `crypto.randomBytes()`
+- [x] Pass `CRON_SECRET` to both the Next.js server (via env inheritance) and cron scheduler
+- [x] Update `electron/cron.ts` to read `CRON_SECRET` from environment
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **Root cause:** `proxy.ts` (Next.js middleware) was redirecting all unauthenticated requests to `/login`, including internal API calls from the Electron cron scheduler which has no browser session cookie.
+- **proxy.ts fix:** Added `isSelfAuthedApi` check for `/api/cron` and `/api/health` routes — these handle their own authorization (cron via `x-cron-secret` header, health is public).
+- **CRON_SECRET generation:** `electron/main.ts` generates a random 32-byte hex secret at startup using `crypto.randomBytes()`. This is set in `process.env.CRON_SECRET` before the Next.js server starts, so both the server (child process inherits env) and the cron scheduler (same process) share the same secret.
+- **Cron header:** `electron/cron.ts` reads `process.env.CRON_SECRET` for the `x-cron-secret` header, matching what the API route's `isAuthorized()` function checks.
+
+**What is left to do:**
+- Nothing — completed
+
+**Notes:**
+- Branch: `main`
+- Commit: `a89894d`
+- The recurrence API route already had `isAuthorized()` checking `x-cron-secret` header — the only missing piece was (1) the proxy bypass and (2) actually setting the secret
+- In dev mode without `CRON_SECRET`, the route falls back to allowing unauthenticated requests when `NODE_ENV !== "production"`
 
 ---
 
