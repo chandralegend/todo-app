@@ -579,7 +579,7 @@
 - Navigate menu provides keyboard shortcuts for quick page access
 
 **What is left to do:**
-- Phase D: Packaging & distribution
+- Nothing — completed
 
 **Notes:**
 - Branch: `electron-migration`
@@ -589,23 +589,75 @@
 
 ---
 
+### Phase 7D: Packaging & Distribution
+**Description:** Add production Next.js server launcher for Electron and configure electron-builder for cross-platform packaging.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Create `electron/server.ts` — production server launcher
+  - Fork standalone Next.js `server.js` as child process
+  - Port availability check before spawning
+  - TCP connection wait with configurable timeout (30s)
+  - Pipe stdout/stderr to Electron console with prefixes
+  - Graceful SIGTERM shutdown on app quit
+  - In dev mode, returns `localhost:3000` without spawning
+- [x] Update `electron/main.ts` — integrate server lifecycle
+  - `await startServer()` before `createWindow()`
+  - Dynamic `serverUrl` for `BrowserWindow.loadURL()`
+  - `stopServer()` on `will-quit`
+- [x] Create `electron-builder.config.js` — cross-platform packaging
+  - macOS: DMG (arm64 + x64), category: Productivity
+  - Windows: NSIS installer (x64), customizable install directory
+  - Linux: AppImage (x64), category: Office
+  - App bundles: `dist-electron/**` in app.asar
+  - Extra resources: standalone output, static files, public assets, prisma migrations/schema/CLI
+- [x] Create `build/` directory for app icons (placeholder)
+- [x] Verified: electron compiles, lint passes, Next.js build succeeds, electron starts correctly in dev
+
+**Summary of what has been done:**
+- Complete production pipeline: `bun run electron:build` triggers Next.js build → Electron compile → electron-builder packaging
+- Server architecture: Electron main process forks standalone Next.js server, waits for it to accept connections, then opens BrowserWindow
+- Packaging bundles everything needed: compiled Electron code, standalone Next.js server, static assets, Prisma migrations and CLI
+- Dev workflow unchanged: `bun run electron:dev` runs Next.js dev server + Electron concurrently
+
+**What is left to do:**
+- Add app icons (build/icon.icns for macOS, build/icon.ico for Windows, build/icon.png for Linux)
+- Code signing (optional, for distribution outside app stores)
+- Auto-updater (optional, future)
+- Test `bun run electron:build` end-to-end with icons
+
+**Notes:**
+- Branch: `electron-migration`
+- Commit: `a78e47b`
+- `electron-builder` uses `extraResources` (not `files`) for the Next.js standalone output because app.asar can't run Node.js child processes from within an archive
+- Server waits up to 30 seconds for Next.js to boot before timing out
+- `process.resourcesPath` is the path to extraResources in the packaged app
+
+---
+
 ## Future Plans
 
 ### Description
-After Phase 6 is tested and merged, the following features could be considered:
+After Phase 7 (Electron migration) is merged to `main`, the following features could be considered:
 
-1. **Shared Lists** - Allow users to share lists with others (editors, viewers)
-2. **Advanced AI Features:**
+1. **App Icons** — Design and add production icons (icns, ico, png) for macOS/Windows/Linux
+2. **Code Signing** — Sign the app for macOS notarization and Windows SmartScreen
+3. **Auto-Updater** — Electron autoUpdater for seamless updates
+4. **Shared Lists** — Allow users to share lists with others (editors, viewers)
+5. **Advanced AI Features:**
    - Auto-submit for multi-step tool chains
    - Message persistence (database-backed chat history)
    - Smart task breakdown from long descriptions
    - Auto tagging suggestions
    - Weekly review summaries
    - Natural language task entry
-3. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
+6. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
 
 ### Timeline
-- Phase 6 (AI Features): Completed, pending testing with live API key
+- Phase 7 (Electron migration): Completed on `electron-migration` branch, pending merge to `main`
+- App icons: Before first release
+- Code signing: Before public distribution
 - Shared lists: Post-merge
 - Advanced AI: Future roadmap
 
@@ -614,6 +666,8 @@ After Phase 6 is tested and merged, the following features could be considered:
 - Clean service layer around tasks for AI context feeding (done)
 - Authorization checks reusable by AI endpoints (done)
 - OpenAI API key required for AI features
+- Apple Developer account for macOS code signing (optional)
+- Windows code signing certificate for SmartScreen (optional)
 
 ---
 
