@@ -1,5 +1,5 @@
 import { app } from "electron";
-import { ChildProcess, fork } from "node:child_process";
+import { ChildProcess, spawn } from "node:child_process";
 import path from "node:path";
 import net from "node:net";
 
@@ -11,15 +11,11 @@ let serverProcess: ChildProcess | null = null;
 
 /**
  * Find the standalone server.js path.
- * In production, electron-builder packs it into app.asar/standalone/server.js
  */
 function getServerPath(): string {
   if (isDev) {
-    // In dev, we don't use this — Next.js dev server runs via concurrently
     throw new Error("Production server should not be started in dev mode");
   }
-
-  // In production, the standalone output is copied to resources/standalone/
   return path.join(process.resourcesPath!, "standalone", "server.js");
 }
 
@@ -70,11 +66,14 @@ function waitForServer(
 
 /**
  * Start the standalone Next.js server as a child process.
- * Returns the URL where the server is listening.
+ *
+ * Uses spawn() instead of fork() because Electron's fork() uses its own
+ * Node.js module resolution which can't find modules in the standalone
+ * output's node_modules. By spawning with process.execPath (Electron's
+ * Node binary) and setting NODE_PATH, the server resolves modules correctly.
  */
 export async function startServer(): Promise<string> {
   if (isDev) {
-    // In dev mode, Next.js runs externally via `next dev`
     return `http://${PROD_HOSTNAME}:${PROD_PORT}`;
   }
 
@@ -86,17 +85,24 @@ export async function startServer(): Promise<string> {
 
   const serverPath = getServerPath();
   const serverDir = path.dirname(serverPath);
+  const standaloneNodeModules = path.join(serverDir, "node_modules");
+
   console.log(`[electron:server] Starting Next.js standalone server: ${serverPath}`);
   console.log(`[electron:server] Server working directory: ${serverDir}`);
 
-  serverProcess = fork(serverPath, [], {
+  // Use spawn with Electron's Node binary (process.execPath) and pass
+  // the server.js as a script argument. Set NODE_PATH so require() finds
+  // modules in the standalone's node_modules directory.
+  serverProcess = spawn(process.execPath, [serverPath], {
     env: {
       ...process.env,
       PORT: String(PROD_PORT),
       HOSTNAME: PROD_HOSTNAME,
       NODE_ENV: "production",
+      NODE_PATH: standaloneNodeModules,
+      // Electron sets this which interferes with the child process
+      ELECTRON_RUN_AS_NODE: "1",
     },
-    // Set cwd to the standalone directory so Next.js finds .env and .next/
     cwd: serverDir,
     stdio: "pipe",
   });

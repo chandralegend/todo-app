@@ -696,14 +696,47 @@
 - DMG with Applications folder link created
 
 **What is left to do:**
-- Test the DMG installation and app launch
 - Windows `.ico` icon generation (when targeting Windows)
 
 **Notes:**
 - Branch: `main`
-- `better-sqlite3` native module was rebuilt by `@electron/rebuild` for Electron's Node.js version
 - macOS notarization skipped (no Apple Developer certificate configured)
 - Build targets arm64 only (Apple Silicon); x64 can be added to electron-builder config
+
+---
+
+### Phase 7G: Fix Packaged Electron App Launch
+**Description:** Fix three critical issues preventing the packaged Electron app from launching: missing node_modules, prisma CLI dependency chain, and better-sqlite3 ABI mismatch.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Fix electron-builder stripping standalone `node_modules/` (built-in `!**/node_modules/**` exclusion)
+- [x] Add afterPack hook to manually copy `dist-standalone/node_modules/` into the packaged app
+- [x] Exclude `release/`, `dist-standalone/`, `dist-electron/` etc. from standalone copy (caused codesign failure)
+- [x] Replace prisma CLI for production migrations with lightweight `migrate.mjs` script using better-sqlite3 directly
+- [x] Fix `@electron/rebuild` not producing correct ABI — added explicit `node-gyp rebuild` in afterPack targeting Electron headers
+- [x] Fix architecture mismatch (x86_64 vs arm64) in node-gyp rebuild by mapping electron-builder arch names
+- [x] Verify full app lifecycle: DB creation → migrations → Next.js server → window load → login page
+- [x] Lint + build pass clean
+
+**Summary of what has been done:**
+- **node_modules fix**: electron-builder has a hardcoded `!**/node_modules/**` exclusion in `extraResources` that cannot be overridden via filters. The afterPack hook now manually copies `dist-standalone/node_modules/` and `.next/node_modules/` into the packaged app's Resources.
+- **prisma migration fix**: The prisma CLI (`prisma migrate deploy`) has dozens of transitive dependencies (`@prisma/dev`, `valibot`, `hono`, etc.) making it impractical to bundle. Replaced with `electron/migrate.mjs` — a lightweight script that reads `.sql` migration files and applies them directly via `better-sqlite3`, maintaining Prisma-compatible `_prisma_migrations` table.
+- **better-sqlite3 ABI fix**: `@electron/rebuild` v6 was not correctly rebuilding for Electron 40's Node ABI (143 vs system Node 137). Added explicit `node-gyp rebuild --target=<electron-version> --dist-url=https://electronjs.org/headers` in the afterPack hook, then patches all standalone copies.
+- **prepare-standalone.mjs**: Added exclusion list for directories that Next.js standalone output copies from the project root (release/, dist-standalone/, dist-electron/, .git, etc.) that were causing codesign failures.
+
+**What is left to do:**
+- Fix cron recurrence generation in packaged app (returns HTML login page instead of JSON — needs auth bypass for internal requests)
+- Build and test DMG distribution
+- Windows/Linux build testing
+
+**Notes:**
+- Branch: `main`
+- Electron 40.6.0 uses Node.js v24.13.1 (ABI 143), while system Node v24.4.0 uses ABI 137
+- The `electron:build` script must rebuild better-sqlite3 for system Node afterward (or dev mode breaks)
+- Auth JWT "no matching decryption secret" errors on first launch are expected — fresh DB has no sessions
+- The `migrate.mjs` script creates a Prisma-compatible `_prisma_migrations` table so `prisma migrate deploy` can still be used in dev
 
 ---
 

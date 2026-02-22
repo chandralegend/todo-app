@@ -1,7 +1,7 @@
 import { app } from "electron";
 import path from "node:path";
 import fs from "node:fs";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 
 const isDev = !app.isPackaged;
 
@@ -9,7 +9,7 @@ const isDev = !app.isPackaged;
  * Get the database file path.
  * - Dev: ./prisma/dev.db (relative to project root)
  * - Production: ~/Library/Application Support/the-todo-app/todo.db (macOS)
- *               or equivalent on other platforms via app.getPath('userData')
+ *               or equivalent on other platform via app.getPath('userData')
  */
 export function getDatabasePath(): string {
   if (isDev) {
@@ -52,33 +52,40 @@ export function ensureDatabase(): void {
   }
 
   try {
-    // Determine the path to the prisma CLI
-    // In dev, use npx; in production, we'll bundle the prisma binary
-    const prismaSchemaPath = isDev
-      ? path.join(process.cwd(), "prisma", "schema.prisma")
-      : path.join(process.resourcesPath!, "prisma", "schema.prisma");
-
     const migrationsPath = isDev
       ? path.join(process.cwd(), "prisma", "migrations")
       : path.join(process.resourcesPath!, "prisma", "migrations");
 
-    // Only run migrations if the migrations directory exists
     if (fs.existsSync(migrationsPath)) {
-      const prismaBin = isDev
-        ? path.join(process.cwd(), "node_modules", ".bin", "prisma")
-        : path.join(process.resourcesPath!, "node_modules", ".bin", "prisma");
-
-      execSync(
-        `"${prismaBin}" migrate deploy --schema="${prismaSchemaPath}"`,
-        {
+      if (isDev) {
+        // In dev, use the local prisma CLI
+        const prismaBin = path.join(process.cwd(), "node_modules", ".bin", "prisma");
+        const prismaSchemaPath = path.join(process.cwd(), "prisma", "schema.prisma");
+        execFileSync(prismaBin, ["migrate", "deploy", `--schema=${prismaSchemaPath}`], {
           env: {
             ...process.env,
             DATABASE_URL: getDatabaseUrl(),
           },
           stdio: "pipe",
-          cwd: isDev ? process.cwd() : process.resourcesPath!,
-        }
-      );
+          cwd: process.cwd(),
+        });
+      } else {
+        // In production, use the lightweight migrate.mjs script instead of
+        // the full prisma CLI (which has too many transitive dependencies).
+        // The script uses better-sqlite3 directly from the standalone's
+        // node_modules to apply .sql migration files.
+        const migrateScript = path.join(process.resourcesPath!, "migrate.mjs");
+        const standaloneDir = path.join(process.resourcesPath!, "standalone");
+
+        execFileSync(process.execPath, [migrateScript, dbPath, migrationsPath, standaloneDir], {
+          env: {
+            ...process.env,
+            ELECTRON_RUN_AS_NODE: "1",
+          },
+          stdio: "pipe",
+          cwd: process.resourcesPath!,
+        });
+      }
       console.log("[electron] Migrations applied successfully.");
     } else {
       console.log("[electron] No migrations directory found, skipping migrations.");

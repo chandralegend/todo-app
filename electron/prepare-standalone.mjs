@@ -16,11 +16,30 @@ import crypto from "node:crypto";
 const ROOT = process.cwd();
 const DEST = path.join(ROOT, "dist-standalone");
 
-function copyDirSync(src, dest) {
+// Directories that Next.js standalone copies from the project root
+// but are not needed (and harmful) in the packaged app
+const EXCLUDE_DIRS = new Set([
+  "release",
+  "dist-standalone",
+  "dist-electron",
+  "dist",
+  "build",
+  "electron",
+  ".git",
+  ".docs",
+]);
+
+function copyDirSync(src, dest, depth = 0) {
   fs.mkdirSync(dest, { recursive: true });
   const entries = fs.readdirSync(src, { withFileTypes: true });
 
   for (const entry of entries) {
+    // Skip excluded directories at the top level of the standalone copy
+    if (depth === 0 && EXCLUDE_DIRS.has(entry.name)) {
+      console.log(`  Skipping excluded directory: ${entry.name}/`);
+      continue;
+    }
+
     const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
 
@@ -32,7 +51,7 @@ function copyDirSync(src, dest) {
         const realPath = fs.realpathSync(srcPath);
         const realStat = fs.statSync(realPath);
         if (realStat.isDirectory()) {
-          copyDirSync(realPath, destPath);
+          copyDirSync(realPath, destPath, depth + 1);
         } else {
           fs.copyFileSync(realPath, destPath);
         }
@@ -44,7 +63,7 @@ function copyDirSync(src, dest) {
     }
 
     if (entry.isDirectory()) {
-      copyDirSync(srcPath, destPath);
+      copyDirSync(srcPath, destPath, depth + 1);
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
