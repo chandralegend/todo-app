@@ -49,5 +49,6 @@ next-env.d.ts
 
 # Electron
 /dist-electron
+/dist-standalone
 /dist
 /release

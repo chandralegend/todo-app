@@ -20,20 +20,12 @@ module.exports = {
 
   // Extra resources copied alongside app.asar (not inside it)
   // These are accessible via process.resourcesPath
+  // Note: dist-standalone/ is prepared by electron/prepare-standalone.mjs
+  // which resolves symlinks and adds .env defaults
   extraResources: [
     {
-      from: ".next/standalone",
+      from: "dist-standalone",
       to: "standalone",
-      filter: ["**/*"],
-    },
-    {
-      from: ".next/static",
-      to: "standalone/.next/static",
-      filter: ["**/*"],
-    },
-    {
-      from: "public",
-      to: "standalone/public",
       filter: ["**/*"],
     },
     {
@@ -44,10 +36,6 @@ module.exports = {
     {
       from: "prisma/schema.prisma",
       to: "prisma/schema.prisma",
-    },
-    {
-      from: "node_modules/.bin/prisma",
-      to: "node_modules/.bin/prisma",
     },
     {
       from: "node_modules/prisma",
@@ -66,7 +54,7 @@ module.exports = {
     target: [
       {
         target: "dmg",
-        arch: ["arm64", "x64"],
+        arch: ["arm64"],
       },
     ],
     category: "public.app-category.productivity",

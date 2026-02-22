@@ -85,7 +85,9 @@ export async function startServer(): Promise<string> {
   }
 
   const serverPath = getServerPath();
+  const serverDir = path.dirname(serverPath);
   console.log(`[electron:server] Starting Next.js standalone server: ${serverPath}`);
+  console.log(`[electron:server] Server working directory: ${serverDir}`);
 
   serverProcess = fork(serverPath, [], {
     env: {
@@ -94,6 +96,8 @@ export async function startServer(): Promise<string> {
       HOSTNAME: PROD_HOSTNAME,
       NODE_ENV: "production",
     },
+    // Set cwd to the standalone directory so Next.js finds .env and .next/
+    cwd: serverDir,
     stdio: "pipe",
   });
 
