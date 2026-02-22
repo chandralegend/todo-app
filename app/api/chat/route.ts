@@ -1,14 +1,25 @@
 import { streamText, convertToModelMessages, UIMessage, stepCountIs } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { auth } from "@/lib/auth";
 import { getSystemPrompt } from "@/lib/ai/system-prompt";
 import { buildTools } from "@/lib/ai/tools";
+import { getOpenAIApiKey } from "@/lib/settings";
 
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return new Response("Unauthorized", { status: 401 });
   }
+
+  const apiKey = await getOpenAIApiKey();
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: "OpenAI API key not configured. Set it in Settings > AI." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const openai = createOpenAI({ apiKey });
 
   const { messages } = (await req.json()) as { messages: UIMessage[] };
 

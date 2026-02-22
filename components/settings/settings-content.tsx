@@ -14,6 +14,8 @@ import {
   Eye,
   EyeOff,
   Save,
+  Paintbrush,
+  Bug,
 } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -23,6 +25,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 // ---------- Types ----------
@@ -40,6 +43,12 @@ type SerializedLog = {
   errorMessage: string | null;
 };
 
+interface AppSettings {
+  cursorEnabled: boolean;
+  hasApiKey: boolean;
+  maskedApiKey: string;
+}
+
 interface SettingsContentProps {
   user: { name: string; email: string };
   recurrence: {
@@ -51,6 +60,7 @@ interface SettingsContentProps {
     };
   };
   databaseUrl: string;
+  appSettings: AppSettings;
 }
 
 // ---------- Helpers ----------
@@ -189,20 +199,56 @@ function ChangePasswordSection() {
   );
 }
 
-function ApiKeySection() {
+/** Helper to save a setting via the API */
+async function saveSetting(key: string, value: string): Promise<boolean> {
+  try {
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+function ApiKeySection({ hasApiKey, maskedApiKey }: { hasApiKey: boolean; maskedApiKey: string }) {
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [currentMasked, setCurrentMasked] = useState(maskedApiKey);
+  const [currentHasKey, setCurrentHasKey] = useState(hasApiKey);
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    // Store in localStorage for client-side usage
-    // The server-side key is set via .env
-    if (apiKey.trim()) {
-      localStorage.setItem("openai-api-key", apiKey.trim());
-      toast.success("API key saved to local storage");
+    if (!apiKey.trim()) return;
+    setSaving(true);
+    const ok = await saveSetting("openai_api_key", apiKey.trim());
+    setSaving(false);
+    if (ok) {
+      toast.success("API key saved to database");
       setSaved(true);
+      setCurrentHasKey(true);
+      setCurrentMasked(`sk-...${apiKey.trim().slice(-4)}`);
+      setApiKey("");
       setTimeout(() => setSaved(false), 2000);
+    } else {
+      toast.error("Failed to save API key");
+    }
+  }
+
+  async function handleRemove() {
+    setSaving(true);
+    const ok = await saveSetting("openai_api_key", "");
+    setSaving(false);
+    if (ok) {
+      toast.success("API key removed");
+      setCurrentHasKey(false);
+      setCurrentMasked("");
+    } else {
+      toast.error("Failed to remove API key");
     }
   }
 
@@ -213,13 +259,31 @@ function ApiKeySection() {
         <h3 className="font-semibold text-sm">OpenAI API Key</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        Set your OpenAI API key for AI features. This is stored in your browser&apos;s local storage.
-        For server-side configuration, set <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">OPENAI_API_KEY</code> in your <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">.env</code> file.
+        Set your OpenAI API key for AI features. The key is stored securely in your local database.
+        Alternatively, set <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">OPENAI_API_KEY</code> in your <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">.env</code> file as a fallback.
       </p>
+
+      {currentHasKey && (
+        <div className="flex items-center gap-2 mb-4 text-xs">
+          <CheckCircle2 className="size-3.5 text-status-completed" />
+          <span className="text-muted-foreground">
+            Current key: <code className="bg-muted px-1.5 py-0.5 rounded font-mono">{currentMasked}</code>
+          </span>
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={saving}
+            className="text-destructive hover:text-destructive/80 underline underline-offset-2 ml-1"
+          >
+            Remove
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleSave} className="space-y-4 max-w-sm">
         <div className="space-y-1.5">
           <Label htmlFor="api-key" className="text-xs">
-            API Key
+            {currentHasKey ? "Replace API Key" : "API Key"}
           </Label>
           <div className="relative">
             <Input
@@ -241,12 +305,76 @@ function ApiKeySection() {
         </div>
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2 text-xs font-medium hover:bg-foreground/90 transition-colors"
+          disabled={saving || !apiKey.trim()}
+          className="inline-flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2 text-xs font-medium hover:bg-foreground/90 transition-colors disabled:opacity-50"
         >
           {saved ? <CheckCircle2 className="size-3.5" /> : <Key className="size-3.5" />}
-          {saved ? "Saved" : "Save Key"}
+          {saving ? "Saving..." : saved ? "Saved" : "Save Key"}
         </button>
       </form>
+    </BentoCard>
+  );
+}
+
+function AppearanceSection({ cursorEnabled: initialCursorEnabled }: { cursorEnabled: boolean }) {
+  const [cursorEnabled, setCursorEnabled] = useState(initialCursorEnabled);
+  const [saving, setSaving] = useState(false);
+
+  async function handleCursorToggle(checked: boolean) {
+    setCursorEnabled(checked);
+    setSaving(true);
+    const ok = await saveSetting("cursor_enabled", checked ? "true" : "false");
+    setSaving(false);
+    if (ok) {
+      toast.success(checked ? "Ant cursor enabled" : "Ant cursor disabled");
+      // Dispatch a custom event so the CursorEffect component can react
+      window.dispatchEvent(
+        new CustomEvent("setting-changed", {
+          detail: { key: "cursor_enabled", value: checked ? "true" : "false" },
+        })
+      );
+    } else {
+      // Revert on failure
+      setCursorEnabled(!checked);
+      toast.error("Failed to update setting");
+    }
+  }
+
+  return (
+    <BentoCard interactive={false}>
+      <div className="flex items-center gap-2 mb-4">
+        <Paintbrush className="size-4 text-coral" />
+        <h3 className="font-semibold text-sm">Appearance</h3>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between max-w-sm">
+          <div className="space-y-0.5">
+            <Label htmlFor="cursor-toggle" className="text-sm font-medium">
+              Ant Cursor Trail
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Show a trail of ants following your cursor
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {saving && (
+              <span className="text-xs text-muted-foreground animate-pulse">Saving...</span>
+            )}
+            <Switch
+              id="cursor-toggle"
+              checked={cursorEnabled}
+              onCheckedChange={handleCursorToggle}
+              disabled={saving}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Bug className="size-3.5" />
+          <span>The ant cursor is a fun Easter egg that adds animated ants following your mouse.</span>
+        </div>
+      </div>
     </BentoCard>
   );
 }
@@ -404,7 +532,7 @@ function RecurrenceSection({
 
 // ---------- Main Component ----------
 
-export function SettingsContent({ user, recurrence, databaseUrl }: SettingsContentProps) {
+export function SettingsContent({ user, recurrence, databaseUrl, appSettings }: SettingsContentProps) {
   return (
     <AppShell>
       <div className="mb-6">
@@ -417,6 +545,7 @@ export function SettingsContent({ user, recurrence, databaseUrl }: SettingsConte
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
           <TabsTrigger value="ai">AI</TabsTrigger>
           <TabsTrigger value="recurrence">Recurrence</TabsTrigger>
         </TabsList>
@@ -441,9 +570,14 @@ export function SettingsContent({ user, recurrence, databaseUrl }: SettingsConte
           <DatabaseSection databaseUrl={databaseUrl} />
         </TabsContent>
 
+        {/* Appearance Tab */}
+        <TabsContent value="appearance" className="space-y-6">
+          <AppearanceSection cursorEnabled={appSettings.cursorEnabled} />
+        </TabsContent>
+
         {/* AI Tab */}
         <TabsContent value="ai" className="space-y-6">
-          <ApiKeySection />
+          <ApiKeySection hasApiKey={appSettings.hasApiKey} maskedApiKey={appSettings.maskedApiKey} />
         </TabsContent>
 
         {/* Recurrence Tab */}

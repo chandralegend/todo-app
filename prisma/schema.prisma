@@ -195,6 +195,14 @@ model DailyFocus {
   @@map("daily_focus")
 }
 
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
 model RecurrenceRunLog {
   id                String              @id @default(cuid())
   status            RecurrenceRunStatus

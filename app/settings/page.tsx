@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getAllSettings } from "@/lib/settings";
 import { SettingsContent } from "@/components/settings/settings-content";
 
 export default async function SettingsPage() {
@@ -50,6 +51,15 @@ export default async function SettingsPage() {
   // Get current DB URL (sanitized)
   const dbUrl = process.env.DATABASE_URL ?? "Not set";
 
+  // Fetch app settings from database
+  const appSettings = await getAllSettings();
+
+  // Mask the API key for display (only show last 4 chars)
+  const hasApiKey = !!appSettings.openai_api_key;
+  const maskedApiKey = hasApiKey
+    ? `sk-...${appSettings.openai_api_key.slice(-4)}`
+    : "";
+
   return (
     <SettingsContent
       user={{
@@ -65,6 +75,11 @@ export default async function SettingsPage() {
         },
       }}
       databaseUrl={dbUrl}
+      appSettings={{
+        cursorEnabled: appSettings.cursor_enabled !== "false", // default true
+        hasApiKey,
+        maskedApiKey,
+      }}
     />
   );
 }
