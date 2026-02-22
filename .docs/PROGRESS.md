@@ -464,6 +464,47 @@
 
 ---
 
+### Phase 7A: Database Migration — PostgreSQL to SQLite
+**Description:** Migrate the entire database layer from PostgreSQL to SQLite as preparation for the Electron desktop app.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Switch Prisma datasource from `postgresql` to `sqlite`
+- [x] Convert `String[]` fields (`tags`, `tagsSnapshot`) to JSON `String`
+- [x] Convert `Int[]` field (`daysOfWeek`) to JSON `String`
+- [x] Remove `@db.Date` annotation (PostgreSQL-only)
+- [x] Swap `@prisma/adapter-pg` + `pg` for `@prisma/adapter-better-sqlite3` + `better-sqlite3`
+- [x] Create `lib/array-fields.ts` helpers (parseTags, serializeTags, parseDaysOfWeek, serializeDaysOfWeek)
+- [x] Update 6 server pages/actions for JSON array serialization
+- [x] Update AI tools (4 READ sites, 2 WRITE sites)
+- [x] Update recurrence engine (daysOfWeek parsing, remove skipDuplicates)
+- [x] Update seed script for SQLite adapter
+- [x] Delete 4 PostgreSQL migrations, create fresh SQLite migration
+- [x] Gitignore *.db files
+- [x] Verify seed (5 lists, 42 tasks), lint, and build all pass clean
+
+**Summary of what has been done:**
+- Full database migration from PostgreSQL to SQLite with zero UI component changes
+- 18 files changed across schema, adapter, helpers, 6 server pages, 3 lib files, seed, config
+- JSON serialization boundary at the server layer so all client components receive `string[]` as before
+- Tag filtering changed from Prisma `has` operator to `contains` (string search)
+- `createMany({ skipDuplicates })` replaced with individual creates + catch (SQLite limitation)
+- `better-sqlite3` native module works with Next.js (Node.js runtime) but not Bun directly — seed uses `npx tsx`
+
+**What is left to do:**
+- Phase B: Electron shell wrapper
+- Phase C: Desktop adaptations (dynamic DB path, cron, auto-migrations)
+- Phase D: Packaging & distribution
+
+**Notes:**
+- Branch: `electron-migration`
+- Commits: `72ce3e7` (plan), `c21d9ee` (schema+adapter+helpers), `5572d6c` (complete Phase A)
+- `DATABASE_URL` now `file:./prisma/dev.db`
+- Seed login: `alice@example.com / password123`
+
+---
+
 ## Future Plans
 
 ### Description
