@@ -2,7 +2,7 @@
   "name": "the-todo-app",
   "version": "0.2.0",
   "description": "A self-hosted Todo desktop application with AI-powered task management",
-  "author": "chandralegend",
+  "author": "chandralegend <chandralegend@users.noreply.github.com>",
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {

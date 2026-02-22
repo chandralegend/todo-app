@@ -29,7 +29,7 @@ jobs:
           - os: macos-14          # Apple Silicon runner
             platform: mac
             arch: arm64
-          - os: macos-13          # Intel runner
+          - os: macos-latest       # Intel runner (macos-13 is being deprecated)
             platform: mac
             arch: x64
           - os: windows-latest
