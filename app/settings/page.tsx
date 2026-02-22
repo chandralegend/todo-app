@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, getDatabasePath } from "@/lib/prisma";
 import { getAllSettings } from "@/lib/settings";
 import { SettingsContent } from "@/components/settings/settings-content";
 
@@ -48,8 +48,8 @@ export default async function SettingsPage() {
     errorMessage: log.errorMessage,
   }));
 
-  // Get current DB URL (sanitized)
-  const dbUrl = process.env.DATABASE_URL ?? "Not set";
+  // Get resolved database path
+  const dbUrl = getDatabasePath();
 
   // Fetch app settings from database
   const appSettings = await getAllSettings();

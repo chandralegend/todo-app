@@ -42,10 +42,10 @@ export async function getAllSettings(): Promise<Record<string, string>> {
 }
 
 /**
- * Get the OpenAI API key — checks database first, then falls back to env var.
+ * Get the OpenAI API key from the database.
+ * Configure it via Settings > AI in the app.
  */
 export async function getOpenAIApiKey(): Promise<string | undefined> {
   const dbKey = await getSetting(SETTING_KEYS.OPENAI_API_KEY);
-  if (dbKey) return dbKey;
-  return process.env.OPENAI_API_KEY;
+  return dbKey ?? undefined;
 }

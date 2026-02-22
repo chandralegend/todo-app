@@ -260,7 +260,6 @@ function ApiKeySection({ hasApiKey, maskedApiKey }: { hasApiKey: boolean; masked
       </div>
       <p className="text-xs text-muted-foreground mb-4">
         Set your OpenAI API key for AI features. The key is stored securely in your local database.
-        Alternatively, set <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">OPENAI_API_KEY</code> in your <code className="bg-muted px-1 py-0.5 rounded text-[0.65rem]">.env</code> file as a fallback.
       </p>
 
       {currentHasKey && (
@@ -387,17 +386,17 @@ function DatabaseSection({ databaseUrl }: { databaseUrl: string }) {
         <h3 className="font-semibold text-sm">Database</h3>
       </div>
       <p className="text-xs text-muted-foreground mb-4">
-        The database URL is configured via environment variable. In the desktop app, it defaults to your user data directory.
+        SQLite database location. In the desktop app, this defaults to your user data directory.
       </p>
       <div className="space-y-1.5 max-w-lg">
-        <Label className="text-xs">DATABASE_URL</Label>
+        <Label className="text-xs">Database Path</Label>
         <Input
           value={databaseUrl}
           readOnly
           className="font-mono text-xs bg-muted"
         />
         <p className="text-[0.65rem] text-muted-foreground">
-          To change, update <code className="bg-muted px-1 py-0.5 rounded">DATABASE_URL</code> in your <code className="bg-muted px-1 py-0.5 rounded">.env</code> file and restart the app.
+          This path is managed automatically by the application.
         </p>
       </div>
     </BentoCard>
