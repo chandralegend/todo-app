@@ -1878,3 +1878,108 @@ collapsible, tabs, checkbox, table, drawer, navigation-menu, hover-card
 - **Filter chips:** animate in/out with scale + opacity
 - **Skeleton loaders:** pulse animation for loading states
 
+## 26. Electron Desktop App Migration
+
+### 26.1 Overview
+
+Convert the Next.js web app from PostgreSQL-backed cloud deployment to an Electron desktop application with embedded SQLite database. The app becomes a self-contained desktop app with zero external dependencies.
+
+### 26.2 Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  Electron Main Process                      │
+│  ├── Spawns Next.js standalone server       │
+│  ├── Creates BrowserWindow → localhost:PORT  │
+│  ├── Manages DB path (userData/todo.db)     │
+│  └── Runs recurrence cron (node-cron)       │
+├─────────────────────────────────────────────┤
+│  Next.js Standalone Server (renderer)       │
+│  ├── All existing pages/routes              │
+│  ├── API routes (/api/chat, /api/health)    │
+│  ├── Server actions (all existing)          │
+│  ├── Prisma + better-sqlite3               │
+│  └── Auth (NextAuth - kept as-is)          │
+└─────────────────────────────────────────────┘
+```
+
+### 26.3 Phase A: Database Migration (PostgreSQL → SQLite)
+
+**Goal:** Switch Prisma from PostgreSQL to SQLite with zero UI changes.
+
+1. Change `datasource db { provider = "sqlite" }` in schema.prisma
+2. Replace `String[]` fields with `String` (JSON-serialized):
+   - `TaskTemplate.tags` → `String @default("[]")`
+   - `TaskInstance.tagsSnapshot` → `String @default("[]")`
+3. Replace `Int[]` field with `String` (JSON-serialized):
+   - `RecurrenceRule.daysOfWeek` → `String @default("[]")`
+4. Replace `@db.Date` on `DailyFocus.date` with plain `DateTime`
+5. Create `lib/array-fields.ts` with `parseTags()` / `serializeTags()` / `parseDaysOfWeek()` / `serializeDaysOfWeek()` helpers
+6. Update all server actions/queries that read/write/filter array fields (~15-20 files)
+7. Update recurrence engine (`lib/recurrence.ts`) for daysOfWeek as JSON string
+8. Update seed script for SQLite
+9. Switch Prisma client from `@prisma/adapter-pg` + `pg` to `better-sqlite3`
+10. Update `lib/prisma.ts` client initialization
+11. Update `DATABASE_URL` to `file:./dev.db`
+12. Generate fresh SQLite migration
+13. Verify lint + build clean
+
+**Schema changes summary:**
+
+| Field | PostgreSQL | SQLite |
+|-------|-----------|--------|
+| `TaskTemplate.tags` | `String[]` | `String` (JSON) |
+| `TaskInstance.tagsSnapshot` | `String[]` | `String` (JSON) |
+| `RecurrenceRule.daysOfWeek` | `Int[]` | `String` (JSON) |
+| `DailyFocus.date` | `DateTime @db.Date` | `DateTime` |
+
+**Files requiring array field updates:**
+- `prisma/schema.prisma` — field types
+- `prisma/seed.ts` — serialize arrays
+- `lib/prisma.ts` — switch adapter
+- `lib/recurrence.ts` — parse daysOfWeek
+- `lib/ai/tools.ts` — tag handling in AI tools
+- `app/page.tsx` — dashboard tag queries
+- `app/lists/[id]/page.tsx` — tag filtering, task creation
+- `app/lists/[id]/tasks/new/page.tsx` — tag creation
+- `app/today/page.tsx` — tag display
+- `components/dashboard/dashboard-content.tsx` — tag display
+- `components/lists/list-view-content.tsx` — tag filtering/display
+- `components/lists/task-edit-sheet.tsx` — tag editing
+- `components/lists/quick-add-dialog.tsx` — tag creation
+- `components/lists/new-task-content.tsx` — tag creation + recurrence daysOfWeek
+- `components/ai/tool-ui/*` — tag display in AI cards
+
+### 26.4 Phase B: Electron Shell
+
+**Goal:** Wrap the Next.js app in Electron.
+
+1. Install `electron`, `electron-builder`, `concurrently`, `wait-on`
+2. Create `electron/main.ts` — main process
+3. Create `electron/preload.ts` — security bridge
+4. Configure `next.config.ts` with `output: 'standalone'`
+5. Dev: `concurrently "next dev" "wait-on tcp:3000 && electron ."`
+6. Production: bundle standalone + electron
+
+### 26.5 Phase C: Desktop Adaptations
+
+1. Dynamic `DATABASE_URL` pointing to `app.getPath('userData')/todo.db`
+2. Replace cron API with `node-cron` in main process
+3. Auto-run migrations on first launch
+4. Native window menu
+5. System tray icon (optional)
+
+### 26.6 Phase D: Packaging & Distribution
+
+1. `electron-builder` config (macOS .dmg, Windows .exe, Linux .AppImage)
+2. Code signing (optional)
+3. Auto-updater (optional, future)
+
+### 26.7 What Stays Unchanged
+
+- All UI components (zero changes)
+- All AI features (chat, tools, generative UI)
+- NextAuth (works with standalone server)
+- All server actions
+- Prisma ORM (different adapter, same queries minus array syntax)
+
