@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TopBar } from "@/components/layout/top-bar";
-import { Footer } from "@/components/layout/footer";
+
 import { AppBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { Toaster } from "@/components/ui/sonner";
 import { ChatPanel } from "@/components/ai/chat-sidebar";
@@ -38,7 +38,7 @@ export function AppShell({ children, breadcrumbOverrides, action }: AppShellProp
             </div>
             {children}
           </main>
-          <Footer />
+          <span className="px-5 pb-2 text-[0.6rem] text-muted-foreground">v0.1.0</span>
         </div>
 
         {/* Chat panel — full viewport height, pushes content */}

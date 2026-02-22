@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Menu, LayoutDashboard, Activity, ListTodo, Sun, Sparkles } from "lucide-react";
+import { Search, Menu, LayoutDashboard, ListTodo, Sun, Sparkles } from "lucide-react";
 import { useSession, signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -43,7 +43,7 @@ const navLinks = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/lists", label: "Lists", icon: ListTodo },
   { href: "/today", label: "Today", icon: Sun },
-  { href: "/admin/recurrence", label: "Admin", icon: Activity },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 interface TopBarProps {
@@ -182,12 +182,6 @@ export function TopBar({ onAiClick, chatOpen }: TopBarProps = {}) {
                 <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/admin/recurrence">
-                  <Activity className="mr-2 size-4" />
-                  Recurrence Logs
-                </Link>
-              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <Settings className="mr-2 size-4" />

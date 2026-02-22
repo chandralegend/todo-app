@@ -9,8 +9,8 @@ export function CursorEffect() {
 
     let effect: { destroy: () => void } | null = null;
 
-    import("cursor-effects").then(({ ghostCursor }) => {
-      effect = ghostCursor();
+    import("@/lib/ants-cursor").then(({ antsCursor }) => {
+      effect = antsCursor();
     });
 
     return () => {
