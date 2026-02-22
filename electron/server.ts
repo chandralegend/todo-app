@@ -1,0 +1,131 @@
+import { app } from "electron";
+import { ChildProcess, fork } from "node:child_process";
+import path from "node:path";
+import net from "node:net";
+
+const isDev = !app.isPackaged;
+const PROD_PORT = 3000;
+const PROD_HOSTNAME = "localhost";
+
+let serverProcess: ChildProcess | null = null;
+
+/**
+ * Find the standalone server.js path.
+ * In production, electron-builder packs it into app.asar/standalone/server.js
+ */
+function getServerPath(): string {
+  if (isDev) {
+    // In dev, we don't use this — Next.js dev server runs via concurrently
+    throw new Error("Production server should not be started in dev mode");
+  }
+
+  // In production, the standalone output is copied to resources/standalone/
+  return path.join(process.resourcesPath!, "standalone", "server.js");
+}
+
+/**
+ * Check if a port is available.
+ */
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once("error", () => resolve(false));
+    server.once("listening", () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, PROD_HOSTNAME);
+  });
+}
+
+/**
+ * Wait for the server to be ready (accepting connections).
+ */
+function waitForServer(
+  port: number,
+  host: string,
+  timeoutMs: number = 30_000
+): Promise<void> {
+  const start = Date.now();
+
+  return new Promise((resolve, reject) => {
+    function tryConnect() {
+      if (Date.now() - start > timeoutMs) {
+        reject(new Error(`Server did not start within ${timeoutMs}ms`));
+        return;
+      }
+
+      const socket = net.createConnection({ port, host }, () => {
+        socket.destroy();
+        resolve();
+      });
+
+      socket.on("error", () => {
+        setTimeout(tryConnect, 200);
+      });
+    }
+
+    tryConnect();
+  });
+}
+
+/**
+ * Start the standalone Next.js server as a child process.
+ * Returns the URL where the server is listening.
+ */
+export async function startServer(): Promise<string> {
+  if (isDev) {
+    // In dev mode, Next.js runs externally via `next dev`
+    return `http://${PROD_HOSTNAME}:${PROD_PORT}`;
+  }
+
+  const available = await isPortAvailable(PROD_PORT);
+  if (!available) {
+    console.log(`[electron:server] Port ${PROD_PORT} already in use, assuming server is running`);
+    return `http://${PROD_HOSTNAME}:${PROD_PORT}`;
+  }
+
+  const serverPath = getServerPath();
+  console.log(`[electron:server] Starting Next.js standalone server: ${serverPath}`);
+
+  serverProcess = fork(serverPath, [], {
+    env: {
+      ...process.env,
+      PORT: String(PROD_PORT),
+      HOSTNAME: PROD_HOSTNAME,
+      NODE_ENV: "production",
+    },
+    stdio: "pipe",
+  });
+
+  // Log server output
+  serverProcess.stdout?.on("data", (data: Buffer) => {
+    console.log(`[next:server] ${data.toString().trim()}`);
+  });
+
+  serverProcess.stderr?.on("data", (data: Buffer) => {
+    console.error(`[next:server:err] ${data.toString().trim()}`);
+  });
+
+  serverProcess.on("exit", (code) => {
+    console.log(`[electron:server] Next.js server exited with code ${code}`);
+    serverProcess = null;
+  });
+
+  // Wait for the server to accept connections
+  console.log(`[electron:server] Waiting for server on port ${PROD_PORT}...`);
+  await waitForServer(PROD_PORT, PROD_HOSTNAME);
+  console.log(`[electron:server] Server is ready at http://${PROD_HOSTNAME}:${PROD_PORT}`);
+
+  return `http://${PROD_HOSTNAME}:${PROD_PORT}`;
+}
+
+/**
+ * Stop the standalone Next.js server.
+ */
+export function stopServer(): void {
+  if (serverProcess) {
+    console.log("[electron:server] Stopping Next.js server...");
+    serverProcess.kill("SIGTERM");
+    serverProcess = null;
+  }
+}

@@ -2,12 +2,14 @@ import { app, BrowserWindow, shell, ipcMain } from "electron";
 import path from "node:path";
 import { ensureDatabase, getDatabaseUrl } from "./database";
 import { startCronScheduler, stopCronScheduler } from "./cron";
+import { startServer, stopServer } from "./server";
 import { setupMenu } from "./menu";
 
 const isDev = !app.isPackaged;
 const DEV_URL = "http://localhost:3000";
 
 let mainWindow: BrowserWindow | null = null;
+let serverUrl: string = DEV_URL;
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -40,14 +42,12 @@ function createWindow(): void {
     return { action: "deny" };
   });
 
+  // Load the app URL (set during initialization)
+  mainWindow.loadURL(serverUrl);
+
   if (isDev) {
-    mainWindow.loadURL(DEV_URL);
     // Open DevTools in development
     mainWindow.webContents.openDevTools({ mode: "detach" });
-  } else {
-    // In production, load the standalone Next.js server
-    // Phase D will set this up with embedded server — for now, fall back to localhost
-    mainWindow.loadURL(DEV_URL);
   }
 
   mainWindow.on("closed", () => {
@@ -87,26 +87,32 @@ app.on("window-all-closed", () => {
   }
 });
 
-// Clean up cron on quit
+// Clean up cron and server on quit
 app.on("will-quit", () => {
   stopCronScheduler();
+  stopServer();
 });
 
 // ---------- Initialization ----------
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // 1. Ensure database exists and migrations are applied
   //    Sets DATABASE_URL env var for the Next.js process
   ensureDatabase();
 
   console.log(`[electron] DATABASE_URL = ${getDatabaseUrl()}`);
 
-  // 2. Set up native window menu
+  // 2. Start the embedded Next.js server (production only)
+  //    In dev mode, this returns http://localhost:3000 immediately
+  serverUrl = await startServer();
+  console.log(`[electron] Server URL = ${serverUrl}`);
+
+  // 3. Set up native window menu
   setupMenu();
 
-  // 3. Create the main window
+  // 4. Create the main window
   createWindow();
 
-  // 4. Start cron scheduler for recurring task generation
+  // 5. Start cron scheduler for recurring task generation
   startCronScheduler();
 });
