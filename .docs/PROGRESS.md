@@ -493,7 +493,6 @@
 - `better-sqlite3` native module works with Next.js (Node.js runtime) but not Bun directly — seed uses `npx tsx`
 
 **What is left to do:**
-- Phase B: Electron shell wrapper
 - Phase C: Desktop adaptations (dynamic DB path, cron, auto-migrations)
 - Phase D: Packaging & distribution
 
@@ -502,6 +501,44 @@
 - Commits: `72ce3e7` (plan), `c21d9ee` (schema+adapter+helpers), `5572d6c` (complete Phase A)
 - `DATABASE_URL` now `file:./prisma/dev.db`
 - Seed login: `alice@example.com / password123`
+
+---
+
+### Phase 7B: Electron Shell
+**Description:** Wrap the Next.js app in an Electron shell with BrowserWindow, preload security bridge, and dev/build scripts.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Install `electron` (v40.6.0), `electron-builder`, `concurrently`, `wait-on` as dev dependencies
+- [x] Create `electron/main.ts` — main process with BrowserWindow, macOS hiddenInset titlebar, preload script, external link handler, dev/prod URL loading
+- [x] Create `electron/preload.ts` — contextBridge exposing platform detection, version, and window control APIs
+- [x] Create `electron/tsconfig.json` — separate TypeScript config targeting CommonJS (ES2022) for Electron main process
+- [x] Create `electron/electron-env.d.ts` — type declarations for `window.electronAPI`
+- [x] Configure `next.config.ts` with `output: 'standalone'` for Electron bundling
+- [x] Add `main` field to `package.json` pointing to `dist-electron/main.js`
+- [x] Add scripts: `electron:compile`, `electron:dev`, `electron:preview`, `electron:build`
+- [x] Exclude `electron/` and `dist-electron/` from Next.js tsconfig and ESLint
+- [x] Add `dist-electron/`, `dist/`, `release/` to `.gitignore`
+- [x] Verified electron compiles, lint passes, Next.js build with standalone output succeeds, electron process starts
+
+**Summary of what has been done:**
+- Full Electron shell wrapping the Next.js app
+- Dev workflow: `bun run electron:dev` starts Next.js dev server + waits for port 3000 + launches Electron window
+- Preview workflow: `bun run electron:preview` builds Next.js + compiles Electron + runs Electron loading production build
+- Build workflow: `bun run electron:build` builds Next.js + compiles Electron + runs electron-builder for packaging
+- Electron main process: 1280x860 default window, 800x600 minimum, macOS hidden titlebar with traffic lights, external links open in default browser, DevTools auto-open in development
+- Security: `contextIsolation: true`, `nodeIntegration: false`, `sandbox: true`
+
+**What is left to do:**
+- Phase C: Desktop adaptations (dynamic DB path, node-cron, auto-migrations, native menu)
+- Phase D: Packaging & distribution
+
+**Notes:**
+- Branch: `electron-migration`
+- Commit: `3a48606`
+- Electron 40.6.0 (Chromium 132, Node 22)
+- `electron-squirrel-startup` NOT used (electron-builder handles installation differently)
 
 ---
 
@@ -536,7 +573,9 @@ After Phase 6 is tested and merged, the following features could be considered:
 ## Current Project State
 
 ### Technology Stack
-- **Framework:** Next.js 16.1.6 (App Router)
+- **Framework:** Next.js 16.1.6 (App Router, standalone output)
+- **Desktop:** Electron 40.6.0 (Chromium 132, Node 22)
+- **Database:** SQLite via better-sqlite3 + @prisma/adapter-better-sqlite3
 - **UI:** React 19.2.3, Tailwind CSS 4, Base UI + Radix UI, shadcn/ui (radix-nova style)
 - **Package Manager:** Bun
 - **Drag & Drop:** @dnd-kit/core 6.3.1, @dnd-kit/sortable 10.0.0, @dnd-kit/utilities 3.2.2
