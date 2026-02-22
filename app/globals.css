@@ -162,6 +162,30 @@ button:hover .pill-arrow {
   transform: translateX(3px);
 }
 
+/* AI button glow pulse */
+.ai-glow {
+  position: relative;
+}
+.ai-glow::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #E07A5F 0%, #F2C4B6 50%, #E07A5F 100%);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 300ms ease;
+  filter: blur(6px);
+}
+.ai-glow:hover::before {
+  opacity: 0.5;
+  animation: ai-pulse 2s ease-in-out infinite;
+}
+@keyframes ai-pulse {
+  0%, 100% { opacity: 0.35; filter: blur(6px); }
+  50% { opacity: 0.6; filter: blur(10px); }
+}
+
 /* Filter chip animation */
 .filter-chip {
   animation: chip-in 150ms ease;

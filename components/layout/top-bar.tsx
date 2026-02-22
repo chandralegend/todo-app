@@ -151,8 +151,10 @@ function MobileTopBar({
             <button
               aria-label="AI Assistant"
               onClick={onAiClick}
-              className={`flex items-center justify-center rounded-lg p-1.5 transition-colors cursor-pointer ${
-                chatOpen ? "bg-coral/10 text-coral" : "hover:bg-muted text-muted-foreground"
+              className={`ai-glow flex items-center justify-center rounded-lg p-1.5 transition-colors cursor-pointer ${
+                chatOpen
+                  ? "bg-coral/10 text-coral shadow-sm shadow-coral/20"
+                  : "text-coral/70 hover:text-coral hover:bg-coral/5"
               }`}
             >
               <Sparkles className="size-4" />
@@ -194,16 +196,17 @@ function DesktopSidebar({
         collapsed ? "w-16" : "w-56"
       }`}
     >
+      {/* Spacer for macOS traffic lights (hiddenInset titlebar) */}
+      <div className="h-7 shrink-0" />
+
       {/* Logo + collapse toggle */}
-      <div className={`flex items-center border-b border-border h-14 shrink-0 ${collapsed ? "justify-center px-2" : "justify-between px-4"}`}>
-        {!collapsed && (
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs shrink-0">
-              T
-            </div>
-            <span className="font-semibold text-sm">TodoApp</span>
-          </Link>
-        )}
+      <div className={`flex items-center border-b border-border shrink-0 ${collapsed ? "flex-col gap-2 px-2 py-3" : "justify-between px-4 h-12"}`}>
+        <Link href="/" className={`flex items-center shrink-0 ${collapsed ? "" : "gap-2.5"}`}>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs shrink-0">
+            T
+          </div>
+          {!collapsed && <span className="font-semibold text-sm">TodoApp</span>}
+        </Link>
         <Tooltip>
           <TooltipTrigger asChild>
             <button
@@ -287,10 +290,10 @@ function DesktopSidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={onAiClick}
-                  className={`flex items-center justify-center rounded-lg p-2.5 w-full transition-colors cursor-pointer mb-2 ${
+                  className={`ai-glow flex items-center justify-center rounded-lg p-2.5 w-full transition-colors cursor-pointer mb-2 ${
                     chatOpen
-                      ? "bg-coral/10 text-coral"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-gradient-to-br from-coral/20 to-coral/10 text-coral shadow-sm shadow-coral/20"
+                      : "text-coral/70 hover:text-coral hover:bg-coral/5"
                   }`}
                   aria-label="AI Assistant"
                 >
@@ -304,10 +307,10 @@ function DesktopSidebar({
           ) : (
             <button
               onClick={onAiClick}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 w-full text-sm font-medium transition-colors cursor-pointer mb-2 ${
+              className={`ai-glow flex items-center gap-3 rounded-lg px-3 py-2 w-full text-sm font-medium transition-colors cursor-pointer mb-2 ${
                 chatOpen
-                  ? "bg-coral/10 text-coral"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-gradient-to-r from-coral/20 to-coral/10 text-coral shadow-sm shadow-coral/20"
+                  : "text-coral/70 hover:text-coral hover:bg-coral/5"
               }`}
             >
               <Sparkles className="size-4" />
