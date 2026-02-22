@@ -129,13 +129,15 @@ export default async function ListPage({ params, searchParams }: PageProps) {
 
   const totalTasks = allTasks.length;
   const overdueCount = allTasks.filter(
-    (t) =>
+    (t: { status: string; deadlineAt: Date | null; tagsSnapshot: string | null }) =>
       t.deadlineAt &&
       new Date(t.deadlineAt) < now &&
       t.status !== "COMPLETED" &&
       t.status !== "FAILED"
   ).length;
-  const completedCount = allTasks.filter((t) => t.status === "COMPLETED").length;
+  const completedCount = allTasks.filter(
+    (t: { status: string }) => t.status === "COMPLETED"
+  ).length;
   const progress =
     totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
