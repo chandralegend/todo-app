@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 enum UserRole {
@@ -106,7 +106,7 @@ model TaskTemplate {
   isRecurring           Boolean  @default(false) @map("is_recurring")
   isActive              Boolean  @default(true) @map("is_active")
   templateStatus        TaskStatus @default(DRAFT) @map("template_status")
-  tags                  String[] @default([])
+  tags                  String   @default("[]")
   recurrenceRuleId      String?  @unique @map("recurrence_rule_id")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
@@ -131,7 +131,7 @@ model RecurrenceRule {
   startDate       DateTime  @map("start_date") @default(now())
   endDate         DateTime? @map("end_date")
   timezone        String    @default("Asia/Colombo")
-  daysOfWeek      Int[]     @default([]) @map("days_of_week")
+  daysOfWeek      String    @default("[]") @map("days_of_week")
   nextGenerationCursor DateTime? @map("next_generation_cursor")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -150,7 +150,7 @@ model TaskInstance {
   deadlineAt            DateTime? @map("deadline_at")
   descriptionSnapshot   String    @map("description_snapshot")
   importanceSnapshot    Importance @map("importance_snapshot")
-  tagsSnapshot          String[]  @default([]) @map("tags_snapshot")
+  tagsSnapshot          String    @default("[]") @map("tags_snapshot")
   status                TaskStatus @default(TODO)
   startedAt             DateTime? @map("started_at")
   completedAt           DateTime? @map("completed_at")
@@ -181,7 +181,7 @@ model DailyFocus {
   id             String       @id @default(cuid())
   userId         String       @map("user_id")
   taskInstanceId String       @map("task_instance_id")
-  date           DateTime     @db.Date
+  date           DateTime
   position       Int          @default(0)
   completed      Boolean      @default(false)
   completedAt    DateTime?    @map("completed_at")
