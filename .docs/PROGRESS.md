@@ -675,30 +675,62 @@
 
 ---
 
+### Phase 7F: App Icons & macOS Build
+**Description:** Generate production app icons matching the in-app logo (white T on coral rounded square) and produce the first macOS Electron build.
+
+**Status:** Completed
+
+**Sub Tasks:**
+- [x] Generate app icon in all macOS iconset sizes (16–1024px) using Python script
+- [x] Design: white bold "T" on coral (#E07A5F) rounded square, matching in-app sidebar logo
+- [x] Convert iconset to `.icns` using macOS `iconutil`
+- [x] Create `build/icon.png` (512px) for Linux fallback
+- [x] Run `bun run electron:build` — successful macOS DMG + ZIP produced
+- [x] Output: `dist/the-todo-app-0.1.0-arm64.dmg` (552 MB), `dist/the-todo-app-0.1.0-arm64-mac.zip` (537 MB)
+
+**Summary of what has been done:**
+- App icon generated programmatically (pure Python, no external image libraries) with SDF-based rounded rectangle and anti-aliased "T" letterform
+- All 10 required macOS iconset sizes generated + `.icns` bundle
+- electron-builder successfully packaged: Next.js standalone + Electron + better-sqlite3 (rebuilt for arm64) + Prisma CLI/engines
+- Ad-hoc code signing applied (no Apple Developer certificate)
+- DMG with Applications folder link created
+
+**What is left to do:**
+- Test the DMG installation and app launch
+- Windows `.ico` icon generation (when targeting Windows)
+
+**Notes:**
+- Branch: `main`
+- `better-sqlite3` native module was rebuilt by `@electron/rebuild` for Electron's Node.js version
+- macOS notarization skipped (no Apple Developer certificate configured)
+- Build targets arm64 only (Apple Silicon); x64 can be added to electron-builder config
+
+---
+
 ## Future Plans
 
 ### Description
-After Phase 7 (Electron migration) is merged to `main`, the following features could be considered:
+The core application is complete with a working macOS Electron build. The following features could be considered:
 
-1. **App Icons** — Design and add production icons (icns, ico, png) for macOS/Windows/Linux
-2. **Code Signing** — Sign the app for macOS notarization and Windows SmartScreen
-3. **Auto-Updater** — Electron autoUpdater for seamless updates
-4. **Shared Lists** — Allow users to share lists with others (editors, viewers)
-5. **Advanced AI Features:**
+1. **Code Signing** — Sign the app for macOS notarization and Windows SmartScreen
+2. **Auto-Updater** — Electron autoUpdater for seamless updates
+3. **Shared Lists** — Allow users to share lists with others (editors, viewers)
+4. **Advanced AI Features:**
    - Auto-submit for multi-step tool chains
    - Message persistence (database-backed chat history)
    - Smart task breakdown from long descriptions
    - Auto tagging suggestions
    - Weekly review summaries
    - Natural language task entry
-6. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
+5. **Keyboard shortcuts** — Quick access to AI chat, navigation, task actions
+6. **Windows/Linux builds** — Generate `.ico` icon, test NSIS installer and AppImage
 
 ### Timeline
-- Phase 7 (Electron migration): Completed on `electron-migration` branch, pending merge to `main`
-- App icons: Before first release
+- macOS build: Completed (v0.1.0 arm64 DMG)
 - Code signing: Before public distribution
-- Shared lists: Post-merge
+- Shared lists: Post-v0.1.0
 - Advanced AI: Future roadmap
+- Windows/Linux: On demand
 
 ### Dependencies and Requirements
 - TaskListMember model and permission system must be in place (done)
