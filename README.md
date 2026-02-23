@@ -16,6 +16,12 @@
 
 ---
 
+<p align="center">
+  <img src="build/screenshots/demo.gif" alt="TodoApp Demo" width="720" />
+</p>
+
+---
+
 ## Overview
 
 TodoApp is a full-featured task management application built as a **Next.js web app wrapped in Electron** with an embedded **SQLite database**. It runs entirely on your machine with no external services required.
