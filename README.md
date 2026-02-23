@@ -14,6 +14,12 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/chandralegend/todo-app/releases/tag/v0.2.0">
+    <img alt="Download Latest Release" src="https://img.shields.io/badge/Download%20v0.2.0-macOS%20%7C%20Windows%20%7C%20Linux-E07A5F?style=for-the-badge&logo=github" />
+  </a>
+</p>
+
 ---
 
 <p align="center">
